@@ -11,7 +11,6 @@ import {
   FlaskConical,
   IdCard,
   Pill,
-  Plus,
   Stethoscope,
   Users,
 } from "lucide-react";
@@ -19,7 +18,6 @@ import Link from "next/link";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { useRole } from "@/components/providers/role-provider";
-import { PageHeader } from "@/components/shell/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusPill } from "@/components/ui/status-pill";
@@ -32,12 +30,6 @@ const statIcons = [Stethoscope, IdCard, CalendarClock, Users, BedDouble, BedDoub
 
 export function DashboardPage() {
   const { role } = useRole();
-  const roleMessage =
-    role === "Doctor"
-      ? "Clinical queue, patient safety, and pending reviews are emphasized for your role."
-      : role === "Management"
-        ? ""
-      : "Hospital-wide operational control view with static Phase 1 data.";
   const quickActions =
     role === "Doctor"
       ? dashboardQuickActions.filter((action) => ["consult", "sample", "monitor"].includes(action.id))
@@ -51,17 +43,6 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader
-        title="Dashboard"
-        description={roleMessage}
-        actions={
-          <Button>
-            <Plus className="h-4 w-4" />
-            Quick action
-          </Button>
-        }
-      />
-
       <section className="grid gap-3 pt-4 sm:grid-cols-2 xl:grid-cols-5">
         {dashboardStats.map((stat, index) => (
           <motion.div

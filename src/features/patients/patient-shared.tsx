@@ -49,11 +49,6 @@ export function ProtectedPatient({ children }: { children: (state: { role: Role;
   }
   return (
     <div className="space-y-4">
-      {access.readOnly ? (
-        <AlertBanner icon={LockKeyhole} tone="warning" title="Read-only patient access">
-          {access.role} can review patient records in this static preview, but registration and sensitive edit actions are disabled.
-        </AlertBanner>
-      ) : null}
       {children({ role: access.role, readOnly: access.readOnly })}
     </div>
   );

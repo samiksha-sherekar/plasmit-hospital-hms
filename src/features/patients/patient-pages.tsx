@@ -7,7 +7,6 @@ import {
   AlertTriangle,
   CalendarClock,
   ClipboardCheck,
-  Download,
   Eye,
   FileCheck2,
   FileText,
@@ -16,7 +15,6 @@ import {
   Plus,
   Printer,
   RefreshCcw,
-  Search,
   ShieldAlert,
   Users,
 } from "lucide-react";
@@ -95,14 +93,8 @@ export function PatientsPage() {
 
   return (
     <ProtectedPatient>
-      {({ readOnly }) => (
+      {() => (
         <>
-          <PageHeader
-            eyebrow="Phase 3 • Patient Registry"
-            title="Patients"
-            description="Fast patient search, safety flags, document status, and quick patient context."
-            actions={<><Button variant="outline" onClick={() => toast.info("Advanced search placeholder opened")}><Search className="h-4 w-4" />Advanced</Button><Button variant="outline" asChild><Link href="/patients/duplicates">Duplicates</Link></Button><Button variant="outline" onClick={() => toast.info("Export pending backend integration")}><Download className="h-4 w-4" />Export</Button><Button disabled={readOnly} asChild><Link href="/patients/register"><Plus className="h-4 w-4" />Register patient</Link></Button></>}
-          />
           <SummaryGrid>
             <StatCard label="Total patients" value={mockPatients.length} change="Seeded" context="Static registry" tone="info" icon={IdCard} />
             <StatCard label="Registered today" value={2} change="Today" context="Front office" tone="success" icon={Plus} />
