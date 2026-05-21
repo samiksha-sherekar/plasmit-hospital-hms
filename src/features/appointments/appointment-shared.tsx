@@ -37,11 +37,6 @@ export function ProtectedAppointment({ children }: { children: (state: { role: R
   }
   return (
     <div className="space-y-4">
-      {access.readOnly ? (
-        <AlertBanner icon={LockKeyhole} tone="warning" title="Read-only operational access">
-          {access.role} can review appointment, queue, and front-office data, but status-changing actions are disabled.
-        </AlertBanner>
-      ) : null}
       {children({ role: access.role, readOnly: access.readOnly })}
     </div>
   );

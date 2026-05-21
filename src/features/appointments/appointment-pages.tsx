@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import type { ColumnDef } from "@tanstack/react-table";
-import { CalendarClock, Check, Clock3, Download, Eye, PhoneCall, Plus, RefreshCcw, Search, ShieldAlert, Ticket, UserCheck, Video } from "lucide-react";
+import { CalendarClock, Check, Clock3, Eye, PhoneCall, Plus, RefreshCcw, Search, ShieldAlert, Ticket, UserCheck, Video } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/shell/page-header";
@@ -82,7 +82,6 @@ export function AppointmentsPage() {
     <ProtectedAppointment>
       {({ readOnly }) => (
         <>
-          <PageHeader eyebrow="Phase 4 • Appointments" title="Appointments" description="Manage booking, check-in, reschedule, cancellation, token issue, and daily appointment flow." actions={<><Button variant="outline" asChild><Link href="/appointments/calendar">Calendar</Link></Button><Button variant="outline" asChild><Link href="/appointments/queue">Queue</Link></Button><PrintAction label="Print list" /><Button variant="outline" onClick={() => toast.info("Export pending backend integration")}><Download className="h-4 w-4" />Export</Button><Button disabled={readOnly} asChild><Link href="/appointments/book"><Plus className="h-4 w-4" />Book appointment</Link></Button></>} />
           <SummaryGrid>
             <StatCard label="Today" value={mockAppointments.length} change="Active day" context="All appointments" tone="info" icon={CalendarClock} />
             <StatCard label="Checked in" value={mockAppointments.filter((a) => a.status === "Checked in").length} change="Arrived" context="Ready for queue" tone="success" icon={UserCheck} />
@@ -92,6 +91,7 @@ export function AppointmentsPage() {
           <FilterBar search={search} onSearch={setSearch} placeholder="Search patient, UHID, appointment no, doctor...">
             <NativeSelect label="Status" value={status} onChange={setStatus} options={["All status", "Scheduled", "Confirmed", "Checked in", "Waiting", "Late", "No-show", "Completed", "Cancelled"]} />
             <Button variant="outline" onClick={() => toast.success("Static appointment data refreshed")}><RefreshCcw className="h-4 w-4" />Refresh</Button>
+            <Button disabled={readOnly} asChild><Link href="/appointments/book"><Plus className="h-4 w-4" />Book appointment</Link></Button>
           </FilterBar>
           <DataTable data={rows} columns={columns} />
           <AppointmentDetailDrawer appointment={selected} open={Boolean(selected)} onOpenChange={(open) => !open && setSelected(null)} />
