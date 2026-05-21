@@ -36,7 +36,7 @@ export function DashboardPage() {
     role === "Doctor"
       ? "Clinical queue, patient safety, and pending reviews are emphasized for your role."
       : role === "Management"
-        ? "Management overview."
+        ? ""
       : "Hospital-wide operational control view with static Phase 1 data.";
   const quickActions =
     role === "Doctor"
@@ -55,15 +55,10 @@ export function DashboardPage() {
         title="Dashboard"
         description={roleMessage}
         actions={
-          <>
-            <Button variant="outline" asChild>
-              <Link href="/notifications">Review alerts</Link>
-            </Button>
-            <Button>
-              <Plus className="h-4 w-4" />
-              Quick action
-            </Button>
-          </>
+          <Button>
+            <Plus className="h-4 w-4" />
+            Quick action
+          </Button>
         }
       />
 
