@@ -37,11 +37,6 @@ export function ProtectedOpd({ children }: { children: (state: { role: Role; rea
   }
   return (
     <div className="space-y-4">
-      {access.readOnly ? (
-        <AlertBanner icon={LockKeyhole} tone="warning" title="Read-only clinical access">
-          {access.role} can review OPD records in this static preview, but clinical save and completion actions are disabled.
-        </AlertBanner>
-      ) : null}
       {children({ role: access.role, readOnly: access.readOnly, vitalsOnly: access.vitalsOnly })}
     </div>
   );

@@ -79,7 +79,6 @@ export function OpdWorklistPage() {
     <ProtectedOpd>
       {({ readOnly }) => (
         <>
-          <PageHeader eyebrow="Phase 5 • OPD" title="OPD Worklist" description="Doctor-facing checked-in queue with patient alerts, vitals state, consultation state, and appointment context." actions={<><Button variant="outline" onClick={() => toast.success("Static OPD worklist refreshed")}><RefreshCcw className="h-4 w-4" />Refresh</Button><Button variant="outline" asChild><Link href="/appointments/calendar">Calendar</Link></Button><Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4" />Print</Button><Button disabled={readOnly} asChild><Link href="/opd/consultation/visit-001"><Stethoscope className="h-4 w-4" />Start next</Link></Button></>} />
           <SummaryGrid>
             <StatCard label="Waiting" value={mockQueueEntries.filter((q) => q.status === "Waiting").length} change="Queue" context="Needs doctor" tone="warning" icon={Stethoscope} />
             <StatCard label="In consultation" value={mockOpdWorklist.filter((w) => w.consultationStatus === "In progress").length} change="Active" context="Clinical rooms" tone="info" icon={ClipboardList} />
@@ -88,6 +87,8 @@ export function OpdWorklistPage() {
           </SummaryGrid>
           <FilterBar search={search} onSearch={setSearch} placeholder="Search patient, UHID, token, doctor, status...">
             <NativeSelect label="Consultation status" value={status} onChange={setStatus} options={["All status", "Not started", "In progress", "Draft saved", "Completed"]} />
+            <Button variant="outline" onClick={() => toast.success("Static OPD worklist refreshed")}><RefreshCcw className="h-4 w-4" />Refresh</Button>
+            <Button disabled={readOnly} asChild><Link href="/opd/consultation/visit-001"><Stethoscope className="h-4 w-4" />Start next</Link></Button>
           </FilterBar>
           <DataTable data={rows} columns={columns} />
           <AppointmentDetailDrawer appointment={appointment} open={Boolean(selected)} onOpenChange={(open) => !open && setSelected(null)} />
