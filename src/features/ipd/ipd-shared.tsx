@@ -29,11 +29,6 @@ export function ProtectedIpd({ children }: { children: (state: { role: Role; rea
   }
   return (
     <div className="space-y-4">
-      {access.readOnly ? (
-        <AlertBanner icon={LockKeyhole} tone="warning" title="Read-only inpatient access">
-          {access.role} can review inpatient and emergency records, but high-impact actions are disabled in this static preview.
-        </AlertBanner>
-      ) : null}
       {children({ role: access.role, readOnly: access.readOnly })}
     </div>
   );
