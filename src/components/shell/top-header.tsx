@@ -6,6 +6,7 @@ import Link from "next/link";
 import { CommandSearch } from "@/components/shell/command-search";
 import { MobileNavigation } from "@/components/shell/mobile-navigation";
 import { NotificationPopover } from "@/components/shell/notification-popover";
+import { ProfileMenu } from "@/components/shell/profile-menu";
 import { RoleSwitcher } from "@/components/shell/role-switcher";
 import { Button } from "@/components/ui/button";
 import { hospitalContext } from "@/data/mock";
@@ -30,6 +31,7 @@ export function TopHeader() {
           <ShieldCheck className="h-4 w-4" />
         </Link>
       </Button>
+      <ProfileMenu />
     </header>
   );
 }
