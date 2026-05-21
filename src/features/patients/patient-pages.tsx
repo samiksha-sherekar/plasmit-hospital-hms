@@ -93,7 +93,7 @@ export function PatientsPage() {
 
   return (
     <ProtectedPatient>
-      {() => (
+      {({ readOnly }) => (
         <>
           <SummaryGrid>
             <StatCard label="Total patients" value={mockPatients.length} change="Seeded" context="Static registry" tone="info" icon={IdCard} />
@@ -104,6 +104,7 @@ export function PatientsPage() {
           <FilterBar search={search} onSearch={setSearch} placeholder="Search by name, UHID, mobile, ABHA, temporary ID...">
             <NativeSelect label="Patient status" value={status} onChange={setStatus} options={["All status", "Active", "Unknown emergency", "Deceased", "Duplicate review", "Inactive"]} />
             <Button variant="outline" onClick={() => toast.success("Static patient list refreshed")}><RefreshCcw className="h-4 w-4" />Refresh</Button>
+            <Button disabled={readOnly} asChild><Link href="/patients/register"><Plus className="h-4 w-4" />Register patient</Link></Button>
           </FilterBar>
           <DataTable data={filtered} columns={columns} />
           <PatientQuickDrawer patient={selected} onOpenChange={(open) => !open && setSelected(null)} />
