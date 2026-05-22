@@ -28,8 +28,8 @@ export function MobileNavigation() {
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[80] bg-black/35" />
-        <Dialog.Content className="fixed inset-y-0 left-0 z-[90] flex w-[min(88vw,360px)] flex-col border-r border-border bg-sidebar text-sidebar-foreground shadow-soft outline-none">
-          <div className="flex h-20 items-center justify-between border-b border-border px-3">
+        <Dialog.Content className="fixed inset-y-0 left-0 z-[90] flex w-[min(88vw,360px)] flex-col overflow-hidden border-r border-border bg-sidebar text-sidebar-foreground shadow-soft outline-none">
+          <div className="flex h-20 shrink-0 items-center justify-between border-b border-border px-3">
             <Dialog.Title className="sr-only">Plasmit Hospital navigation</Dialog.Title>
             <Dialog.Description className="sr-only">Mobile navigation</Dialog.Description>
             <Image
@@ -46,11 +46,11 @@ export function MobileNavigation() {
               </Button>
             </Dialog.Close>
           </div>
-          <div className="border-b border-border p-3">
+          <div className="shrink-0 border-b border-border p-3">
             <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-sidebar-foreground/55">Active role</div>
             <RoleSwitcher className="w-full border-border bg-sidebar text-sidebar-foreground hover:bg-sidebar-active/10" />
           </div>
-          <nav className="min-h-0 flex-1 overflow-auto p-2">
+          <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2">
             {visibleItems.map((item) => {
               const Icon = item.icon;
               const active = pathname === item.route;
