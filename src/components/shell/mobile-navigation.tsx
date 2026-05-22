@@ -47,7 +47,7 @@ export function MobileNavigation() {
             </Dialog.Close>
           </div>
           <div className="shrink-0 border-b border-border p-3">
-            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-sidebar-foreground/55">Active role</div>
+            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-sidebar-foreground/55">Select role</div>
             <RoleSwitcher className="w-full border-border bg-sidebar text-sidebar-foreground hover:bg-sidebar-active/10" />
           </div>
           <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2">
