@@ -9,13 +9,14 @@ import { Menu, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useRole } from "@/components/providers/role-provider";
+import { RoleSwitcher } from "@/components/shell/role-switcher";
 import { navigationItems } from "@/data/navigation";
 import { cn } from "@/lib/utils";
 
 export function MobileNavigation() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const { role, roles, setRole } = useRole();
+  const { role } = useRole();
   const visibleItems = navigationItems.filter((item) => item.allowedRoles.includes(role));
 
   return (
@@ -47,21 +48,7 @@ export function MobileNavigation() {
           </div>
           <div className="shrink-0 border-b border-border p-3">
             <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-sidebar-foreground/55">Select role</div>
-            <div className="flex gap-2 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
-              {roles.map((item) => (
-                <button
-                  className={cn(
-                    "h-9 shrink-0 rounded-full border border-border bg-white px-3 text-xs font-semibold text-sidebar-foreground shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25",
-                    item === role && "border-transparent bg-gradient-to-r from-[#7367f0] to-[#5b8def] text-white shadow-[0_8px_18px_rgba(115,103,240,0.24)]",
-                  )}
-                  key={item}
-                  onClick={() => setRole(item)}
-                  type="button"
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
+            <RoleSwitcher className="w-full border-border bg-sidebar text-sidebar-foreground hover:bg-sidebar-active/10" portal={false} />
           </div>
           <nav className="min-h-0 flex-1 touch-pan-y scroll-pb-6 overflow-y-auto overscroll-y-none p-2 pb-6 [scrollbar-gutter:stable] [-webkit-overflow-scrolling:touch]">
             {visibleItems.map((item) => {
