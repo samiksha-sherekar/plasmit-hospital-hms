@@ -28,7 +28,7 @@ export function MobileNavigation() {
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[80] bg-black/35" />
-        <Dialog.Content className="fixed inset-y-0 left-0 z-[90] flex w-[min(88vw,360px)] flex-col overflow-hidden border-r border-border bg-sidebar text-sidebar-foreground shadow-soft outline-none">
+        <Dialog.Content className="fixed left-0 top-0 z-[90] flex h-[100dvh] max-h-[100dvh] w-[min(88vw,360px)] flex-col overflow-hidden overscroll-none border-r border-border bg-sidebar text-sidebar-foreground shadow-soft outline-none">
           <div className="flex h-20 shrink-0 items-center justify-between border-b border-border px-3">
             <Dialog.Title className="sr-only">Plasmit Hospital navigation</Dialog.Title>
             <Dialog.Description className="sr-only">Mobile navigation</Dialog.Description>
@@ -50,7 +50,7 @@ export function MobileNavigation() {
             <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-sidebar-foreground/55">Select role</div>
             <RoleSwitcher className="w-full border-border bg-sidebar text-sidebar-foreground hover:bg-sidebar-active/10" />
           </div>
-          <nav className="min-h-0 flex-1 touch-pan-y scroll-pb-6 overflow-y-auto overscroll-contain p-2 pb-6 [scrollbar-gutter:stable] [-webkit-overflow-scrolling:touch]">
+          <nav className="min-h-0 flex-1 touch-pan-y scroll-pb-6 overflow-y-auto overscroll-y-none p-2 pb-6 [scrollbar-gutter:stable] [-webkit-overflow-scrolling:touch]">
             {visibleItems.map((item) => {
               const Icon = item.icon;
               const active = pathname === item.route;
