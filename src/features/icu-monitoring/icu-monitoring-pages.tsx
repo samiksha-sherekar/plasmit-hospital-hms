@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import type { ColumnDef } from "@tanstack/react-table";
-import { AlertTriangle, ArrowLeft, Brain, CheckCircle2, ClipboardList, Clock3, Droplets, Filter, Gauge, HeartPulse, MoreHorizontal, Pencil, Plus, Save, Search, Stethoscope, Trash2, TrendingUp, Waves } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Bell, Brain, CheckCircle2, ClipboardList, Clock3, Droplets, Filter, Gauge, HeartPulse, Menu, MoreHorizontal, Pencil, Plus, Save, Search, Stethoscope, Trash2, TrendingUp, Waves } from "lucide-react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { toast } from "sonner";
 
@@ -32,6 +32,15 @@ import {
   drainInsights,
   drainRecords,
   drainTypes,
+  lineDeviceAlertTriggers,
+  lineDeviceAlerts,
+  lineDeviceCommonFields,
+  lineDeviceEntries,
+  lineDeviceInsights,
+  lineDeviceRecords,
+  lineDeviceTrendData,
+  lineDeviceTypes,
+  lumenStatusRecords,
   cvsInsights,
   cvsMetrics,
   cvsParameterCards,
@@ -50,6 +59,10 @@ import {
   type DrainRecord,
   type DrainSeverity,
   type DrainStatus,
+  type LineDeviceAlert,
+  type LineDeviceRecord,
+  type LineDeviceSeverity,
+  type LineDeviceStatus,
 } from "@/data/icu-monitoring";
 import { cn } from "@/lib/utils";
 
@@ -87,6 +100,14 @@ function drainStatusTone(status: DrainStatus) {
 }
 
 function severityTone(severity: DrainSeverity) {
+  return severity === "Stable" ? "success" : severity === "Monitor" ? "warning" : "critical";
+}
+
+function lineDeviceStatusTone(status: LineDeviceStatus) {
+  return status === "Active" ? "success" : status === "Watch" ? "warning" : status === "Critical" ? "critical" : "muted";
+}
+
+function lineSeverityTone(severity: LineDeviceSeverity) {
   return severity === "Stable" ? "success" : severity === "Monitor" ? "warning" : "critical";
 }
 
@@ -185,7 +206,7 @@ export function IcuMonitoringPage() {
                 </div>
                 <div>
                   <div className="text-base font-bold text-foreground">{module.label}</div>
-                  <div className="mt-1 text-sm text-muted-foreground">{module.label === "CVS" ? "Cardiovascular observations, invasive pressures, trends, and records." : module.label === "Abdominal" ? "Abdominal pressure, outputs, hourly totals, notes, and insights." : "Clean placeholder for next ICU monitoring phase."}</div>
+                  <div className="mt-1 text-sm text-muted-foreground">{module.label === "CVS" ? "Cardiovascular observations, invasive pressures, trends, and records." : module.label === "Abdominal" ? "Abdominal pressure, outputs, hourly totals, notes, and insights." : module.label === "Drains & Tubes" ? "Drain output, tube status, site condition, alerts, and trends." : module.label === "Lines & Devices" ? "Line/device insertion state, lumen checks, alerts, and history." : "Clean placeholder for next ICU monitoring phase."}</div>
                 </div>
                 <Button asChild className="w-full" variant={module.ready ? "default" : "outline"}><Link href={module.route}>{module.ready ? "Open module" : "Preview placeholder"}</Link></Button>
               </CardContent>
@@ -608,12 +629,12 @@ export function AbdominalRecordsPage() {
   );
 }
 
-function MobileIcuBottomNav() {
+function MobileIcuBottomNav({ dashboardHref = "/icu-monitoring/drains", alertsHref = "/icu-monitoring/drains/alerts" }: { dashboardHref?: string; alertsHref?: string }) {
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white/95 px-2 py-2 shadow-[0_-8px_24px_rgba(39,37,54,0.08)] backdrop-blur lg:hidden">
       <div className="grid grid-cols-5 gap-1 text-[11px] font-semibold text-muted-foreground">
         {["Dashboard", "Patients", "Orders", "Alerts", "More"].map((item) => (
-          <Link className={cn("rounded-lg px-1 py-2 text-center", item === "Alerts" && "bg-primary-soft text-primary")} href={item === "Alerts" ? "/icu-monitoring/drains/alerts" : "/icu-monitoring/drains"} key={item}>{item}</Link>
+          <Link className={cn("rounded-lg px-1 py-2 text-center", item === "Alerts" && "bg-primary-soft text-primary")} href={item === "Alerts" ? alertsHref : dashboardHref} key={item}>{item}</Link>
         ))}
       </div>
     </div>
@@ -905,6 +926,233 @@ export function DrainAlertsPage() {
       </Tabs>
       <div className="grid gap-4 xl:grid-cols-2"><DrainLegendCard /><DrainTriggersCard /></div>
       <MobileIcuBottomNav />
+    </PageMotion>
+  );
+}
+
+function LineDeviceInsightCard() {
+  return (
+    <Card className="border-primary/20 bg-gradient-to-br from-white to-[#f5f7ff]">
+      <CardHeader><div><CardTitle>Clinical Insight Engine</CardTitle><CardDescription>Line and device safety intelligence</CardDescription></div></CardHeader>
+      <CardContent className="space-y-3">{lineDeviceInsights.map((insight) => <div className="rounded-xl border border-border bg-white p-3 text-sm font-medium text-foreground shadow-sm" key={insight}>{insight}</div>)}</CardContent>
+    </Card>
+  );
+}
+
+function LineDeviceQuickActions({ id }: { id?: string }) {
+  const base = id ? `/icu-monitoring/lines-devices/${id}` : "/icu-monitoring/lines-devices/line-cvc-01";
+  return (
+    <Card>
+      <CardHeader><div><CardTitle>Quick Actions</CardTitle><CardDescription>Line and device workflow shortcuts</CardDescription></div></CardHeader>
+      <CardContent className="grid gap-2">
+        <Button asChild><Link href="/icu-monitoring/lines-devices/add"><Plus className="h-4 w-4" />Add New Entry</Link></Button>
+        <Button asChild variant="outline"><Link href={base}><TrendingUp className="h-4 w-4" />View Trend</Link></Button>
+        <Button variant="outline" onClick={() => toast.info("Line/device detail editing placeholder")}><Pencil className="h-4 w-4" />Edit Details</Button>
+        <Button variant="danger" onClick={() => toast.warning("Discontinue line/device workflow staged")}><Trash2 className="h-4 w-4" />Discontinue Line / Device</Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+function LineDeviceReferenceCards() {
+  return (
+    <div className="grid gap-4 xl:grid-cols-3">
+      <Card>
+        <CardHeader><div><CardTitle>Device Icon Reference</CardTitle><CardDescription>Clinical line/device legend</CardDescription></div></CardHeader>
+        <CardContent className="space-y-2">
+          {lineDeviceTypes.map((type) => {
+            const Icon = type.icon;
+            return <div className="flex items-center justify-between rounded-lg border border-border bg-white px-3 py-2 text-sm" key={type.id}><span className="font-semibold text-foreground">{type.fullName}</span><Icon className="h-4 w-4 text-primary" /></div>;
+          })}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><div><CardTitle>Common Fields</CardTitle><CardDescription>Shared entry fields</CardDescription></div></CardHeader>
+        <CardContent className="space-y-2">{lineDeviceCommonFields.map((field) => <div className="rounded-lg border border-border bg-[#f8f9fc] px-3 py-2 text-sm text-foreground" key={field}>{field}</div>)}</CardContent>
+      </Card>
+      <Card>
+        <CardHeader><div><CardTitle>Alert Triggers</CardTitle><CardDescription>Example safety rules</CardDescription></div></CardHeader>
+        <CardContent className="space-y-2">{lineDeviceAlertTriggers.map((trigger) => <div className="rounded-lg border border-border bg-[#f8f9fc] px-3 py-2 text-sm text-foreground" key={trigger}>{trigger}</div>)}</CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function LineDeviceCard({ device }: { device: LineDeviceRecord }) {
+  const Icon = device.icon;
+  return (
+    <Link className="group block" href={`/icu-monitoring/lines-devices/${device.id}`}>
+      <Card className="transition duration-200 hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(39,37,54,0.10)]">
+        <CardContent className="grid gap-3 p-4 md:grid-cols-[auto_1fr_auto] md:items-center">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-soft text-primary"><Icon className="h-5 w-5" /></div>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2"><div className="font-bold text-foreground">{device.name}</div><Badge tone={lineDeviceStatusTone(device.status)}>{device.status}</Badge></div>
+            <div className="mt-1 text-sm text-muted-foreground">{device.insertionDetails} • {device.site}</div>
+            <div className="mt-1 text-xs text-muted-foreground">{device.metadata}</div>
+          </div>
+          <Sparkline color={device.color} values={device.sparkline} />
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
+
+export function LinesDevicesOverviewPage() {
+  const [search, setSearch] = React.useState("");
+  const rows = lineDeviceRecords.filter((device) => `${device.name} ${device.type} ${device.site} ${device.metadata}`.toLowerCase().includes(search.toLowerCase()));
+  return (
+    <PageMotion>
+      <HeaderBand title="Lines & Devices" subtitle="ICU access line, catheter, lumen, dressing, waveform, and device safety monitoring." actions={<><Button variant="outline"><Menu className="h-4 w-4" />Menu</Button><Button asChild variant="outline"><Link href="/icu-monitoring/lines-devices/alerts"><Bell className="h-4 w-4" />Alerts</Link></Button><Button asChild><Link href="/icu-monitoring/lines-devices/add"><Plus className="h-4 w-4" />Add New Line / Device</Link></Button></>} />
+      <IcuModuleTabs active="lines-and-devices" />
+      <Card className="sticky top-20 z-20">
+        <CardContent className="flex flex-col gap-3 p-3 md:flex-row md:items-center">
+          <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-border bg-white px-3 shadow-sm">
+            <Search className="h-4 w-4 text-muted-foreground" />
+            <Input className="border-0 bg-transparent shadow-none focus-visible:ring-0" onChange={(event) => setSearch(event.target.value)} placeholder="Search device, site, lumen, dressing..." value={search} />
+          </div>
+        </CardContent>
+      </Card>
+      <div className="grid gap-4 xl:grid-cols-[1fr_340px]">
+        <div className="space-y-3">{rows.length ? rows.map((device) => <LineDeviceCard device={device} key={device.id} />) : <EmptyState icon={Search} title="No line/device records found" description="Try another device, site, or dressing keyword." />}</div>
+        <div className="space-y-4"><LineDeviceQuickActions /><LineDeviceInsightCard /></div>
+      </div>
+      <LineDeviceReferenceCards />
+      <MobileIcuBottomNav dashboardHref="/icu-monitoring/lines-devices" alertsHref="/icu-monitoring/lines-devices/alerts" />
+    </PageMotion>
+  );
+}
+
+const lineDeviceFields: Record<string, string[]> = {
+  cvc: ["Lumen Type", "Lumen Patency", "Blood Return Yes/No", "Blue", "Brown", "White", "Flushed", "Patent", "Blocked"],
+  "arterial-line": ["Site", "Waveform", "Dampened Yes/No", "Zeroed Yes/No", "Dressing Clean & Dry Yes/No"],
+  "dialysis-line": ["Catheter Type", "Lumen Type", "Arterial Lumen Status", "Venous Lumen Status", "Heparin Locked Yes/No"],
+  "foley-catheter": ["Catheter Size", "Balloon Volume", "Urine Output", "Urine Color", "Drainage Status"],
+  "ecmo-catheter": ["ECMO Type", "Cannulation Site", "Cannula Size", "Flow", "Dressing Intact Yes/No", "Anticoagulation Status"],
+};
+
+export function LineDeviceAddPage() {
+  const router = useRouter();
+  const [selected, setSelected] = React.useState(lineDeviceTypes[0].id);
+  const [condition, setCondition] = React.useState("Clean");
+  const [securement, setSecurement] = React.useState("Secure");
+  const selectedType = lineDeviceTypes.find((item) => item.id === selected) ?? lineDeviceTypes[0];
+  const fields = ["Insertion Date & Time", "Site", "Side", "Dressing Type", "Dressing Date", "Condition of Site", "Securement", "Notes", ...(lineDeviceFields[selected] ?? [])];
+  return (
+    <PageMotion>
+      <HeaderBand title="Add Line / Device" subtitle="Select device type and document line insertion, dressing, condition, securement, and device-specific safety fields." actions={<BackButton href="/icu-monitoring/lines-devices" />} />
+      <div className="grid gap-4 xl:grid-cols-[360px_1fr]">
+        <Card>
+          <CardHeader><div><CardTitle>Step 1: Device type</CardTitle><CardDescription>Touch-friendly ICU line selection</CardDescription></div></CardHeader>
+          <CardContent className="grid gap-2">
+            {lineDeviceTypes.map((type) => {
+              const Icon = type.icon;
+              const active = selected === type.id;
+              return (
+                <button className={cn("flex items-start gap-3 rounded-xl border p-3 text-left transition hover:-translate-y-0.5", active ? "border-primary bg-primary-soft text-primary" : "border-border bg-white text-foreground")} key={type.id} onClick={() => setSelected(type.id)} type="button">
+                  <Icon className="mt-0.5 h-5 w-5 shrink-0" />
+                  <span><span className="block text-sm font-bold">{type.fullName}</span><span className="mt-0.5 block text-xs text-muted-foreground">{type.description}</span></span>
+                </button>
+              );
+            })}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><div><CardTitle>{selectedType.fullName} Entry</CardTitle><CardDescription>Common form plus type-specific monitoring fields</CardDescription></div><Badge tone="info">Step 2</Badge></CardHeader>
+          <CardContent className="grid gap-3 md:grid-cols-2">
+            {fields.map((field) => (
+              field === "Condition of Site" ? (
+                <div className="space-y-2 md:col-span-2" key={field}><div className="text-sm font-medium text-foreground">{field}</div><div className="flex flex-wrap gap-2">{["Clean", "Redness", "Swelling", "Bleeding"].map((item) => <Button key={item} onClick={() => setCondition(item)} size="sm" variant={condition === item ? "default" : "outline"}>{item}</Button>)}</div></div>
+              ) : field === "Securement" ? (
+                <div className="space-y-2 md:col-span-2" key={field}><div className="text-sm font-medium text-foreground">{field}</div><div className="flex flex-wrap gap-2">{["Secure", "Not Secure"].map((item) => <Button key={item} onClick={() => setSecurement(item)} size="sm" variant={securement === item ? "default" : "outline"}>{item}</Button>)}</div></div>
+              ) : (
+                <label className={cn("space-y-1 text-sm", field === "Notes" ? "md:col-span-2" : undefined)} key={field}><span className="font-medium text-foreground">{field}</span><Input placeholder={field === "Insertion Date & Time" ? "Today 18:00" : field} /></label>
+              )
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+      <div className="sticky bottom-0 z-20 -mx-4 mt-4 border-t border-border bg-background/92 px-4 py-3 backdrop-blur md:-mx-6 md:px-6">
+        <div className="flex justify-end gap-2"><Button asChild variant="outline"><Link href="/icu-monitoring/lines-devices">Cancel</Link></Button><Button onClick={() => { toast.success(`${selectedType.fullName} entry saved`); router.push("/icu-monitoring/lines-devices"); }}><Save className="h-4 w-4" />Save</Button></div>
+      </div>
+      <MobileIcuBottomNav dashboardHref="/icu-monitoring/lines-devices" alertsHref="/icu-monitoring/lines-devices/alerts" />
+    </PageMotion>
+  );
+}
+
+function getLineDevice(id: string) {
+  return lineDeviceRecords.find((device) => device.id === id) ?? lineDeviceRecords[0];
+}
+
+export function LineDeviceDetailPage({ id }: { id: string }) {
+  const device = getLineDevice(id);
+  const lumenColumns = React.useMemo<ColumnDef<(typeof lumenStatusRecords)[number]>[]>(() => [
+    { header: "Lumen color", accessorKey: "color" },
+    { header: "Patency", accessorKey: "patency" },
+    { header: "Blood return", accessorKey: "bloodReturn" },
+    { header: "Last flushed time", accessorKey: "lastFlushed" },
+  ], []);
+  return (
+    <PageMotion>
+      <HeaderBand title={device.name} subtitle={`${device.insertionDetails} • ${device.site} • ${device.metadata}`} actions={<><BackButton href="/icu-monitoring/lines-devices" /><Button asChild><Link href={`/icu-monitoring/lines-devices/${device.id}/history`}>View All Entries</Link></Button></>} />
+      <Tabs defaultValue="overview">
+        <TabsList><TabsTrigger value="overview">Overview</TabsTrigger><TabsTrigger value="lumen">Lumen Status</TabsTrigger><TabsTrigger value="history">History</TabsTrigger></TabsList>
+        <TabsContent value="overview" className="space-y-4">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">{[["Inserted on", device.insertionDetails], ["Site", device.site], ["Lumen type", device.type === "CVC" ? "Triple lumen" : "Standard"], ["Dressing type", device.metadata]].map(([label, value]) => <Card key={label}><CardContent className="p-4"><div className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{label}</div><div className="mt-2 text-sm font-semibold text-foreground">{value}</div></CardContent></Card>)}</div>
+          <Card><CardHeader><div><CardTitle>Output / Usage Trend</CardTitle><CardDescription>Total intake, output, and hourly fluctuations</CardDescription></div></CardHeader><CardContent className="h-72 p-4"><ClientChart><ResponsiveContainer height="100%" width="100%"><LineChart data={lineDeviceTrendData}><CartesianGrid stroke="#eceaf2" /><XAxis dataKey="time" tick={{ fontSize: 12 }} /><YAxis tick={{ fontSize: 12 }} /><Tooltip /><Line dataKey="usage" dot={false} stroke="#7367f0" strokeWidth={3} /><Line dataKey="intake" dot={false} stroke="#22a06b" strokeWidth={3} /><Line dataKey="output" dot={false} stroke="#5b8def" strokeWidth={3} /></LineChart></ResponsiveContainer></ClientChart></CardContent></Card>
+        </TabsContent>
+        <TabsContent value="lumen"><DataTable data={lumenStatusRecords} columns={lumenColumns} /></TabsContent>
+        <TabsContent value="history"><LineDeviceHistorySummary id={device.id} /></TabsContent>
+      </Tabs>
+      <div className="grid gap-4 xl:grid-cols-[1fr_340px]"><LineDeviceInsightCard /><LineDeviceQuickActions id={device.id} /></div>
+      <MobileIcuBottomNav dashboardHref="/icu-monitoring/lines-devices" alertsHref="/icu-monitoring/lines-devices/alerts" />
+    </PageMotion>
+  );
+}
+
+function LineDeviceHistorySummary({ id }: { id: string }) {
+  return <Button asChild variant="outline"><Link href={`/icu-monitoring/lines-devices/${id}/history`}>Open detailed timeline</Link></Button>;
+}
+
+export function LineDeviceHistoryPage({ id }: { id: string }) {
+  const device = getLineDevice(id);
+  return (
+    <PageMotion>
+      <HeaderBand title={`${device.name} History`} subtitle="Detailed line/device entry timeline and summary." actions={<BackButton href={`/icu-monitoring/lines-devices/${device.id}`} />} />
+      <Tabs defaultValue="entries">
+        <TabsList><TabsTrigger value="entries">Entries</TabsTrigger><TabsTrigger value="summary">Summary</TabsTrigger></TabsList>
+        <TabsContent value="entries" className="space-y-3">
+          {lineDeviceEntries.map((entry) => <Card className="transition hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(39,37,54,0.08)]" key={entry.id}><CardContent className="grid gap-3 p-4 md:grid-cols-5"><div><div className="text-xs text-muted-foreground">Timestamp</div><div className="font-semibold text-foreground">{entry.timestamp}</div></div><div><div className="text-xs text-muted-foreground">MAP</div><div className="font-semibold text-foreground">{entry.map}</div></div><div><div className="text-xs text-muted-foreground">Waveform</div><div className="font-semibold text-foreground">{entry.waveform}</div></div><div><div className="text-xs text-muted-foreground">Zeroed status</div><div className="font-semibold text-foreground">{entry.zeroedStatus}</div></div><div><div className="text-xs text-muted-foreground">Site condition</div><div className="font-semibold text-foreground">{entry.siteCondition}</div></div></CardContent></Card>)}
+          <div className="flex justify-center"><Button variant="outline" onClick={() => toast.info("More line/device entries will load when API is connected")}>View All Entries</Button></div>
+        </TabsContent>
+        <TabsContent value="summary"><LineDeviceInsightCard /></TabsContent>
+      </Tabs>
+      <MobileIcuBottomNav dashboardHref="/icu-monitoring/lines-devices" alertsHref="/icu-monitoring/lines-devices/alerts" />
+    </PageMotion>
+  );
+}
+
+function LineAlertCard({ alert }: { alert: LineDeviceAlert }) {
+  const Icon = alert.severity === "Critical" ? AlertTriangle : alert.severity === "Monitor" ? MoreHorizontal : CheckCircle2;
+  return (
+    <Card className="transition hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(39,37,54,0.08)]"><CardContent className="flex items-start gap-3 p-4"><div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", alert.severity === "Critical" ? "bg-critical/10 text-critical" : alert.severity === "Monitor" ? "bg-warning/10 text-warning" : "bg-success/10 text-success")}><Icon className="h-5 w-5" /></div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><div className="font-bold text-foreground">{alert.title}</div><Badge tone={lineSeverityTone(alert.severity)}>{alert.severity}</Badge></div><div className="mt-1 text-sm text-muted-foreground">{alert.description}</div><div className="mt-2 text-xs text-muted-foreground">{alert.timestamp}</div></div></CardContent></Card>
+  );
+}
+
+export function LineDeviceAlertsPage() {
+  const groups = [
+    { id: "all", label: "All", rows: lineDeviceAlerts },
+    { id: "high", label: "High Priority", rows: lineDeviceAlerts.filter((alert) => alert.severity === "Critical") },
+    { id: "info", label: "Info", rows: lineDeviceAlerts.filter((alert) => alert.severity !== "Critical") },
+  ];
+  return (
+    <PageMotion>
+      <HeaderBand title="Lines & Devices Alerts" subtitle="Critical-care alert center for access lines, catheters, dressing integrity, and flow issues." actions={<BackButton href="/icu-monitoring/lines-devices" />} />
+      <Tabs defaultValue="all">
+        <TabsList>{groups.map((group) => <TabsTrigger key={group.id} value={group.id}>{group.label}</TabsTrigger>)}</TabsList>
+        {groups.map((group) => <TabsContent className="space-y-3" key={group.id} value={group.id}>{group.rows.map((alert) => <LineAlertCard alert={alert} key={alert.id} />)}</TabsContent>)}
+      </Tabs>
+      <LineDeviceReferenceCards />
+      <MobileIcuBottomNav dashboardHref="/icu-monitoring/lines-devices" alertsHref="/icu-monitoring/lines-devices/alerts" />
     </PageMotion>
   );
 }

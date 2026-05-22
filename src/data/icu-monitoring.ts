@@ -45,7 +45,7 @@ export const icuModules = [
   { label: "Respiratory", route: "/icu-monitoring", ready: false },
   { label: "Abdominal", route: "/icu-monitoring/abdominal", ready: true },
   { label: "Drains & Tubes", route: "/icu-monitoring/drains", ready: true },
-  { label: "Lines & Devices", route: "/icu-monitoring", ready: false },
+  { label: "Lines & Devices", route: "/icu-monitoring/lines-devices", ready: true },
   { label: "Neuro", route: "/icu-monitoring", ready: false },
   { label: "Renal", route: "/icu-monitoring", ready: false },
 ];
@@ -324,4 +324,138 @@ export const drainApiEndpoints = {
   entries: "POST /api/v1/icu/drains/:id/entries",
   history: "GET /api/v1/icu/drains/:id/history",
   alerts: "GET /api/v1/icu/drains/alerts",
+};
+
+export type LineDeviceStatus = "Active" | "Watch" | "Critical" | "Discontinued";
+export type LineDeviceSeverity = "Critical" | "Monitor" | "Stable";
+
+export type LineDeviceRecord = {
+  id: string;
+  type: string;
+  name: string;
+  insertionDetails: string;
+  site: string;
+  metadata: string;
+  status: LineDeviceStatus;
+  icon: LucideIcon;
+  color: string;
+  sparkline: number[];
+};
+
+export type LumenStatusRecord = {
+  color: string;
+  patency: string;
+  bloodReturn: string;
+  lastFlushed: string;
+};
+
+export type LineDeviceEntry = {
+  id: string;
+  timestamp: string;
+  map: number;
+  waveform: string;
+  zeroedStatus: string;
+  siteCondition: string;
+};
+
+export type LineDeviceAlert = {
+  id: string;
+  severity: LineDeviceSeverity;
+  title: string;
+  description: string;
+  timestamp: string;
+};
+
+export const lineDeviceTypes = [
+  { id: "cvc", label: "CVC", fullName: "CVC (Central Venous Catheter)", icon: Stethoscope, description: "Central line lumen and blood return monitoring" },
+  { id: "arterial-line", label: "Arterial Line", fullName: "Arterial Line", icon: Activity, description: "Waveform, zeroing, and dressing surveillance" },
+  { id: "dialysis-line", label: "Dialysis Line", fullName: "Dialysis Line", icon: Gauge, description: "Arterial/venous lumen and flow safety" },
+  { id: "foley-catheter", label: "Foley Catheter", fullName: "Foley Catheter", icon: Droplets, description: "Urine output, color, and drainage state" },
+  { id: "ecmo-catheter", label: "ECMO Catheter", fullName: "ECMO Catheter", icon: HeartPulse, description: "Cannula, flow, dressing, anticoagulation" },
+  { id: "picc-line", label: "PICC Line", fullName: "PICC Line", icon: Syringe, description: "PICC site, patency, and securement" },
+  { id: "midline-catheter", label: "Midline Catheter", fullName: "Midline Catheter", icon: Syringe, description: "Midline access and dressing checks" },
+  { id: "peripheral-iv-line", label: "Peripheral IV Line", fullName: "Peripheral IV Line", icon: Syringe, description: "Peripheral access monitoring" },
+  { id: "chest-tube", label: "Chest Tube", fullName: "Chest Tube", icon: Waves, description: "Chest tube placement and drainage context" },
+];
+
+export const lineDeviceRecords: LineDeviceRecord[] = [
+  { id: "line-cvc-01", type: "CVC", name: "CVC (Central Venous Catheter)", insertionDetails: "Inserted Today 06:30 • Day 1", site: "Right IJ", metadata: "Triple lumen • Dressing transparent", status: "Watch", icon: Stethoscope, color: "#d97706", sparkline: [72, 73, 72, 74, 75, 74, 76] },
+  { id: "line-art-01", type: "Arterial Line", name: "Arterial Line", insertionDetails: "Inserted Yesterday 21:10 • Day 2", site: "Left radial", metadata: "Waveform crisp • Zeroed 16:00", status: "Active", icon: Activity, color: "#16a34a", sparkline: [88, 90, 91, 90, 92, 91, 93] },
+  { id: "line-dialysis-01", type: "Dialysis Line", name: "Dialysis Line", insertionDetails: "Inserted 2 days ago • Day 3", site: "Right femoral", metadata: "Temporary catheter • Heparin locked", status: "Critical", icon: Gauge, color: "#dc2626", sparkline: [220, 210, 205, 196, 188, 178, 170] },
+  { id: "line-foley-01", type: "Foley Catheter", name: "Foley Catheter", insertionDetails: "Inserted Today 08:00 • Day 1", site: "Urethral", metadata: "16 Fr • Dependent drainage", status: "Watch", icon: Droplets, color: "#d97706", sparkline: [46, 42, 38, 34, 31, 28, 25] },
+  { id: "line-ecmo-01", type: "ECMO Catheter", name: "ECMO Catheter", insertionDetails: "Inserted 3 days ago • Day 4", site: "Femoral VA", metadata: "Flow 3.8 L/min • Dressing intact", status: "Active", icon: HeartPulse, color: "#16a34a", sparkline: [3.6, 3.7, 3.8, 3.8, 3.9, 3.8, 3.8] },
+  { id: "line-picc-01", type: "PICC Line", name: "PICC Line", insertionDetails: "Inserted 5 days ago • Day 6", site: "Right basilic", metadata: "Single lumen • Securement intact", status: "Active", icon: Syringe, color: "#16a34a", sparkline: [1, 1, 1, 1, 1, 1, 1] },
+  { id: "line-mid-01", type: "Midline Catheter", name: "Midline Catheter", insertionDetails: "Inserted 4 days ago • Day 5", site: "Left cephalic", metadata: "Dressing clean • Flush due", status: "Active", icon: Syringe, color: "#16a34a", sparkline: [1, 1, 1, 1, 1, 1, 1] },
+  { id: "line-piv-01", type: "Peripheral IV Line", name: "Peripheral IV Line", insertionDetails: "Inserted Today 12:20 • Day 1", site: "Left hand", metadata: "22G • Mild redness watch", status: "Watch", icon: Syringe, color: "#d97706", sparkline: [1, 1, 2, 2, 2, 3, 3] },
+  { id: "line-chest-01", type: "Chest Tube", name: "Chest Tube", insertionDetails: "Inserted Yesterday 09:45 • Day 2", site: "Right pleural", metadata: "Water seal • No air leak", status: "Active", icon: Waves, color: "#16a34a", sparkline: [26, 24, 23, 21, 20, 18, 18] },
+];
+
+export const lumenStatusRecords: LumenStatusRecord[] = [
+  { color: "Blue", patency: "Patent", bloodReturn: "Yes", lastFlushed: "Today 16:00" },
+  { color: "Brown", patency: "Flushed", bloodReturn: "Yes", lastFlushed: "Today 14:00" },
+  { color: "White", patency: "Blocked", bloodReturn: "No", lastFlushed: "Today 10:00" },
+];
+
+export const lineDeviceEntries: LineDeviceEntry[] = [
+  { id: "ld-entry-001", timestamp: "Today 18:00", map: 93, waveform: "Crisp", zeroedStatus: "Zeroed", siteCondition: "Clean" },
+  { id: "ld-entry-002", timestamp: "Today 16:00", map: 91, waveform: "Crisp", zeroedStatus: "Zeroed", siteCondition: "Clean" },
+  { id: "ld-entry-003", timestamp: "Today 14:00", map: 90, waveform: "Mildly dampened", zeroedStatus: "Zeroed", siteCondition: "Clean" },
+  { id: "ld-entry-004", timestamp: "Today 12:00", map: 92, waveform: "Crisp", zeroedStatus: "Due", siteCondition: "Redness" },
+  { id: "ld-entry-005", timestamp: "Today 10:00", map: 88, waveform: "Dampened", zeroedStatus: "Zeroed", siteCondition: "Clean" },
+];
+
+export const lineDeviceTrendData = [
+  { time: "06:00", usage: 72, intake: 120, output: 86 },
+  { time: "08:00", usage: 74, intake: 160, output: 94 },
+  { time: "10:00", usage: 70, intake: 180, output: 88 },
+  { time: "12:00", usage: 76, intake: 210, output: 102 },
+  { time: "14:00", usage: 82, intake: 240, output: 118 },
+  { time: "16:00", usage: 78, intake: 260, output: 125 },
+  { time: "18:00", usage: 84, intake: 290, output: 132 },
+];
+
+export const lineDeviceAlerts: LineDeviceAlert[] = [
+  { id: "ld-alert-001", severity: "Critical", title: "No blood return", description: "White lumen has no blood return and is marked blocked.", timestamp: "8 min ago" },
+  { id: "ld-alert-002", severity: "Critical", title: "Low flow dialysis line", description: "Dialysis flow reduced below ICU threshold.", timestamp: "18 min ago" },
+  { id: "ld-alert-003", severity: "Monitor", title: "High arterial pressure", description: "Arterial pressure trend requires reassessment.", timestamp: "32 min ago" },
+  { id: "ld-alert-004", severity: "Monitor", title: "Low urine output", description: "Foley catheter urine output below configured threshold.", timestamp: "45 min ago" },
+  { id: "ld-alert-005", severity: "Monitor", title: "Dressing leak", description: "Peripheral IV dressing requires review.", timestamp: "1 hr ago" },
+  { id: "ld-alert-006", severity: "Stable", title: "Site infection risk stable", description: "CVC site remains clean after latest dressing review.", timestamp: "2 hr ago" },
+];
+
+export const lineDeviceInsights = [
+  "Arterial line waveform stable.",
+  "No blood return detected in white lumen.",
+  "Dialysis flow reduced by 18%.",
+  "Urine output below ICU threshold.",
+  "Dressing integrity compromised.",
+];
+
+export const lineDeviceAlertTriggers = [
+  "No blood return / not flushing",
+  "Site redness / infection",
+  "Bleeding / oozing",
+  "High pressure",
+  "Low flow",
+  "Low urine output",
+  "Dressing leak",
+];
+
+export const lineDeviceCommonFields = [
+  "Insertion Date & Time",
+  "Site",
+  "Side",
+  "Dressing Type",
+  "Dressing Date",
+  "Securement",
+  "Notes",
+];
+
+export const lineDeviceApiEndpoints = {
+  list: "GET /api/v1/icu/lines-devices",
+  create: "POST /api/v1/icu/lines-devices",
+  detail: "GET /api/v1/icu/lines-devices/:id",
+  entries: "POST /api/v1/icu/lines-devices/:id/entries",
+  history: "GET /api/v1/icu/lines-devices/:id/history",
+  alerts: "GET /api/v1/icu/lines-devices/alerts",
 };
