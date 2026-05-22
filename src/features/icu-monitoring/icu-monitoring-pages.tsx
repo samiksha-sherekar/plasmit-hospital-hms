@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import type { ColumnDef } from "@tanstack/react-table";
-import { ArrowLeft, Brain, ClipboardList, Clock3, Droplets, Gauge, HeartPulse, Plus, Save, Stethoscope, TrendingUp, Waves } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Brain, CheckCircle2, ClipboardList, Clock3, Droplets, Filter, Gauge, HeartPulse, MoreHorizontal, Pencil, Plus, Save, Search, Stethoscope, Trash2, TrendingUp, Waves } from "lucide-react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { toast } from "sonner";
 
@@ -26,6 +26,12 @@ import {
   abdominalMetrics,
   abdominalPatient,
   abdominalTrendData,
+  drainAlertTriggers,
+  drainAlerts,
+  drainEntries,
+  drainInsights,
+  drainRecords,
+  drainTypes,
   cvsInsights,
   cvsMetrics,
   cvsParameterCards,
@@ -40,10 +46,15 @@ import {
   type CvsParameterId,
   type CvsRecord,
   type CvsStatus,
+  type DrainAlert,
+  type DrainRecord,
+  type DrainSeverity,
+  type DrainStatus,
 } from "@/data/icu-monitoring";
 import { cn } from "@/lib/utils";
 
 const moduleIcons = [HeartPulse, Stethoscope, Gauge, Waves, Droplets, Brain, ClipboardList];
+const conditionOptions = ["Clean", "Redness", "Swelling", "Infection"];
 
 function PageMotion({ children }: { children: React.ReactNode }) {
   return <motion.div animate={{ opacity: 1, y: 0 }} className="space-y-4" initial={{ opacity: 0, y: 8 }} transition={{ duration: 0.22, ease: "easeOut" }}>{children}</motion.div>;
@@ -69,6 +80,14 @@ function IcuModuleTabs({ active = "cvs" }: { active?: string }) {
 
 function statusTone(status: CvsStatus) {
   return status === "Stable" ? "success" : status === "Watch" ? "warning" : "critical";
+}
+
+function drainStatusTone(status: DrainStatus) {
+  return status === "Normal" ? "success" : status === "Monitor" ? "warning" : status === "High Output" ? "danger" : "critical";
+}
+
+function severityTone(severity: DrainSeverity) {
+  return severity === "Stable" ? "success" : severity === "Monitor" ? "warning" : "critical";
 }
 
 function Sparkline({ values, color }: { values: number[]; color: string }) {
@@ -585,6 +604,307 @@ export function AbdominalRecordsPage() {
         <ClinicalNotesCard />
         <ClinicalInsightCard />
       </div>
+    </PageMotion>
+  );
+}
+
+function MobileIcuBottomNav() {
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white/95 px-2 py-2 shadow-[0_-8px_24px_rgba(39,37,54,0.08)] backdrop-blur lg:hidden">
+      <div className="grid grid-cols-5 gap-1 text-[11px] font-semibold text-muted-foreground">
+        {["Dashboard", "Patients", "Orders", "Alerts", "More"].map((item) => (
+          <Link className={cn("rounded-lg px-1 py-2 text-center", item === "Alerts" && "bg-primary-soft text-primary")} href={item === "Alerts" ? "/icu-monitoring/drains/alerts" : "/icu-monitoring/drains"} key={item}>{item}</Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DrainLegendCard() {
+  return (
+    <Card>
+      <CardHeader><div><CardTitle>Legend</CardTitle><CardDescription>ICU alert state</CardDescription></div></CardHeader>
+      <CardContent className="space-y-2 text-sm">
+        {[["bg-critical", "Red dot = High Risk / Critical"], ["bg-warning", "Amber dot = Monitor Closely"], ["bg-success", "Green dot = Normal"]].map(([color, label]) => (
+          <div className="flex items-center gap-2" key={label}><span className={cn("h-2.5 w-2.5 rounded-full", color)} /><span className="text-muted-foreground">{label}</span></div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+function DrainTriggersCard() {
+  return (
+    <Card>
+      <CardHeader><div><CardTitle>Alert Triggers</CardTitle><CardDescription>Reference rules for static preview</CardDescription></div></CardHeader>
+      <CardContent className="space-y-2">
+        {drainAlertTriggers.map((trigger) => <div className="rounded-lg border border-border bg-[#f8f9fc] px-3 py-2 text-sm text-foreground" key={trigger}>{trigger}</div>)}
+      </CardContent>
+    </Card>
+  );
+}
+
+function DrainIconLegend() {
+  return (
+    <Card>
+      <CardHeader><div><CardTitle>Drain Icon Reference</CardTitle><CardDescription>Bedside drain and tube types</CardDescription></div></CardHeader>
+      <CardContent className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+        {drainTypes.map((item) => {
+          const Icon = item.icon;
+          return <div className="flex items-center gap-2 rounded-xl border border-border bg-white p-3 text-sm font-semibold text-foreground" key={item.id}><Icon className="h-4 w-4 text-primary" />{item.label}</div>;
+        })}
+      </CardContent>
+    </Card>
+  );
+}
+
+function DrainInsightCard() {
+  return (
+    <Card className="border-primary/20 bg-gradient-to-br from-white to-[#f5f7ff]">
+      <CardHeader><div><CardTitle>Clinical Insight Engine</CardTitle><CardDescription>Static ICU monitoring intelligence</CardDescription></div></CardHeader>
+      <CardContent className="space-y-3">{drainInsights.map((insight) => <div className="rounded-xl border border-border bg-white p-3 text-sm font-medium text-foreground shadow-sm" key={insight}>{insight}</div>)}</CardContent>
+    </Card>
+  );
+}
+
+function QuickActionsPanel({ drainId }: { drainId?: string }) {
+  const base = drainId ? `/icu-monitoring/drains/${drainId}` : "/icu-monitoring/drains/drain-peri-01";
+  return (
+    <Card>
+      <CardHeader><div><CardTitle>Quick Actions</CardTitle><CardDescription>Bedside workflow shortcuts</CardDescription></div></CardHeader>
+      <CardContent className="grid gap-2">
+        <Button asChild><Link href="/icu-monitoring/drains/add"><Plus className="h-4 w-4" />Add New Entry</Link></Button>
+        <Button asChild variant="outline"><Link href={base}><TrendingUp className="h-4 w-4" />View Trend</Link></Button>
+        <Button variant="outline" onClick={() => toast.info("Drain detail editing placeholder")}><Pencil className="h-4 w-4" />Edit Drain Details</Button>
+        <Button variant="danger" onClick={() => toast.warning("Discontinue drain workflow staged")}><Trash2 className="h-4 w-4" />Discontinue Drain</Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+function DrainListCard({ drain }: { drain: DrainRecord }) {
+  const Icon = drain.icon;
+  return (
+    <Link className="group block" href={`/icu-monitoring/drains/${drain.id}`}>
+      <Card className="transition duration-200 hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(39,37,54,0.10)]">
+        <CardContent className="grid gap-3 p-4 md:grid-cols-[auto_1fr_auto] md:items-center">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-soft text-primary"><Icon className="h-5 w-5" /></div>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="font-bold text-foreground">{drain.name}</div>
+              <Badge tone={drainStatusTone(drain.status)}>{drain.status}</Badge>
+            </div>
+            <div className="mt-1 text-sm text-muted-foreground">{drain.outputColor} • {drain.metadata}</div>
+            <div className="mt-1 text-xs text-muted-foreground">Updated {drain.updatedAt}</div>
+          </div>
+          <div className="flex items-end justify-between gap-3 md:justify-end">
+            <div className="text-right">
+              <div className="text-2xl font-bold text-foreground">{drain.outputAmount}</div>
+              <div className="text-xs font-semibold text-muted-foreground">{drain.outputUnit}</div>
+            </div>
+            <Sparkline color={drain.color} values={drain.sparkline} />
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
+
+export function DrainsOverviewPage() {
+  const [search, setSearch] = React.useState("");
+  const rows = drainRecords.filter((drain) => `${drain.name} ${drain.type} ${drain.outputColor} ${drain.metadata}`.toLowerCase().includes(search.toLowerCase()));
+  return (
+    <PageMotion>
+      <HeaderBand title="Drains & Tubes" subtitle="ICU bedside drain and tube monitoring with output state, site condition, trends, and alerts." actions={<><BackButton href="/icu-monitoring" /><Button asChild><Link href="/icu-monitoring/drains/add"><Plus className="h-4 w-4" />Add New Drain / Tube</Link></Button></>} />
+      <IcuModuleTabs active="drains-and-tubes" />
+      <Card className="sticky top-20 z-20">
+        <CardContent className="flex flex-col gap-3 p-3 md:flex-row md:items-center">
+          <Filter className="hidden h-4 w-4 text-muted-foreground md:block" />
+          <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-border bg-white px-3 shadow-sm">
+            <Search className="h-4 w-4 text-muted-foreground" />
+            <Input className="border-0 bg-transparent shadow-none focus-visible:ring-0" onChange={(event) => setSearch(event.target.value)} placeholder="Search drain, tube, output color, site..." value={search} />
+          </div>
+          <Button asChild variant="outline"><Link href="/icu-monitoring/drains/alerts"><AlertTriangle className="h-4 w-4" />Alerts</Link></Button>
+        </CardContent>
+      </Card>
+      <div className="grid gap-4 xl:grid-cols-[1fr_340px]">
+        <div className="space-y-3">
+          {rows.length ? rows.map((drain) => <DrainListCard drain={drain} key={drain.id} />) : <EmptyState icon={Search} title="No drain records found" description="Try another output color, drain type, or site keyword." />}
+        </div>
+        <div className="space-y-4">
+          <QuickActionsPanel />
+          <DrainLegendCard />
+          <DrainTriggersCard />
+        </div>
+      </div>
+      <DrainIconLegend />
+      <MobileIcuBottomNav />
+    </PageMotion>
+  );
+}
+
+const typeSpecificFields: Record<string, string[]> = {
+  "abdominal-drain": ["Drain Type", "Suction Yes/No", "Comments"],
+  "ng-tube": ["Purpose", "Residual Volume", "Tube Position Check", "Verified indicator"],
+  "flexi-seal": ["Stool Consistency", "Leakage Yes/No", "Skin Condition"],
+  ileostomy: ["Stoma Color", "Output Type", "Peristomal Skin"],
+  "peg-tube": ["Feeding Given Yes/No", "Residual Volume", "Blockage Yes/No"],
+  "icc-chest-drain": ["Air Leak Yes/No", "Fluid Type", "Bubbling Yes/No"],
+  "pericardial-drain": ["Output Volume", "Fluid Type", "Sudden Increase Yes/No"],
+  "vac-dressing": ["Pressure Setting", "Dressing Integrity", "Leak Present Yes/No", "Last Changed Date"],
+};
+
+export function DrainAddPage() {
+  const router = useRouter();
+  const [selected, setSelected] = React.useState(drainTypes[0].id);
+  const [condition, setCondition] = React.useState("Clean");
+  const selectedType = drainTypes.find((item) => item.id === selected) ?? drainTypes[0];
+  const fields = ["Site / Location", "Output Volume (ml)", "Output Color", "Odor", "Consistency", "Condition of Site", "Date & Time", "Notes", ...(typeSpecificFields[selected] ?? [])];
+  return (
+    <PageMotion>
+      <HeaderBand title="Add Drain / Tube" subtitle="Select drain type, document output and site condition, then save into the ICU mock workflow." actions={<BackButton href="/icu-monitoring/drains" />} />
+      <div className="grid gap-4 xl:grid-cols-[360px_1fr]">
+        <Card>
+          <CardHeader><div><CardTitle>Step 1: Drain type</CardTitle><CardDescription>Touch-friendly selection cards</CardDescription></div></CardHeader>
+          <CardContent className="grid gap-2">
+            {drainTypes.map((type) => {
+              const Icon = type.icon;
+              const active = selected === type.id;
+              return (
+                <button className={cn("flex items-start gap-3 rounded-xl border p-3 text-left transition hover:-translate-y-0.5", active ? "border-primary bg-primary-soft text-primary" : "border-border bg-white text-foreground")} key={type.id} onClick={() => setSelected(type.id)} type="button">
+                  <Icon className="mt-0.5 h-5 w-5 shrink-0" />
+                  <span><span className="block text-sm font-bold">{type.label}</span><span className="mt-0.5 block text-xs text-muted-foreground">{type.description}</span></span>
+                </button>
+              );
+            })}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><div><CardTitle>{selectedType.label} Entry</CardTitle><CardDescription>Generic drain form with type-specific ICU fields</CardDescription></div><Badge tone="info">Step 2</Badge></CardHeader>
+          <CardContent className="grid gap-3 md:grid-cols-2">
+            {fields.map((field) => (
+              field === "Condition of Site" ? (
+                <div className="space-y-2 md:col-span-2" key={field}>
+                  <div className="text-sm font-medium text-foreground">{field}</div>
+                  <div className="flex flex-wrap gap-2">{conditionOptions.map((item) => <Button key={item} onClick={() => setCondition(item)} size="sm" variant={condition === item ? "default" : "outline"}>{item}</Button>)}</div>
+                </div>
+              ) : (
+                <label className={cn("space-y-1 text-sm", field === "Notes" || field === "Comments" ? "md:col-span-2" : undefined)} key={field}>
+                  <span className="font-medium text-foreground">{field}</span>
+                  <Input placeholder={field === "Date & Time" ? "Today 18:00" : field} />
+                </label>
+              )
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+      <div className="sticky bottom-0 z-20 -mx-4 mt-4 border-t border-border bg-background/92 px-4 py-3 backdrop-blur md:-mx-6 md:px-6">
+        <div className="flex justify-end gap-2">
+          <Button asChild variant="outline"><Link href="/icu-monitoring/drains">Cancel</Link></Button>
+          <Button onClick={() => { toast.success(`${selectedType.label} entry saved`); router.push("/icu-monitoring/drains"); }}><Save className="h-4 w-4" />Save</Button>
+        </div>
+      </div>
+      <MobileIcuBottomNav />
+    </PageMotion>
+  );
+}
+
+function getDrain(id: string) {
+  return drainRecords.find((drain) => drain.id === id) ?? drainRecords[0];
+}
+
+export function DrainDetailPage({ id }: { id: string }) {
+  const drain = getDrain(id);
+  const columns = React.useMemo<ColumnDef<(typeof drainEntries)[number]>[]>(() => [
+    { header: "Time", accessorKey: "time" },
+    { header: "Output amount", cell: ({ row }) => `${row.original.volume} ml` },
+    { header: "Output color", accessorKey: "color" },
+    { header: "Consistency", accessorKey: "consistency" },
+    { header: "Site condition", accessorKey: "siteCondition" },
+  ], []);
+  return (
+    <PageMotion>
+      <HeaderBand title={drain.name} subtitle={`${drain.metadata} • Last updated ${drain.updatedAt}`} actions={<><BackButton href="/icu-monitoring/drains" /><Button asChild><Link href={`/icu-monitoring/drains/${drain.id}/history`}>View All Entries</Link></Button></>} />
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <Card><CardContent className="p-4"><div className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Total Output Today</div><div className="mt-2 text-3xl font-bold text-foreground">{drain.outputAmount * 3} ml</div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Average per hour</div><div className="mt-2 text-3xl font-bold text-foreground">{Math.round(drain.outputAmount / 4)} ml</div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Status</div><div className="mt-2"><Badge tone={drainStatusTone(drain.status)}>{drain.status}</Badge></div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Output color</div><div className="mt-2 text-xl font-bold text-foreground">{drain.outputColor}</div></CardContent></Card>
+      </div>
+      <div className="grid gap-4 xl:grid-cols-[1fr_340px]">
+        <Card>
+          <CardHeader><div><CardTitle>Hourly Output Trend</CardTitle><CardDescription>Output progression with ICU analytics visualization</CardDescription></div></CardHeader>
+          <CardContent className="h-72 p-4">
+            <ClientChart><ResponsiveContainer height="100%" width="100%"><LineChart data={drainEntries.slice().reverse()}><CartesianGrid stroke="#eceaf2" /><XAxis dataKey="time" tick={{ fontSize: 12 }} /><YAxis tick={{ fontSize: 12 }} /><Tooltip /><Line dataKey="volume" dot={{ r: 3 }} stroke={drain.color} strokeWidth={3} /></LineChart></ResponsiveContainer></ClientChart>
+          </CardContent>
+        </Card>
+        <div className="space-y-4"><QuickActionsPanel drainId={drain.id} /><DrainInsightCard /></div>
+      </div>
+      <DataTable data={drainEntries} columns={columns} />
+      <MobileIcuBottomNav />
+    </PageMotion>
+  );
+}
+
+export function DrainHistoryPage({ id }: { id: string }) {
+  const drain = getDrain(id);
+  return (
+    <PageMotion>
+      <HeaderBand title={`${drain.name} History`} subtitle="Detailed historical timeline and summary of drain entries." actions={<BackButton href={`/icu-monitoring/drains/${drain.id}`} />} />
+      <Tabs defaultValue="entries">
+        <TabsList><TabsTrigger value="entries">Entries</TabsTrigger><TabsTrigger value="summary">Summary</TabsTrigger></TabsList>
+        <TabsContent value="entries" className="space-y-3">
+          {drainEntries.map((entry) => (
+            <Card className="transition hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(39,37,54,0.08)]" key={entry.id}>
+              <CardContent className="grid gap-3 p-4 md:grid-cols-5">
+                <div><div className="text-xs text-muted-foreground">Time</div><div className="font-semibold text-foreground">{entry.time}</div></div>
+                <div><div className="text-xs text-muted-foreground">Volume</div><div className="font-semibold text-foreground">{entry.volume} ml</div></div>
+                <div><div className="text-xs text-muted-foreground">Color</div><div className="font-semibold text-foreground">{entry.color}</div></div>
+                <div><div className="text-xs text-muted-foreground">Consistency</div><div className="font-semibold text-foreground">{entry.consistency}</div></div>
+                <div><div className="text-xs text-muted-foreground">Site condition</div><div className="font-semibold text-foreground">{entry.siteCondition}</div></div>
+              </CardContent>
+            </Card>
+          ))}
+          <div className="flex justify-center"><Button variant="outline" onClick={() => toast.info("More static entries will load when API is connected")}>Load More</Button></div>
+        </TabsContent>
+        <TabsContent value="summary"><DrainInsightCard /></TabsContent>
+      </Tabs>
+      <MobileIcuBottomNav />
+    </PageMotion>
+  );
+}
+
+function AlertCard({ alert }: { alert: DrainAlert }) {
+  const Icon = alert.severity === "Critical" ? AlertTriangle : alert.severity === "Monitor" ? MoreHorizontal : CheckCircle2;
+  return (
+    <Card className="transition hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(39,37,54,0.08)]">
+      <CardContent className="flex items-start gap-3 p-4">
+        <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", alert.severity === "Critical" ? "bg-critical/10 text-critical" : alert.severity === "Monitor" ? "bg-warning/10 text-warning" : "bg-success/10 text-success")}><Icon className="h-5 w-5" /></div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2"><div className="font-bold text-foreground">{alert.title}</div><Badge tone={severityTone(alert.severity)}>{alert.severity}</Badge></div>
+          <div className="mt-1 text-sm text-muted-foreground">{alert.description}</div>
+          <div className="mt-2 text-xs text-muted-foreground">{alert.timestamp}</div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function DrainAlertsPage() {
+  const groups = [
+    { id: "all", label: "All", rows: drainAlerts },
+    { id: "high", label: "High Priority", rows: drainAlerts.filter((alert) => alert.severity === "Critical") },
+    { id: "info", label: "Informational", rows: drainAlerts.filter((alert) => alert.severity !== "Critical") },
+  ];
+  return (
+    <PageMotion>
+      <HeaderBand title="Drain Alerts" subtitle="ICU drain and tube alert center with high-priority clinical events." actions={<BackButton href="/icu-monitoring/drains" />} />
+      <Tabs defaultValue="all">
+        <TabsList>{groups.map((group) => <TabsTrigger key={group.id} value={group.id}>{group.label}</TabsTrigger>)}</TabsList>
+        {groups.map((group) => <TabsContent className="space-y-3" key={group.id} value={group.id}>{group.rows.map((alert) => <AlertCard alert={alert} key={alert.id} />)}</TabsContent>)}
+      </Tabs>
+      <div className="grid gap-4 xl:grid-cols-2"><DrainLegendCard /><DrainTriggersCard /></div>
+      <MobileIcuBottomNav />
     </PageMotion>
   );
 }

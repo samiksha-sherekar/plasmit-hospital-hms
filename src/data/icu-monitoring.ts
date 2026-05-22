@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Activity, Droplets, Gauge, HeartPulse, Stethoscope, Thermometer, Waves } from "lucide-react";
+import { Activity, Droplets, Gauge, HeartPulse, Pill, Stethoscope, Syringe, Thermometer, Waves } from "lucide-react";
 
 export type CvsStatus = "Stable" | "Watch" | "Critical";
 export type CvsParameterId = "heart-rate" | "temperature" | "bp-nibp" | "bp-arterial" | "cvp" | "pcwp";
@@ -44,8 +44,8 @@ export const icuModules = [
   { label: "CVS", route: "/icu-monitoring/cvs", ready: true },
   { label: "Respiratory", route: "/icu-monitoring", ready: false },
   { label: "Abdominal", route: "/icu-monitoring/abdominal", ready: true },
+  { label: "Drains & Tubes", route: "/icu-monitoring/drains", ready: true },
   { label: "Lines & Devices", route: "/icu-monitoring", ready: false },
-  { label: "Drains & Tubes", route: "/icu-monitoring", ready: false },
   { label: "Neuro", route: "/icu-monitoring", ready: false },
   { label: "Renal", route: "/icu-monitoring", ready: false },
 ];
@@ -223,4 +223,105 @@ export const abdominalApiEndpoints = {
   trends: "GET /api/v1/icu/abdominal/:patientId/trends",
   records: "GET /api/v1/icu/abdominal/:patientId/records",
   notes: "POST /api/v1/icu/abdominal/:patientId/notes",
+};
+
+export type DrainStatus = "Normal" | "Monitor" | "High Output" | "Critical";
+export type DrainSeverity = "Critical" | "Monitor" | "Stable";
+
+export type DrainRecord = {
+  id: string;
+  type: string;
+  name: string;
+  outputAmount: number;
+  outputUnit: string;
+  outputColor: string;
+  metadata: string;
+  updatedAt: string;
+  status: DrainStatus;
+  icon: LucideIcon;
+  color: string;
+  sparkline: number[];
+};
+
+export type DrainEntry = {
+  id: string;
+  time: string;
+  volume: number;
+  color: string;
+  consistency: string;
+  siteCondition: string;
+};
+
+export type DrainAlert = {
+  id: string;
+  severity: DrainSeverity;
+  title: string;
+  description: string;
+  timestamp: string;
+};
+
+export const drainTypes = [
+  { id: "abdominal-drain", label: "Abdominal Drain", icon: Droplets, description: "Surgical abdominal drain output and site review" },
+  { id: "ng-tube", label: "NG Tube", icon: Stethoscope, description: "Drainage, feeding, residual, and position checks" },
+  { id: "flexi-seal", label: "Flexi Seal", icon: Waves, description: "Stool output, leakage, and skin condition" },
+  { id: "ileostomy", label: "Ileostomy", icon: Activity, description: "Stoma color, output type, and peristomal skin" },
+  { id: "peg-tube", label: "PEG Tube", icon: Pill, description: "Feeding, residual, and blockage monitoring" },
+  { id: "icc-chest-drain", label: "ICC Chest Drain", icon: Gauge, description: "Air leak, bubbling, and fluid type" },
+  { id: "pericardial-drain", label: "Pericardial Drain", icon: HeartPulse, description: "Output volume and urgent increase review" },
+  { id: "vac-dressing", label: "VAC Dressing", icon: Syringe, description: "Pressure, dressing integrity, and leakage" },
+];
+
+export const drainRecords: DrainRecord[] = [
+  { id: "drain-abd-01", type: "Abdominal Drain", name: "Abdominal Drain", outputAmount: 180, outputUnit: "ml / 4 hrs", outputColor: "Serosanguinous", metadata: "RUQ site • Suction active", updatedAt: "10 min ago", status: "Monitor", icon: Droplets, color: "#d97706", sparkline: [28, 32, 36, 42, 48, 50, 54] },
+  { id: "drain-ng-01", type: "NG Tube", name: "NG Tube", outputAmount: 320, outputUnit: "ml / shift", outputColor: "Bilious", metadata: "Drainage • Position verified", updatedAt: "18 min ago", status: "High Output", icon: Stethoscope, color: "#dc2626", sparkline: [34, 42, 46, 51, 56, 60, 66] },
+  { id: "drain-flexi-01", type: "Flexi Seal", name: "Flexi Seal", outputAmount: 90, outputUnit: "ml / 4 hrs", outputColor: "Brown", metadata: "No leakage • Skin intact", updatedAt: "24 min ago", status: "Normal", icon: Waves, color: "#16a34a", sparkline: [14, 12, 13, 15, 14, 13, 12] },
+  { id: "drain-ileo-01", type: "Ileostomy", name: "Ileostomy", outputAmount: 210, outputUnit: "ml / shift", outputColor: "Green-brown", metadata: "Stoma pink • Peristomal dry", updatedAt: "31 min ago", status: "Monitor", icon: Activity, color: "#d97706", sparkline: [24, 26, 28, 30, 34, 33, 35] },
+  { id: "drain-peg-01", type: "PEG Tube", name: "PEG Tube", outputAmount: 35, outputUnit: "ml residual", outputColor: "Milky", metadata: "Feeding given • No blockage", updatedAt: "40 min ago", status: "Normal", icon: Pill, color: "#16a34a", sparkline: [8, 6, 7, 6, 5, 7, 6] },
+  { id: "drain-icc-01", type: "ICC Chest Drain", name: "ICC (Chest Drain)", outputAmount: 120, outputUnit: "ml / 4 hrs", outputColor: "Serous", metadata: "No air leak • Mild bubbling", updatedAt: "12 min ago", status: "Monitor", icon: Gauge, color: "#d97706", sparkline: [18, 20, 22, 21, 24, 25, 24] },
+  { id: "drain-peri-01", type: "Pericardial Drain", name: "Pericardial Drain", outputAmount: 70, outputUnit: "ml / hr", outputColor: "Blood stained", metadata: "Sudden increase flagged", updatedAt: "4 min ago", status: "Critical", icon: HeartPulse, color: "#dc2626", sparkline: [10, 12, 14, 18, 24, 42, 70] },
+  { id: "drain-vac-01", type: "VAC Dressing", name: "VAC Dressing", outputAmount: 160, outputUnit: "ml / shift", outputColor: "Serous", metadata: "125 mmHg • Dressing intact", updatedAt: "28 min ago", status: "Normal", icon: Syringe, color: "#16a34a", sparkline: [18, 19, 20, 21, 20, 22, 22] },
+  { id: "drain-foley-01", type: "Foley Catheter", name: "Foley Catheter", outputAmount: 540, outputUnit: "ml / shift", outputColor: "Clear yellow", metadata: "Dependent drainage • No kinks", updatedAt: "9 min ago", status: "Normal", icon: Droplets, color: "#16a34a", sparkline: [70, 72, 76, 74, 78, 80, 82] },
+];
+
+export const drainEntries: DrainEntry[] = [
+  { id: "entry-001", time: "18:00", volume: 70, color: "Blood stained", consistency: "Thin", siteCondition: "Redness" },
+  { id: "entry-002", time: "17:00", volume: 42, color: "Blood stained", consistency: "Thin", siteCondition: "Clean" },
+  { id: "entry-003", time: "16:00", volume: 24, color: "Serosanguinous", consistency: "Thin", siteCondition: "Clean" },
+  { id: "entry-004", time: "15:00", volume: 18, color: "Serous", consistency: "Watery", siteCondition: "Clean" },
+  { id: "entry-005", time: "14:00", volume: 14, color: "Serous", consistency: "Watery", siteCondition: "Clean" },
+  { id: "entry-006", time: "13:00", volume: 12, color: "Serous", consistency: "Watery", siteCondition: "Clean" },
+];
+
+export const drainAlerts: DrainAlert[] = [
+  { id: "alert-001", severity: "Critical", title: "Blood in pericardial drain", description: "Output changed to blood stained with sudden hourly increase.", timestamp: "4 min ago" },
+  { id: "alert-002", severity: "Critical", title: "High output detected", description: "NG Tube output increased beyond configured ICU threshold.", timestamp: "18 min ago" },
+  { id: "alert-003", severity: "Monitor", title: "Leakage reported", description: "Flexi Seal leakage was reported during nursing review.", timestamp: "42 min ago" },
+  { id: "alert-004", severity: "Monitor", title: "Stoma color change", description: "Ileostomy stoma color needs reassessment in next round.", timestamp: "1 hr ago" },
+  { id: "alert-005", severity: "Monitor", title: "Possible blockage", description: "PEG residual output reduced compared with previous checks.", timestamp: "2 hr ago" },
+  { id: "alert-006", severity: "Stable", title: "Dressing compromised ruled out", description: "VAC dressing integrity remains intact after review.", timestamp: "3 hr ago" },
+];
+
+export const drainInsights = [
+  "Drain output increased 22% in last 4 hours.",
+  "Possible blockage detected due to low output trend.",
+  "Site condition stable with no leakage.",
+  "Pericardial drain requires urgent review.",
+];
+
+export const drainAlertTriggers = [
+  "Sudden increase in output",
+  "Blood in drain",
+  "Foul smell",
+  "No output / possible blockage",
+  "Stoma color change",
+  "Leakage / dressing compromised",
+];
+
+export const drainApiEndpoints = {
+  list: "GET /api/v1/icu/drains",
+  create: "POST /api/v1/icu/drains",
+  detail: "GET /api/v1/icu/drains/:id",
+  entries: "POST /api/v1/icu/drains/:id/entries",
+  history: "GET /api/v1/icu/drains/:id/history",
+  alerts: "GET /api/v1/icu/drains/alerts",
 };
