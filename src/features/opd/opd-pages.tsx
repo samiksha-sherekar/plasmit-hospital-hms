@@ -107,7 +107,6 @@ export function ConsultationPage({ visitId }: { visitId: string }) {
           <div className="flex flex-wrap justify-end gap-2">
             <ClinicalPrintActions />
             <Button disabled={readOnly}>Save draft</Button>
-            <Button disabled={readOnly}>Complete consultation</Button>
           </div>
           <ClinicalPatientHeader patientId={consultation.patientId} token={mockOpdWorklist.find((item) => item.visitId === visitId)?.tokenNo} appointmentTime={mockOpdWorklist.find((item) => item.visitId === visitId)?.appointmentTime} consultation={consultation} />
           <VisitContext consultation={consultation} />
