@@ -20,7 +20,6 @@ import { ConfirmDrawer, DetailRow, FilterBar, NativeSelect, StickyActionBar } fr
 import {
   AppointmentDetailDrawer,
   AppointmentPatientStrip,
-  ConflictPanel,
   DelayBadge,
   OperationalStatus,
   PatientMini,
@@ -111,7 +110,6 @@ export function AppointmentBookingPage() {
           <div className="flex justify-end gap-2"><Button variant="outline" asChild><Link href="/patients/register">Register new patient</Link></Button></div>
           <Tabs defaultValue="patient" className="space-y-4">
             <TabsList><TabsTrigger value="patient">Patient</TabsTrigger><TabsTrigger value="visit">Visit details</TabsTrigger><TabsTrigger value="slot">Doctor & slot</TabsTrigger><TabsTrigger value="confirm">Confirmation</TabsTrigger></TabsList>
-            <ConflictPanel />
             <TabsContent value="patient" className="grid gap-4 xl:grid-cols-[1fr_380px]">
               <Card><CardContent className="space-y-3 p-4"><label className="space-y-1 text-sm"><span className="font-medium">Search/select patient</span><select className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm" value={patientId} onChange={(e) => setPatientId(e.target.value)}>{mockPatients.map((p) => <option key={p.id} value={p.id}>{p.firstName} {p.lastName} • {p.uhid}</option>)}</select></label><Button variant="outline" asChild><Link href="/patients/emergency-register">Emergency / unknown shortcut</Link></Button></CardContent></Card>
               <AppointmentPatientStrip patientId={patientId} />

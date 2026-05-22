@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, CalendarClock, LockKeyhole, Printer, UserRound } from "lucide-react";
+import { CalendarClock, LockKeyhole, Printer, UserRound } from "lucide-react";
 
-import { AlertBanner } from "@/components/ui/alert-banner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -182,14 +181,6 @@ export function PrintAction({ label = "Print" }: { label?: string }) {
       <Printer className="h-4 w-4" />
       {label}
     </Button>
-  );
-}
-
-export function ConflictPanel() {
-  return (
-    <AlertBanner icon={AlertTriangle} tone="warning" title="Operational conflict checks">
-      Same-day appointment, booked slot, teleconsultation consent, room capacity, active queue entry, and duplicate patient warnings are shown as static placeholders before save.
-    </AlertBanner>
   );
 }
 
