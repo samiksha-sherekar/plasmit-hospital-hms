@@ -5,18 +5,18 @@ import * as Dialog from "@radix-ui/react-dialog";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Check, ChevronDown, Menu, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useRole } from "@/components/providers/role-provider";
-import { RoleSwitcher } from "@/components/shell/role-switcher";
 import { navigationItems } from "@/data/navigation";
 import { cn } from "@/lib/utils";
 
 export function MobileNavigation() {
   const [open, setOpen] = useState(false);
+  const [roleOpen, setRoleOpen] = useState(false);
   const pathname = usePathname();
-  const { role } = useRole();
+  const { role, roles, setRole } = useRole();
   const visibleItems = navigationItems.filter((item) => item.allowedRoles.includes(role));
 
   return (
@@ -28,7 +28,7 @@ export function MobileNavigation() {
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[80] bg-black/35" />
-        <Dialog.Content className="fixed left-0 top-0 z-[90] flex h-[100dvh] max-h-[100dvh] w-[min(88vw,360px)] flex-col overflow-hidden overscroll-none border-r border-border bg-sidebar text-sidebar-foreground shadow-soft outline-none">
+        <Dialog.Content className="fixed left-0 top-0 z-[90] flex h-[100dvh] max-h-[100dvh] w-[min(88vw,360px)] flex-col overflow-hidden overscroll-none border-r border-border bg-sidebar text-sidebar-foreground shadow-soft outline-none" onPointerDownOutside={() => setRoleOpen(false)}>
           <div className="flex h-20 shrink-0 items-center justify-between border-b border-border px-3">
             <Dialog.Title className="sr-only">Plasmit Hospital navigation</Dialog.Title>
             <Dialog.Description className="sr-only">Mobile navigation</Dialog.Description>
@@ -46,11 +46,39 @@ export function MobileNavigation() {
               </Button>
             </Dialog.Close>
           </div>
-          <div className="shrink-0 border-b border-border p-3">
+          <div className="relative shrink-0 border-b border-border p-3">
             <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-sidebar-foreground/55">Select role</div>
-            <RoleSwitcher className="w-full border-border bg-sidebar text-sidebar-foreground hover:bg-sidebar-active/10" portal={false} />
+            <button
+              className="flex h-10 w-full items-center justify-between gap-2 rounded-md border border-border bg-sidebar px-3 text-sm font-medium text-sidebar-foreground outline-none hover:bg-sidebar-active/10 focus-visible:ring-2 focus-visible:ring-ring/25"
+              onClick={() => setRoleOpen((value) => !value)}
+              type="button"
+            >
+              <span className="truncate">{role}</span>
+              <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition", roleOpen && "rotate-180")} />
+            </button>
+            {roleOpen ? (
+              <div className="absolute left-3 right-3 top-[calc(100%-10px)] z-[110] max-h-56 touch-pan-y overflow-y-auto rounded-md border border-border bg-white p-1 shadow-soft [-webkit-overflow-scrolling:touch]">
+                {roles.map((item) => (
+                  <button
+                    className={cn(
+                      "flex h-10 w-full items-center justify-between rounded px-3 text-left text-sm font-medium text-foreground outline-none hover:bg-surface-muted focus-visible:bg-surface-muted",
+                      item === role && "bg-primary/10 text-primary",
+                    )}
+                    key={item}
+                    onClick={() => {
+                      setRole(item);
+                      setRoleOpen(false);
+                    }}
+                    type="button"
+                  >
+                    <span className="truncate">{item}</span>
+                    {item === role ? <Check className="h-4 w-4 shrink-0" /> : null}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
-          <nav className="min-h-0 flex-1 touch-pan-y scroll-pb-6 overflow-y-auto overscroll-y-none p-2 pb-6 [scrollbar-gutter:stable] [-webkit-overflow-scrolling:touch]">
+          <nav className="min-h-0 flex-1 touch-pan-y scroll-pb-6 overflow-y-auto overscroll-y-none p-2 pb-6 [scrollbar-gutter:stable] [-webkit-overflow-scrolling:touch]" onScroll={() => setRoleOpen(false)}>
             {visibleItems.map((item) => {
               const Icon = item.icon;
               const active = pathname === item.route;
