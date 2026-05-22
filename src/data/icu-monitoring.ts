@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Activity, HeartPulse, Stethoscope, Thermometer, Waves } from "lucide-react";
+import { Activity, Droplets, Gauge, HeartPulse, Stethoscope, Thermometer, Waves } from "lucide-react";
 
 export type CvsStatus = "Stable" | "Watch" | "Critical";
 export type CvsParameterId = "heart-rate" | "temperature" | "bp-nibp" | "bp-arterial" | "cvp" | "pcwp";
@@ -43,7 +43,7 @@ export type CvsRecord = {
 export const icuModules = [
   { label: "CVS", route: "/icu-monitoring/cvs", ready: true },
   { label: "Respiratory", route: "/icu-monitoring", ready: false },
-  { label: "Abdominal", route: "/icu-monitoring", ready: false },
+  { label: "Abdominal", route: "/icu-monitoring/abdominal", ready: true },
   { label: "Lines & Devices", route: "/icu-monitoring", ready: false },
   { label: "Drains & Tubes", route: "/icu-monitoring", ready: false },
   { label: "Neuro", route: "/icu-monitoring", ready: false },
@@ -101,3 +101,126 @@ export const trendOptions = [
   { id: "cvp", label: "CVP", key: "cvp", unit: "mmHg", color: "#9b72f2" },
   { id: "pcwp", label: "PCWP", key: "pcwp", unit: "mmHg", color: "#2f80ed" },
 ] as const;
+
+export type AbdominalParameterId = "iap" | "ng-output" | "gastrostomy-output" | "abdominal-drains";
+
+export type AbdominalMetric = {
+  id: AbdominalParameterId;
+  label: string;
+  value: string;
+  unit: string;
+  updatedAt: string;
+  status: CvsStatus;
+  icon: LucideIcon;
+  color: string;
+  sparkline: number[];
+};
+
+export type AbdominalTrendPoint = {
+  time: string;
+  iap: number;
+  ngOutput: number;
+  gastrostomyOutput: number;
+  abdominalDrains: number;
+};
+
+export type AbdominalHourlyRecord = {
+  time: string;
+  value: number;
+  total12h: number;
+  total24h: number;
+};
+
+export type AbdominalComparisonRecord = {
+  parameter: string;
+  hourly: number[];
+  total12h: number;
+  total24h: number;
+};
+
+export const abdominalPatient = {
+  name: "Aarav Mehta",
+  mrn: "MRN-ICU-20491",
+  bed: "ICU-2 / Bed 08",
+  dateTime: "Today 18:00",
+};
+
+export const abdominalMetrics: AbdominalMetric[] = [
+  { id: "iap", label: "Intra-abdominal Pressure", value: "14", unit: "mmHg", updatedAt: "8 min ago", status: "Stable", icon: Gauge, color: "#7367f0", sparkline: [13, 14, 14, 13, 14, 15, 14] },
+  { id: "ng-output", label: "NG Output Total", value: "850", unit: "ml / 24 hrs", updatedAt: "15 min ago", status: "Watch", icon: Droplets, color: "#3baed8", sparkline: [22, 30, 34, 38, 42, 48, 52] },
+  { id: "gastrostomy-output", label: "Gastrostomy Output", value: "210", unit: "ml / 24 hrs", updatedAt: "22 min ago", status: "Stable", icon: Stethoscope, color: "#22a06b", sparkline: [8, 10, 9, 11, 10, 12, 13] },
+  { id: "abdominal-drains", label: "Abdominal Drains Output", value: "640", unit: "ml / 24 hrs", updatedAt: "18 min ago", status: "Watch", icon: Activity, color: "#5b8def", sparkline: [24, 26, 28, 31, 32, 35, 36] },
+];
+
+export const abdominalTrendData: AbdominalTrendPoint[] = [
+  { time: "06:00", iap: 13, ngOutput: 28, gastrostomyOutput: 8, abdominalDrains: 24 },
+  { time: "08:00", iap: 14, ngOutput: 34, gastrostomyOutput: 10, abdominalDrains: 26 },
+  { time: "10:00", iap: 14, ngOutput: 38, gastrostomyOutput: 9, abdominalDrains: 28 },
+  { time: "12:00", iap: 13, ngOutput: 42, gastrostomyOutput: 11, abdominalDrains: 31 },
+  { time: "14:00", iap: 14, ngOutput: 48, gastrostomyOutput: 10, abdominalDrains: 32 },
+  { time: "16:00", iap: 15, ngOutput: 50, gastrostomyOutput: 12, abdominalDrains: 35 },
+  { time: "18:00", iap: 14, ngOutput: 56, gastrostomyOutput: 13, abdominalDrains: 36 },
+];
+
+export const abdominalChartConfigs = [
+  { id: "iap", label: "IAP trend", latest: "14 mmHg", total: "Mean 14", dataKey: "iap", unit: "mmHg", color: "#7367f0" },
+  { id: "ng-output", label: "NG Output trend", latest: "56 ml/hr", total: "850 ml / 24 hrs", dataKey: "ngOutput", unit: "ml/hr", color: "#3baed8" },
+  { id: "gastrostomy-output", label: "Gastrostomy Output trend", latest: "13 ml/hr", total: "210 ml / 24 hrs", dataKey: "gastrostomyOutput", unit: "ml/hr", color: "#22a06b" },
+  { id: "abdominal-drains", label: "Abdominal Drains Output trend", latest: "36 ml/hr", total: "640 ml / 24 hrs", dataKey: "abdominalDrains", unit: "ml/hr", color: "#5b8def" },
+] as const;
+
+export const abdominalHourlyRecords: Record<AbdominalParameterId, AbdominalHourlyRecord[]> = {
+  iap: [
+    { time: "13:00", value: 14, total12h: 168, total24h: 334 },
+    { time: "14:00", value: 14, total12h: 168, total24h: 334 },
+    { time: "15:00", value: 15, total12h: 169, total24h: 334 },
+    { time: "16:00", value: 15, total12h: 169, total24h: 334 },
+    { time: "17:00", value: 14, total12h: 168, total24h: 334 },
+    { time: "18:00", value: 14, total12h: 168, total24h: 334 },
+  ],
+  "ng-output": [
+    { time: "13:00", value: 42, total12h: 490, total24h: 850 },
+    { time: "14:00", value: 48, total12h: 506, total24h: 850 },
+    { time: "15:00", value: 46, total12h: 520, total24h: 850 },
+    { time: "16:00", value: 50, total12h: 536, total24h: 850 },
+    { time: "17:00", value: 52, total12h: 552, total24h: 850 },
+    { time: "18:00", value: 56, total12h: 568, total24h: 850 },
+  ],
+  "gastrostomy-output": [
+    { time: "13:00", value: 11, total12h: 104, total24h: 210 },
+    { time: "14:00", value: 10, total12h: 106, total24h: 210 },
+    { time: "15:00", value: 12, total12h: 111, total24h: 210 },
+    { time: "16:00", value: 12, total12h: 115, total24h: 210 },
+    { time: "17:00", value: 13, total12h: 119, total24h: 210 },
+    { time: "18:00", value: 13, total12h: 123, total24h: 210 },
+  ],
+  "abdominal-drains": [
+    { time: "13:00", value: 31, total12h: 360, total24h: 640 },
+    { time: "14:00", value: 32, total12h: 374, total24h: 640 },
+    { time: "15:00", value: 34, total12h: 390, total24h: 640 },
+    { time: "16:00", value: 35, total12h: 404, total24h: 640 },
+    { time: "17:00", value: 35, total12h: 420, total24h: 640 },
+    { time: "18:00", value: 36, total12h: 436, total24h: 640 },
+  ],
+};
+
+export const abdominalComparisonRecords: AbdominalComparisonRecord[] = [
+  { parameter: "Intra-abdominal Pressure", hourly: [13, 14, 14, 13, 14, 15, 14, 14], total12h: 168, total24h: 334 },
+  { parameter: "NG Output", hourly: [28, 34, 38, 42, 48, 50, 52, 56], total12h: 568, total24h: 850 },
+  { parameter: "Gastrostomy Output", hourly: [8, 10, 9, 11, 10, 12, 13, 13], total12h: 123, total24h: 210 },
+  { parameter: "Abdominal Drains Output", hourly: [24, 26, 28, 31, 32, 35, 35, 36], total12h: 436, total24h: 640 },
+];
+
+export const abdominalInsights = [
+  "IAP stable below critical threshold.",
+  "NG output increased by 18% in last 6 hours.",
+  "Drain output pattern requires monitoring.",
+  "No sudden abdominal pressure spike detected.",
+];
+
+export const abdominalApiEndpoints = {
+  summary: "GET /api/v1/icu/abdominal/:patientId/summary",
+  trends: "GET /api/v1/icu/abdominal/:patientId/trends",
+  records: "GET /api/v1/icu/abdominal/:patientId/records",
+  notes: "POST /api/v1/icu/abdominal/:patientId/notes",
+};
