@@ -23,8 +23,8 @@ export function RoleSwitcher({ className }: { className?: string }) {
         </Select.Icon>
       </Select.Trigger>
       <Select.Portal>
-        <Select.Content className="z-[120] max-h-80 overflow-hidden rounded-md border border-border bg-surface shadow-soft">
-          <Select.Viewport className="p-1">
+        <Select.Content className="z-[120] max-h-[min(20rem,60dvh)] overflow-hidden rounded-md border border-border bg-surface shadow-soft">
+          <Select.Viewport className="max-h-[min(20rem,60dvh)] touch-pan-y overflow-y-auto p-1 [-webkit-overflow-scrolling:touch]">
             {roles.map((item) => (
               <Select.Item
                 className="cursor-pointer rounded px-2 py-2 text-sm text-foreground outline-none hover:bg-surface-muted focus:bg-surface-muted data-[state=checked]:bg-primary/10"

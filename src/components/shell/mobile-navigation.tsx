@@ -50,7 +50,7 @@ export function MobileNavigation() {
             <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-sidebar-foreground/55">Select role</div>
             <RoleSwitcher className="w-full border-border bg-sidebar text-sidebar-foreground hover:bg-sidebar-active/10" />
           </div>
-          <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2">
+          <nav className="min-h-0 flex-1 touch-pan-y scroll-pb-6 overflow-y-auto overscroll-contain p-2 pb-6 [scrollbar-gutter:stable] [-webkit-overflow-scrolling:touch]">
             {visibleItems.map((item) => {
               const Icon = item.icon;
               const active = pathname === item.route;
