@@ -66,7 +66,7 @@ export function AdmissionDetailPage({ admissionId }: { admissionId: string }) {
 }
 
 export function BedsPage({ mode = "beds" }: { mode?: "beds" | "wards" | "icu" }) {
-  return <ProtectedIpd>{() => <><PageHeader eyebrow="Phase 6 • Bed Operations" title={mode === "icu" ? "ICU Management" : mode === "wards" ? "Ward Management" : "Bed Management"} description="Bed availability, occupancy, cleaning, maintenance, isolation, ward/ICU state, and transfer-safe lifecycle." actions={<><PrintButton label="Print occupancy" /><Button variant="outline" onClick={() => toast.info("Bed data refreshed")}>Refresh</Button></>} />{mode === "wards" ? <GenericTable rows={mockWards} /> : <BedMap icuOnly={mode === "icu"} />}</>}</ProtectedIpd>;
+  return <ProtectedIpd>{() => <><div className="flex justify-end gap-2"><PrintButton label="Print occupancy" /><Button variant="outline" onClick={() => toast.info("Bed data refreshed")}>Refresh</Button></div>{mode === "wards" ? <GenericTable rows={mockWards} /> : <BedMap icuOnly={mode === "icu"} />}</>}</ProtectedIpd>;
 }
 
 function BedMap({ compact, icuOnly }: { compact?: boolean; icuOnly?: boolean }) {
