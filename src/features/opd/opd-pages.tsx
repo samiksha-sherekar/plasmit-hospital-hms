@@ -104,9 +104,12 @@ export function ConsultationPage({ visitId }: { visitId: string }) {
     <ProtectedOpd>
       {({ readOnly }) => (
         <>
-          <PageHeader eyebrow="Phase 5 • Consultation" title="OPD Consultation" description="Tab-based clinical workspace with patient safety context, draft state, handoffs, print, and completion checklist." actions={<><ClinicalPrintActions /><Button disabled={readOnly}>Save draft</Button><Button disabled={readOnly}>Complete consultation</Button></>} />
+          <div className="flex flex-wrap justify-end gap-2">
+            <ClinicalPrintActions />
+            <Button disabled={readOnly}>Save draft</Button>
+            <Button disabled={readOnly}>Complete consultation</Button>
+          </div>
           <ClinicalPatientHeader patientId={consultation.patientId} token={mockOpdWorklist.find((item) => item.visitId === visitId)?.tokenNo} appointmentTime={mockOpdWorklist.find((item) => item.visitId === visitId)?.appointmentTime} consultation={consultation} />
-          <ClinicalSafetyPanel patientId={consultation.patientId} />
           <VisitContext consultation={consultation} />
           <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
             <Tabs defaultValue="complaints" className="min-w-0 space-y-4">
