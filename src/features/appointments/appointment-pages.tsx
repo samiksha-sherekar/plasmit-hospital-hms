@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import type { ColumnDef } from "@tanstack/react-table";
-import { CalendarClock, Check, Clock3, Eye, PhoneCall, Plus, RefreshCcw, Search, ShieldAlert, Ticket, UserCheck, Video } from "lucide-react";
+import { CalendarClock, Clock3, Eye, PhoneCall, Plus, RefreshCcw, Search, ShieldAlert, Ticket, UserCheck, Video } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/shell/page-header";
@@ -108,7 +108,7 @@ export function AppointmentBookingPage() {
     <ProtectedAppointment>
       {({ readOnly }) => (
         <>
-          <PageHeader eyebrow="Phase 4 • Booking" title="Book Appointment" description="Step-based booking with patient selection, visit details, doctor slot, conflict checks, and confirmation." actions={<><Button variant="outline" asChild><Link href="/patients/register">Register new patient</Link></Button><Button disabled={readOnly}><Check className="h-4 w-4" />Save appointment</Button></>} />
+          <div className="flex justify-end gap-2"><Button variant="outline" asChild><Link href="/patients/register">Register new patient</Link></Button></div>
           <Tabs defaultValue="patient" className="space-y-4">
             <TabsList><TabsTrigger value="patient">Patient</TabsTrigger><TabsTrigger value="visit">Visit details</TabsTrigger><TabsTrigger value="slot">Doctor & slot</TabsTrigger><TabsTrigger value="confirm">Confirmation</TabsTrigger></TabsList>
             <ConflictPanel />
