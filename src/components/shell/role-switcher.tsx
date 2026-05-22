@@ -23,7 +23,7 @@ export function RoleSwitcher({ className }: { className?: string }) {
         </Select.Icon>
       </Select.Trigger>
       <Select.Portal>
-        <Select.Content className="z-[80] max-h-80 overflow-hidden rounded-md border border-border bg-surface shadow-soft">
+        <Select.Content className="z-[120] max-h-80 overflow-hidden rounded-md border border-border bg-surface shadow-soft">
           <Select.Viewport className="p-1">
             {roles.map((item) => (
               <Select.Item
