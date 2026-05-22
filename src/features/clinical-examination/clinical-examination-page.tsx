@@ -205,7 +205,17 @@ function ToggleMatrix() {
 
 function ExaminationWorkspace({ specialty }: { specialty: SpecialtyId }) {
   const sections = examinationSections[specialty as keyof typeof examinationSections] ?? examinationSections.cvs;
+  const activeSpecialty = clinicalSpecialties.find((item) => item.id === specialty) ?? clinicalSpecialties[0];
   return (
+    <div className="space-y-4">
+      <div className="flex flex-col gap-2 rounded-xl border border-border bg-white p-4 shadow-soft md:flex-row md:items-center md:justify-between">
+        <div>
+          <div className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Active examination template</div>
+          <h2 className="mt-1 text-xl font-bold text-foreground">{activeSpecialty.label} Examination</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{activeSpecialty.department} specialty template with fast toggle entry, scoring, notes, and trends.</p>
+        </div>
+        <Badge tone="info">{sections.length} categories</Badge>
+      </div>
     <div className="grid min-w-0 gap-4 xl:grid-cols-[230px_minmax(0,1fr)_320px]">
       <Card className="xl:sticky xl:top-20 xl:self-start">
         <CardHeader><CardTitle>Categories</CardTitle></CardHeader>
@@ -241,6 +251,7 @@ function ExaminationWorkspace({ specialty }: { specialty: SpecialtyId }) {
         <TrendCard compact />
         <AlertBanner icon={AlertTriangle} tone="warning" title="Risk indicator">NEWS score moderate. Consultant verification recommended before final submit.</AlertBanner>
       </div>
+    </div>
     </div>
   );
 }
@@ -364,12 +375,18 @@ function MobileTabletOptimization() {
 
 export function ClinicalExaminationPage() {
   const [specialty, setSpecialty] = React.useState<SpecialtyId>("cvs");
+  const [activeTab, setActiveTab] = React.useState("dashboard");
+  const openSpecialty = (id: SpecialtyId) => {
+    setSpecialty(id);
+    setActiveTab("entry");
+    toast.success(`${clinicalSpecialties.find((item) => item.id === id)?.label ?? "Specialty"} examination opened`);
+  };
   return (
     <PageMotion>
       <PatientHeaderStrip />
       <QuickActions />
       <SummaryCards />
-      <Tabs defaultValue="dashboard" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="bg-white shadow-sm">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="specialty">Specialty</TabsTrigger>
@@ -382,11 +399,11 @@ export function ClinicalExaminationPage() {
         <TabsContent value="dashboard" className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
           <div className="space-y-4">
             <AlertBanner icon={Filter} tone="info" title="Fast doctor landing screen">Patient context, quick clinical actions, timeline, risk cards, and current examination state stay visible before entry.</AlertBanner>
-            <SpecialtyPicker selected={specialty} onSelect={setSpecialty} />
+            <SpecialtyPicker selected={specialty} onSelect={openSpecialty} />
           </div>
           <TimelinePanel />
         </TabsContent>
-        <TabsContent value="specialty"><SpecialtyPicker selected={specialty} onSelect={setSpecialty} /></TabsContent>
+        <TabsContent value="specialty"><SpecialtyPicker selected={specialty} onSelect={openSpecialty} /></TabsContent>
         <TabsContent value="entry"><ExaminationWorkspace specialty={specialty} /></TabsContent>
         <TabsContent value="graphs" className="space-y-4"><TrendCard /><ClinicalScorePanel /></TabsContent>
         <TabsContent value="builder"><BuilderAndReports /></TabsContent>
