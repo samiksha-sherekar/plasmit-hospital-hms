@@ -147,7 +147,7 @@ export function PatientRegistrationPage() {
     <ProtectedPatient>
       {({ readOnly }) => (
         <>
-          <PageHeader eyebrow="Phase 3 • Registration" title="Patient Registration" description="Low-click quick registration with detailed demographic, identity, guardian, insurance, ABHA, preference, and alert sections." actions={<><Button variant="outline" asChild><Link href="/patients/emergency-register">Emergency register</Link></Button><Button disabled={readOnly}><ClipboardCheck className="h-4 w-4" />Save patient</Button></>} />
+          <div className="flex justify-end gap-2"><Button variant="outline" asChild><Link href="/patients/emergency-register">Emergency register</Link></Button><Button disabled={readOnly}><ClipboardCheck className="h-4 w-4" />Save patient</Button></div>
           <Tabs value={mode} onValueChange={setMode} className="space-y-4">
             <TabsList><TabsTrigger value="quick">Quick registration</TabsTrigger><TabsTrigger value="detailed">Detailed registration</TabsTrigger><TabsTrigger value="review">Review</TabsTrigger></TabsList>
             {duplicate ? (
