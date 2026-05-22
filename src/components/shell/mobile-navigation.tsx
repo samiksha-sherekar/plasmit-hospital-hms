@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Cross, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useRole } from "@/components/providers/role-provider";
@@ -28,16 +29,17 @@ export function MobileNavigation() {
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[80] bg-black/35" />
         <Dialog.Content className="fixed inset-y-0 left-0 z-[90] flex w-[min(88vw,360px)] flex-col border-r border-border bg-sidebar text-sidebar-foreground shadow-soft outline-none">
-          <div className="flex h-14 items-center justify-between border-b border-border px-3">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Cross className="h-5 w-5" />
-              </div>
-              <div>
-                <Dialog.Title className="text-sm font-semibold">Plasmit Hospital</Dialog.Title>
-                <Dialog.Description className="text-xs text-sidebar-foreground/65">Mobile navigation</Dialog.Description>
-              </div>
-            </div>
+          <div className="flex h-20 items-center justify-between border-b border-border px-3">
+            <Dialog.Title className="sr-only">Plasmit Hospital navigation</Dialog.Title>
+            <Dialog.Description className="sr-only">Mobile navigation</Dialog.Description>
+            <Image
+              src="/plasmit-sidebar-logo.webp"
+              alt="Plasmit Healthcare IT Vector"
+              width={210}
+              height={85}
+              priority
+              className="h-auto w-[190px] object-contain"
+            />
             <Dialog.Close asChild>
               <Button size="icon" variant="ghost" aria-label="Close navigation">
                 <X className="h-4 w-4" />
