@@ -21,8 +21,9 @@ import {
   clinicalSpecialties,
   clinicalTimeline,
   clinicalTrendData,
-  cvsFindings,
   databaseTables,
+  examinationDefaultNotes,
+  examinationFindings,
   examinationSections,
   quickClinicalActions,
   reportLinks,
@@ -166,24 +167,22 @@ function SpecialtyPicker({ selected, onSelect }: { selected: SpecialtyId; onSele
   );
 }
 
-function ToggleMatrix() {
+function ToggleMatrix({ findings, specialtyLabel }: { findings: typeof examinationFindings[SpecialtyId]; specialtyLabel: string }) {
   const [selected, setSelected] = React.useState<Record<string, string>>({
-    "Heart sounds": "Normal",
-    Murmur: "Absent",
-    Pulse: "Mild",
-    BP: "Moderate",
+    [findings[0]?.label ?? "Primary finding"]: findings[0]?.severity ?? "Normal",
+    [findings[1]?.label ?? "Secondary finding"]: findings[1]?.severity ?? "Normal",
   });
   return (
     <Card>
       <CardHeader>
         <div>
-          <CardTitle>Toggle-based clinical matrix</CardTitle>
+          <CardTitle>{specialtyLabel} toggle-based clinical matrix</CardTitle>
           <CardDescription>Single-click selection with auto score generation and keyboard-friendly focus states.</CardDescription>
         </div>
         <Badge tone="info">Score auto-updates</Badge>
       </CardHeader>
       <CardContent className="space-y-3">
-        {cvsFindings.slice(0, 6).map((finding) => (
+        {findings.slice(0, 6).map((finding) => (
           <div className="grid gap-2 rounded-lg border border-border bg-surface-muted p-2 lg:grid-cols-[150px_1fr]" key={finding.label}>
             <div className="flex items-center justify-between gap-2 text-sm font-semibold text-foreground">
               {finding.label}
@@ -206,6 +205,8 @@ function ToggleMatrix() {
 function ExaminationWorkspace({ specialty }: { specialty: SpecialtyId }) {
   const sections = examinationSections[specialty as keyof typeof examinationSections] ?? examinationSections.cvs;
   const activeSpecialty = clinicalSpecialties.find((item) => item.id === specialty) ?? clinicalSpecialties[0];
+  const findings = examinationFindings[specialty] ?? examinationFindings.cvs;
+  const defaultNote = examinationDefaultNotes[specialty] ?? examinationDefaultNotes.cvs;
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-2 rounded-xl border border-border bg-white p-4 shadow-soft md:flex-row md:items-center md:justify-between">
@@ -224,24 +225,24 @@ function ExaminationWorkspace({ specialty }: { specialty: SpecialtyId }) {
         </CardContent>
       </Card>
       <div className="min-w-0 space-y-4">
-        <ToggleMatrix />
+        <ToggleMatrix key={specialty} findings={findings} specialtyLabel={activeSpecialty.label} />
         <Card>
           <CardHeader>
             <div>
-              <CardTitle>Clinical findings and notes</CardTitle>
-              <CardDescription>Structured entries, severity, numeric score fields, and doctor impression in one compact working screen.</CardDescription>
+              <CardTitle>{activeSpecialty.label} findings and notes</CardTitle>
+              <CardDescription>Structured {activeSpecialty.department.toLowerCase()} entries, severity, numeric score fields, and doctor impression in one compact working screen.</CardDescription>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid gap-3 md:grid-cols-2">
-              {cvsFindings.map((item) => (
+              {findings.map((item) => (
                 <div className="rounded-lg border border-border bg-white p-3" key={item.label}>
                   <div className="flex items-start justify-between gap-2"><div className="text-sm font-semibold">{item.label}</div><Badge tone={severityTone[item.severity]}>{item.severity}</Badge></div>
                   <div className="mt-1 text-sm text-muted-foreground">{item.value}</div>
                 </div>
               ))}
             </div>
-            <textarea className="min-h-28 w-full rounded-lg border border-input bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-ring/15" defaultValue="CVS: S1/S2 heard. No murmur. Pulse regular. BP elevated, continue monitoring and review trend before discharge planning." />
+            <textarea key={specialty} className="min-h-28 w-full rounded-lg border border-input bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-ring/15" defaultValue={defaultNote} />
             <div className="flex flex-wrap gap-2"><Button variant="outline"><Mic className="h-4 w-4" />Voice typing</Button><Button variant="outline">Insert shortcut</Button><Button>Apply template</Button></div>
           </CardContent>
         </Card>
