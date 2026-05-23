@@ -67,6 +67,7 @@ export const navigationItems: NavigationItem[] = [
   // { id: "front-office", label: "Front Office", icon: Home, route: "/front-office", group: "Operations", allowedRoles: ["Super Admin", "Hospital Admin", "Receptionist", "Management"], status: "ready" },
   { id: "patients", label: "Patient", icon: IdCard, route: "/patients", group: "Clinical", allowedRoles: allRoles, status: "ready" },
   { id: "appointments", label: "Appointment", icon: CalendarClock, route: "/appointments", group: "Clinical", allowedRoles: ["Super Admin", "Hospital Admin", "Receptionist", "Doctor", "Nurse", "Billing Executive", "Management"], status: "ready" },
+  { id: "billing-desk", label: "Billing Desk", icon: CreditCard, route: "/billing-desk", group: "Clinical", allowedRoles: ["Super Admin", "Hospital Admin", "Receptionist", "Billing Executive", "Management"], status: "ready" },
   { id: "opd", label: "OPD", icon: Stethoscope, route: "/opd", group: "Clinical", allowedRoles: ["Super Admin", "Hospital Admin", "Doctor", "Nurse", "Receptionist", "Pharmacist", "Lab Technician", "Management"], status: "ready" },
   { id: "clinical-examination", label: "Clinical Exam", icon: ClipboardList, route: "/clinical-examination", group: "Clinical", allowedRoles: ["Super Admin", "Hospital Admin", "Doctor", "Nurse", "Management"], status: "ready" },
   { id: "ipd", label: "IPD", icon: BedDouble, route: "/ipd", group: "Clinical", allowedRoles: ["Super Admin", "Hospital Admin", "Doctor", "Nurse", "Receptionist", "Billing Executive", "Pharmacist", "Management"], status: "ready" },
