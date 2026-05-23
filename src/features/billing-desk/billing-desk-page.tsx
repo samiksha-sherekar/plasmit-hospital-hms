@@ -67,15 +67,15 @@ function BillingDeskTopbar() {
   );
 }
 
-function WorkflowRail({ active, onChange }: { active: BillingDeskStep; onChange: (step: BillingDeskStep) => void }) {
+function WorkflowTabs({ active, onChange }: { active: BillingDeskStep; onChange: (step: BillingDeskStep) => void }) {
   return (
-    <Card className="sticky top-20 self-start">
-      <CardContent className="space-y-1 p-2">
+    <Card className="sticky top-16 z-10">
+      <CardContent className="flex gap-1 overflow-x-auto p-2">
         {billingDeskSteps.slice(0, 9).map((step) => {
           const Icon = step.icon;
           const selected = active === step.id;
           return (
-            <button key={step.id} onClick={() => onChange(step.id)} className={cn("flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-semibold transition", selected ? "bg-primary text-white shadow-[0_8px_18px_rgba(115,103,240,0.20)]" : "text-muted-foreground hover:bg-surface-muted hover:text-foreground")}>
+            <button key={step.id} onClick={() => onChange(step.id)} className={cn("flex h-10 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition", selected ? "bg-primary text-white shadow-[0_8px_18px_rgba(115,103,240,0.20)]" : "text-muted-foreground hover:bg-surface-muted hover:text-foreground")}>
               <Icon className="h-4 w-4 shrink-0" />
               <span className="truncate">{step.label}</span>
             </button>
@@ -247,8 +247,8 @@ export function BillingDeskPage({ initialStep = "patient" }: { initialStep?: Bil
   return (
     <PageMotion>
       <BillingDeskTopbar />
-      <div className="grid gap-4 xl:grid-cols-[210px_minmax(0,1fr)_340px]">
-        <WorkflowRail active={active} onChange={changeStep} />
+      <WorkflowTabs active={active} onChange={changeStep} />
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <main className="min-w-0 space-y-4">
           <div className="rounded-2xl border border-border bg-white p-4 shadow-soft">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
