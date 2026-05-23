@@ -281,29 +281,43 @@ function AppointmentsWorkspace({ patient, onAdd }: { patient: BillingDeskPatient
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Consultation fee mapping</CardTitle>
-          <CardDescription>Selected appointment details are used for billing audit, doctor revenue, and visit handoff.</CardDescription>
+          <div>
+            <CardTitle>Consultation fee mapping</CardTitle>
+            <CardDescription>Fast counter workflow for appointment, doctor, fee, and billing handoff.</CardDescription>
+          </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-3 md:grid-cols-2">
-          <SelectField label="Appointment" value={selectedId} onChange={(value) => { const next = appointments.find((appointment) => appointment.id === value); setSelectedId(value); if (next) { setMappedDoctor(next.doctor); setBillingStatus(next.billingStatus); setVisitType(next.visitType); } }} options={appointments.map((appointment) => ({ label: `${appointment.appointmentNo} - ${appointment.slot}`, value: appointment.id }))} />
-          <DoctorFeeSelect value={mappedDoctor} onChange={setMappedDoctor} />
-          <SelectField label="Visit type" value={visitType} onChange={(value) => setVisitType(value as AppointmentVisitType)} options={["New", "Follow-up", "Review", "Teleconsult"].map((item) => ({ label: item, value: item }))} />
-          <SelectField label="Billing status" value={billingStatus} onChange={(value) => setBillingStatus(value as AppointmentBillingStatus)} options={["Unbilled", "Billed", "Package covered"].map((item) => ({ label: item, value: item }))} />
+        <CardContent className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="space-y-4">
+            <div className="grid gap-3 rounded-xl border border-border bg-surface-muted p-3 md:grid-cols-2">
+              <SelectField label="Appointment" value={selectedId} onChange={(value) => { const next = appointments.find((appointment) => appointment.id === value); setSelectedId(value); if (next) { setMappedDoctor(next.doctor); setBillingStatus(next.billingStatus); setVisitType(next.visitType); } }} options={appointments.map((appointment) => ({ label: `${appointment.appointmentNo} - ${appointment.slot}`, value: appointment.id }))} />
+              <DoctorFeeSelect value={mappedDoctor} onChange={setMappedDoctor} />
+              <SelectField label="Visit type" value={visitType} onChange={(value) => setVisitType(value as AppointmentVisitType)} options={["New", "Follow-up", "Review", "Teleconsult"].map((item) => ({ label: item, value: item }))} />
+              <SelectField label="Billing status" value={billingStatus} onChange={(value) => setBillingStatus(value as AppointmentBillingStatus)} options={["Unbilled", "Billed", "Package covered"].map((item) => ({ label: item, value: item }))} />
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+              <MappedValue label="Department" value={doctorFee.department} />
+              <MappedValue label="Room" value={doctorFee.room} />
+              <MappedValue label="Slot" value={selected.slot} />
+              <MappedValue label="Audit ref" value={selected.appointmentNo} />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Badge tone={selected.status === "Checked-in" || selected.status === "Waiting" ? "success" : "info"}>{selected.status}</Badge>
+              <Badge tone={billingStatus === "Package covered" ? "warning" : "muted"}>{billingStatus}</Badge>
+              <Badge tone="info">{visitType}</Badge>
+              <Badge tone="muted">Doctor revenue mapped</Badge>
+            </div>
           </div>
-          <div className="grid gap-3 rounded-xl border border-border bg-surface-muted p-3 md:grid-cols-4">
-            <MappedValue label="Department" value={doctorFee.department} />
-            <MappedValue label="Room" value={doctorFee.room} />
-            <MappedValue label="Slot" value={selected.slot} />
-            <MappedValue label="Fee" value={money(doctorFee.fee)} />
-            <MappedValue label="Discount" value={`${discount}%`} />
-            <MappedValue label="Billable amount" value={money(doctorFee.fee - (doctorFee.fee * discount / 100))} />
-            <MappedValue label="Appointment status" value={selected.status} />
-            <MappedValue label="Audit ref" value={selected.appointmentNo} />
-          </div>
-          <div className="flex flex-col gap-2 md:col-span-2 sm:flex-row">
-            <Button onClick={addAppointmentFee}><Plus className="h-4 w-4" />Add consultation fee</Button>
-            <Button variant="outline" onClick={() => toast.info(`${mappedDoctor} mapping confirmed`)}>Confirm doctor mapping</Button>
+          <div className="rounded-xl border border-primary/20 bg-primary-soft/60 p-4">
+            <div className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Charge preview</div>
+            <div className="mt-3 space-y-2 text-sm">
+              <div className="flex justify-between gap-3"><span className="text-muted-foreground">Consultation fee</span><span className="font-bold">{money(doctorFee.fee)}</span></div>
+              <div className="flex justify-between gap-3"><span className="text-muted-foreground">Discount</span><span className="font-bold">{discount}%</span></div>
+              <div className="flex justify-between gap-3 border-t border-primary/15 pt-2"><span className="font-semibold text-foreground">Billable amount</span><span className="text-xl font-bold text-primary">{money(doctorFee.fee - (doctorFee.fee * discount / 100))}</span></div>
+            </div>
+            <div className="mt-4 grid gap-2">
+              <Button onClick={addAppointmentFee}><Plus className="h-4 w-4" />Add consultation fee</Button>
+              <Button variant="outline" onClick={() => toast.info(`${mappedDoctor} mapping confirmed`)}>Confirm mapping</Button>
+            </div>
           </div>
         </CardContent>
       </Card>
