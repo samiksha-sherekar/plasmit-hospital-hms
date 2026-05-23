@@ -15,7 +15,9 @@ import {
   billingDeskSteps,
   billingHints,
   billingPatients,
+  billingReferrals,
   billingServices,
+  type BillingReferral,
   type BillingDeskPatient,
   type BillingDeskService,
   type BillingDeskStep,
@@ -102,7 +104,16 @@ function PatientCard({ patient, selected, onSelect }: { patient: BillingDeskPati
 
 function PatientWorkspace({ selectedPatient, onSelect }: { selectedPatient: BillingDeskPatient; onSelect: (patient: BillingDeskPatient) => void }) {
   const [search, setSearch] = React.useState("");
-  const rows = billingPatients.filter((patient) => `${patient.name} ${patient.uhid} ${patient.phone} ${patient.bloodGroup} ${patient.address} ${patient.payer} ${patient.city}`.toLowerCase().includes(search.toLowerCase()));
+  const [payer, setPayer] = React.useState("All payers");
+  const [city, setCity] = React.useState("All cities");
+  const [source, setSource] = React.useState("All sources");
+  const payers = ["All payers", ...Array.from(new Set(billingPatients.map((patient) => patient.payer)))];
+  const cities = ["All cities", ...Array.from(new Set(billingPatients.map((patient) => patient.city)))];
+  const sources = ["All sources", ...Array.from(new Set(billingPatients.map((patient) => patient.source)))];
+  const rows = billingPatients.filter((patient) => {
+    const matchesSearch = `${patient.name} ${patient.uhid} ${patient.phone} ${patient.bloodGroup} ${patient.address} ${patient.payer} ${patient.city}`.toLowerCase().includes(search.toLowerCase());
+    return matchesSearch && (payer === "All payers" || patient.payer === payer) && (city === "All cities" || patient.city === city) && (source === "All sources" || patient.source === source);
+  });
   return (
     <div className="space-y-4">
       <Card>
@@ -112,7 +123,13 @@ function PatientWorkspace({ selectedPatient, onSelect }: { selectedPatient: Bill
         <CardContent className="space-y-3">
           <div className="flex flex-col gap-2 lg:flex-row">
             <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-input bg-white px-3 shadow-sm"><Search className="h-4 w-4 text-muted-foreground" /><Input className="border-0 shadow-none focus:ring-0" placeholder="Search by patient, UHID, phone, payer, city..." value={search} onChange={(event) => setSearch(event.target.value)} /></div>
-            {["All payers", "All cities", "All sources"].map((filter) => <Button key={filter} variant="outline">{filter}<ChevronDown className="h-4 w-4" /></Button>)}
+            <PatientFilter label="Payer" value={payer} onChange={setPayer} options={payers} />
+            <PatientFilter label="City" value={city} onChange={setCity} options={cities} />
+            <PatientFilter label="Source" value={source} onChange={setSource} options={sources} />
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+            <span>{rows.length} matching patients</span>
+            {(search || payer !== "All payers" || city !== "All cities" || source !== "All sources") ? <Button size="sm" variant="ghost" onClick={() => { setSearch(""); setPayer("All payers"); setCity("All cities"); setSource("All sources"); }}>Clear filters</Button> : null}
           </div>
           <div className="grid gap-3 xl:grid-cols-2">{rows.map((patient) => <PatientCard key={patient.id} patient={patient} selected={selectedPatient.id === patient.id} onSelect={() => { onSelect(patient); toast.success(`${patient.name} selected`); }} />)}</div>
           {!rows.length ? <EmptyState icon={Search} title="No patient found" description="Try another UHID, phone number, city, payer, or blood group." /> : null}
@@ -125,6 +142,18 @@ function PatientWorkspace({ selectedPatient, onSelect }: { selectedPatient: Bill
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function PatientFilter({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: string[] }) {
+  return (
+    <label className="relative min-w-[150px]">
+      <span className="sr-only">{label}</span>
+      <select className="h-10 w-full appearance-none rounded-lg border border-input bg-white px-3 pr-9 text-sm font-semibold text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/15" value={value} onChange={(event) => onChange(event.target.value)}>
+        {options.map((option) => <option key={option}>{option}</option>)}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
+    </label>
   );
 }
 
@@ -143,7 +172,53 @@ function ServiceCard({ service, added, onAdd }: { service: BillingDeskService; a
 }
 
 function ReferralWorkspace() {
-  return <FormCard title="Referral" description="Referring doctor, source, commission mapping, and notes." fields={["Referring doctor", "Referral source", "Commission mapping", "Notes"]} />;
+  const [selected, setSelected] = React.useState<BillingReferral>(billingReferrals[0]);
+  const [source, setSource] = React.useState("All sources");
+  const sources = ["All sources", ...Array.from(new Set(billingReferrals.map((item) => item.source)))];
+  const rows = billingReferrals.filter((item) => source === "All sources" || item.source === source);
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <div>
+            <CardTitle>Referral selection</CardTitle>
+            <CardDescription>Select referring doctor/source and confirm commission or approval mapping before billing.</CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center">
+            <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-input bg-white px-3 shadow-sm">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input className="border-0 shadow-none focus:ring-0" placeholder="Search referring doctor, clinic, TPA, camp..." />
+            </div>
+            <PatientFilter label="Referral source" value={source} onChange={setSource} options={sources} />
+          </div>
+          <div className="grid gap-3 lg:grid-cols-2">
+            {rows.map((referral) => (
+              <button key={referral.id} onClick={() => { setSelected(referral); toast.success(`${referral.doctor} referral selected`); }} className={cn("rounded-xl border bg-white p-4 text-left shadow-soft transition hover:-translate-y-0.5 hover:bg-primary-soft/40 hover:shadow-[0_12px_26px_rgba(39,37,54,0.08)]", selected.id === referral.id ? "border-primary ring-2 ring-primary/15" : "border-border")}>
+                <div className="flex items-start justify-between gap-3">
+                  <div><div className="font-bold text-foreground">{referral.doctor}</div><div className="mt-1 text-xs font-semibold text-muted-foreground">{referral.organization} • {referral.source}</div></div>
+                  <Badge tone={referral.status === "Mapped" ? "success" : referral.status === "Approval needed" ? "warning" : "muted"}>{referral.status}</Badge>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2"><Badge tone="info">Commission {referral.commission}</Badge><span className="text-xs text-muted-foreground">{referral.notes}</span></div>
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle>Referral billing mapping</CardTitle><CardDescription>Selected referral details are carried into bill audit and payout rules.</CardDescription></CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-2">
+          <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Referring doctor/source</span><Input value={selected.doctor} readOnly /></label>
+          <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Referral source</span><Input value={selected.source} readOnly /></label>
+          <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Commission mapping</span><Input value={selected.commission} readOnly /></label>
+          <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Approval status</span><Input value={selected.status} readOnly /></label>
+          <label className="space-y-1 md:col-span-2"><span className="text-xs font-semibold text-muted-foreground">Notes</span><textarea className="min-h-24 w-full rounded-lg border border-input bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-ring/15" defaultValue={selected.notes} key={selected.id} /></label>
+          <Button className="md:col-span-2" onClick={() => toast.success("Referral mapping saved")}>Save referral mapping</Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
 
 function AppointmentsWorkspace({ onAdd }: { onAdd: (service: BillingDeskService) => void }) {

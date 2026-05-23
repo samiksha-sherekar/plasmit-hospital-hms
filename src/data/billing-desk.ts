@@ -27,6 +27,15 @@ export type BillingDeskService = {
   urgency?: "Routine" | "Urgent" | "Stat";
   meta: string;
 };
+export type BillingReferral = {
+  id: string;
+  doctor: string;
+  source: "Doctor" | "Corporate" | "TPA" | "Walk-in" | "Camp";
+  organization: string;
+  commission: string;
+  status: "Mapped" | "Approval needed" | "No commission";
+  notes: string;
+};
 
 export const billingDeskSteps: { id: BillingDeskStep; label: string; icon: LucideIcon }[] = [
   { id: "patient", label: "Patient", icon: IdCard },
@@ -61,6 +70,14 @@ export const billingServices: BillingDeskService[] = [
   { id: "svc-010", name: "ECG 12 Lead", category: "Quick Test", group: "Favorites", price: 600, discount: 0, tax: 5, meta: "Immediate handoff" },
   { id: "svc-011", name: "Vitamin D", category: "Individual Test", group: "Biochemistry", price: 1900, discount: 0, tax: 5, meta: "Serum sample" },
   { id: "svc-012", name: "OPD Consultation Fee", category: "Appointment", group: "Cardiology", price: 1200, discount: 0, tax: 0, meta: "10:40 AM slot" },
+];
+
+export const billingReferrals: BillingReferral[] = [
+  { id: "ref-001", doctor: "Dr. Kavita Rao", source: "Doctor", organization: "Plasmit Cardiology OPD", commission: "0%", status: "No commission", notes: "Internal consultant, no referral payout." },
+  { id: "ref-002", doctor: "Dr. Harish Mehta", source: "Doctor", organization: "Mehta Clinic", commission: "8%", status: "Mapped", notes: "External OPD referral mapping active." },
+  { id: "ref-003", doctor: "Wellcare Corporate Desk", source: "Corporate", organization: "Wellcare Industries", commission: "Package contract", status: "Mapped", notes: "Corporate rate card applies before discount." },
+  { id: "ref-004", doctor: "Star Health TPA", source: "TPA", organization: "Star Health", commission: "Pre-auth", status: "Approval needed", notes: "Insurance requires pre-approval for high-value diagnostics." },
+  { id: "ref-005", doctor: "Community Health Camp", source: "Camp", organization: "Mayur Vihar Camp", commission: "5%", status: "Mapped", notes: "Camp referral discount can be applied once." },
 ];
 
 export const billingHints = [
