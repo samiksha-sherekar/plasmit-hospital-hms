@@ -23,10 +23,13 @@ import {
   type BillingDeskPatient,
   type BillingDeskService,
   type BillingDeskStep,
+  type BillingAppointment,
 } from "@/data/billing-desk";
 import { cn } from "@/lib/utils";
 
 type BillLine = BillingDeskService & { qty: number };
+type AppointmentVisitType = BillingAppointment["visitType"];
+type AppointmentBillingStatus = BillingAppointment["billingStatus"];
 
 const stepRoute: Record<BillingDeskStep, string> = {
   patient: "/billing-desk/patient",
@@ -229,7 +232,10 @@ function AppointmentsWorkspace({ patient, onAdd }: { patient: BillingDeskPatient
   const [selectedId, setSelectedId] = React.useState(appointments[0].id);
   const selected = appointments.find((appointment) => appointment.id === selectedId) ?? appointments[0];
   const [mappedDoctor, setMappedDoctor] = React.useState(selected.doctor);
+  const [billingStatus, setBillingStatus] = React.useState(selected.billingStatus);
+  const [visitType, setVisitType] = React.useState(selected.visitType);
   const doctorFee = billingDoctorFees.find((doctor) => doctor.doctor === mappedDoctor) ?? billingDoctorFees[0];
+  const discount = billingStatus === "Package covered" ? 100 : 0;
   const addAppointmentFee = () => {
     onAdd({
       id: `appt-fee-${selected.id}-${mappedDoctor.toLowerCase().replaceAll(" ", "-").replaceAll(".", "")}`,
@@ -237,9 +243,9 @@ function AppointmentsWorkspace({ patient, onAdd }: { patient: BillingDeskPatient
       category: "Appointment",
       group: doctorFee.department,
       price: doctorFee.fee,
-      discount: selected.billingStatus === "Package covered" ? 100 : 0,
+      discount,
       tax: 0,
-      meta: `${selected.appointmentNo} • ${mappedDoctor} • ${selected.slot}`,
+      meta: `${selected.appointmentNo} • ${mappedDoctor} • ${visitType} • ${selected.slot}`,
     });
   };
   return (
@@ -254,7 +260,7 @@ function AppointmentsWorkspace({ patient, onAdd }: { patient: BillingDeskPatient
         <CardContent className="space-y-3">
           <div className="grid gap-3 lg:grid-cols-2">
             {appointments.map((appointment) => (
-              <button key={appointment.id} onClick={() => { setSelectedId(appointment.id); toast.success(`${appointment.appointmentNo} selected`); }} className={cn("rounded-xl border bg-white p-4 text-left shadow-soft transition hover:-translate-y-0.5 hover:bg-primary-soft/40 hover:shadow-[0_12px_26px_rgba(39,37,54,0.08)]", selected.id === appointment.id ? "border-primary ring-2 ring-primary/15" : "border-border")}>
+              <button key={appointment.id} onClick={() => { setSelectedId(appointment.id); setMappedDoctor(appointment.doctor); setBillingStatus(appointment.billingStatus); setVisitType(appointment.visitType); toast.success(`${appointment.appointmentNo} selected`); }} className={cn("rounded-xl border bg-white p-4 text-left shadow-soft transition hover:-translate-y-0.5 hover:bg-primary-soft/40 hover:shadow-[0_12px_26px_rgba(39,37,54,0.08)]", selected.id === appointment.id ? "border-primary ring-2 ring-primary/15" : "border-border")}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="font-bold text-foreground">{appointment.appointmentNo}</div>
@@ -278,19 +284,50 @@ function AppointmentsWorkspace({ patient, onAdd }: { patient: BillingDeskPatient
           <CardTitle>Consultation fee mapping</CardTitle>
           <CardDescription>Selected appointment details are used for billing audit, doctor revenue, and visit handoff.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-3 md:grid-cols-2">
-          <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Appointment</span><Input value={selected.appointmentNo} readOnly /></label>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 md:grid-cols-2">
+          <SelectField label="Appointment" value={selectedId} onChange={(value) => { const next = appointments.find((appointment) => appointment.id === value); setSelectedId(value); if (next) { setMappedDoctor(next.doctor); setBillingStatus(next.billingStatus); setVisitType(next.visitType); } }} options={appointments.map((appointment) => ({ label: `${appointment.appointmentNo} - ${appointment.slot}`, value: appointment.id }))} />
           <DoctorFeeSelect value={mappedDoctor} onChange={setMappedDoctor} />
-          <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Department</span><Input value={doctorFee.department} readOnly /></label>
-          <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Slot / Room</span><Input value={`${selected.slot} • ${doctorFee.room}`} readOnly /></label>
-          <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Consultation fee</span><Input value={money(doctorFee.fee)} readOnly /></label>
-          <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Billing status</span><Input value={selected.billingStatus} readOnly /></label>
+          <SelectField label="Visit type" value={visitType} onChange={(value) => setVisitType(value as AppointmentVisitType)} options={["New", "Follow-up", "Review", "Teleconsult"].map((item) => ({ label: item, value: item }))} />
+          <SelectField label="Billing status" value={billingStatus} onChange={(value) => setBillingStatus(value as AppointmentBillingStatus)} options={["Unbilled", "Billed", "Package covered"].map((item) => ({ label: item, value: item }))} />
+          </div>
+          <div className="grid gap-3 rounded-xl border border-border bg-surface-muted p-3 md:grid-cols-4">
+            <MappedValue label="Department" value={doctorFee.department} />
+            <MappedValue label="Room" value={doctorFee.room} />
+            <MappedValue label="Slot" value={selected.slot} />
+            <MappedValue label="Fee" value={money(doctorFee.fee)} />
+            <MappedValue label="Discount" value={`${discount}%`} />
+            <MappedValue label="Billable amount" value={money(doctorFee.fee - (doctorFee.fee * discount / 100))} />
+            <MappedValue label="Appointment status" value={selected.status} />
+            <MappedValue label="Audit ref" value={selected.appointmentNo} />
+          </div>
           <div className="flex flex-col gap-2 md:col-span-2 sm:flex-row">
             <Button onClick={addAppointmentFee}><Plus className="h-4 w-4" />Add consultation fee</Button>
             <Button variant="outline" onClick={() => toast.info(`${mappedDoctor} mapping confirmed`)}>Confirm doctor mapping</Button>
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function SelectField({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: { label: string; value: string }[] }) {
+  return (
+    <label className="relative space-y-1">
+      <span className="text-xs font-semibold text-muted-foreground">{label}</span>
+      <select className="h-10 w-full appearance-none rounded-lg border border-input bg-white px-3 pr-9 text-sm font-semibold text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/15" value={value} onChange={(event) => onChange(event.target.value)}>
+        {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+      </select>
+      <ChevronDown className="pointer-events-none absolute bottom-3 right-3 h-4 w-4 text-muted-foreground" />
+    </label>
+  );
+}
+
+function MappedValue({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-white px-3 py-2">
+      <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="mt-1 text-sm font-bold text-foreground">{value}</div>
     </div>
   );
 }
