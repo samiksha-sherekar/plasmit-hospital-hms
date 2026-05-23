@@ -14,6 +14,7 @@ import {
   billingApiEndpoints,
   billingAppointments,
   billingDeskSteps,
+  billingDoctorFees,
   billingHints,
   billingPatients,
   billingReferrals,
@@ -227,16 +228,18 @@ function AppointmentsWorkspace({ patient, onAdd }: { patient: BillingDeskPatient
   const appointments = patientAppointments.length ? patientAppointments : billingAppointments;
   const [selectedId, setSelectedId] = React.useState(appointments[0].id);
   const selected = appointments.find((appointment) => appointment.id === selectedId) ?? appointments[0];
+  const [mappedDoctor, setMappedDoctor] = React.useState(selected.doctor);
+  const doctorFee = billingDoctorFees.find((doctor) => doctor.doctor === mappedDoctor) ?? billingDoctorFees[0];
   const addAppointmentFee = () => {
     onAdd({
-      id: `appt-fee-${selected.id}`,
-      name: `${selected.department} consultation fee`,
+      id: `appt-fee-${selected.id}-${mappedDoctor.toLowerCase().replaceAll(" ", "-").replaceAll(".", "")}`,
+      name: `${doctorFee.department} consultation fee`,
       category: "Appointment",
-      group: selected.department,
-      price: selected.fee,
+      group: doctorFee.department,
+      price: doctorFee.fee,
       discount: selected.billingStatus === "Package covered" ? 100 : 0,
       tax: 0,
-      meta: `${selected.appointmentNo} • ${selected.slot}`,
+      meta: `${selected.appointmentNo} • ${mappedDoctor} • ${selected.slot}`,
     });
   };
   return (
@@ -277,18 +280,30 @@ function AppointmentsWorkspace({ patient, onAdd }: { patient: BillingDeskPatient
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-2">
           <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Appointment</span><Input value={selected.appointmentNo} readOnly /></label>
-          <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Doctor</span><Input value={selected.doctor} readOnly /></label>
-          <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Department</span><Input value={selected.department} readOnly /></label>
-          <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Slot / Room</span><Input value={`${selected.slot} • ${selected.room}`} readOnly /></label>
-          <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Consultation fee</span><Input value={money(selected.fee)} readOnly /></label>
+          <DoctorFeeSelect value={mappedDoctor} onChange={setMappedDoctor} />
+          <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Department</span><Input value={doctorFee.department} readOnly /></label>
+          <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Slot / Room</span><Input value={`${selected.slot} • ${doctorFee.room}`} readOnly /></label>
+          <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Consultation fee</span><Input value={money(doctorFee.fee)} readOnly /></label>
           <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Billing status</span><Input value={selected.billingStatus} readOnly /></label>
           <div className="flex flex-col gap-2 md:col-span-2 sm:flex-row">
             <Button onClick={addAppointmentFee}><Plus className="h-4 w-4" />Add consultation fee</Button>
-            <Button variant="outline" onClick={() => toast.info("Doctor mapping confirmed")}>Confirm doctor mapping</Button>
+            <Button variant="outline" onClick={() => toast.info(`${mappedDoctor} mapping confirmed`)}>Confirm doctor mapping</Button>
           </div>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function DoctorFeeSelect({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  return (
+    <label className="relative space-y-1">
+      <span className="text-xs font-semibold text-muted-foreground">Doctor</span>
+      <select className="h-10 w-full appearance-none rounded-lg border border-input bg-white px-3 pr-9 text-sm font-semibold text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/15" value={value} onChange={(event) => onChange(event.target.value)}>
+        {billingDoctorFees.map((doctor) => <option key={doctor.doctor} value={doctor.doctor}>{doctor.doctor}</option>)}
+      </select>
+      <ChevronDown className="pointer-events-none absolute bottom-3 right-3 h-4 w-4 text-muted-foreground" />
+    </label>
   );
 }
 

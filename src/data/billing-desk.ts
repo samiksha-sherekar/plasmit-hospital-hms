@@ -49,6 +49,12 @@ export type BillingAppointment = {
   billingStatus: "Unbilled" | "Billed" | "Package covered";
   room: string;
 };
+export type BillingDoctorFee = {
+  doctor: string;
+  department: string;
+  fee: number;
+  room: string;
+};
 
 export const billingDeskSteps: { id: BillingDeskStep; label: string; icon: LucideIcon }[] = [
   { id: "patient", label: "Patient", icon: IdCard },
@@ -98,6 +104,14 @@ export const billingAppointments: BillingAppointment[] = [
   { id: "apt-002", appointmentNo: "APT-5268", patientId: "pat-001", department: "Diagnostics Review", doctor: "Dr. Kavita Rao", slot: "Today 12:10 PM", visitType: "Review", status: "Scheduled", fee: 600, billingStatus: "Package covered", room: "Review Desk" },
   { id: "apt-003", appointmentNo: "APT-5274", patientId: "pat-002", department: "Orthopedics", doctor: "Dr. Aman Verma", slot: "Today 11:20 AM", visitType: "New", status: "Waiting", fee: 900, billingStatus: "Unbilled", room: "Consult Room 05" },
   { id: "apt-004", appointmentNo: "APT-5282", patientId: "pat-003", department: "General Medicine", doctor: "Dr. Neha Malik", slot: "Today 02:30 PM", visitType: "Teleconsult", status: "Scheduled", fee: 750, billingStatus: "Unbilled", room: "Virtual" },
+];
+
+export const billingDoctorFees: BillingDoctorFee[] = [
+  { doctor: "Dr. Kavita Rao", department: "Cardiology", fee: 1200, room: "Consult Room 03" },
+  { doctor: "Dr. Aman Verma", department: "Orthopedics", fee: 900, room: "Consult Room 05" },
+  { doctor: "Dr. Neha Malik", department: "General Medicine", fee: 750, room: "Consult Room 02" },
+  { doctor: "Dr. Sameer Khan", department: "Pediatrics", fee: 800, room: "Pediatric OPD 01" },
+  { doctor: "Dr. Harish Mehta", department: "External Referral", fee: 650, room: "Referral Desk" },
 ];
 
 export const billingHints = [
