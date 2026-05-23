@@ -36,6 +36,19 @@ export type BillingReferral = {
   status: "Mapped" | "Approval needed" | "No commission";
   notes: string;
 };
+export type BillingAppointment = {
+  id: string;
+  appointmentNo: string;
+  patientId: string;
+  department: string;
+  doctor: string;
+  slot: string;
+  visitType: "New" | "Follow-up" | "Review" | "Teleconsult";
+  status: "Checked-in" | "Scheduled" | "Waiting" | "Completed";
+  fee: number;
+  billingStatus: "Unbilled" | "Billed" | "Package covered";
+  room: string;
+};
 
 export const billingDeskSteps: { id: BillingDeskStep; label: string; icon: LucideIcon }[] = [
   { id: "patient", label: "Patient", icon: IdCard },
@@ -78,6 +91,13 @@ export const billingReferrals: BillingReferral[] = [
   { id: "ref-003", doctor: "Wellcare Corporate Desk", source: "Corporate", organization: "Wellcare Industries", commission: "Package contract", status: "Mapped", notes: "Corporate rate card applies before discount." },
   { id: "ref-004", doctor: "Star Health TPA", source: "TPA", organization: "Star Health", commission: "Pre-auth", status: "Approval needed", notes: "Insurance requires pre-approval for high-value diagnostics." },
   { id: "ref-005", doctor: "Community Health Camp", source: "Camp", organization: "Mayur Vihar Camp", commission: "5%", status: "Mapped", notes: "Camp referral discount can be applied once." },
+];
+
+export const billingAppointments: BillingAppointment[] = [
+  { id: "apt-001", appointmentNo: "APT-5261", patientId: "pat-001", department: "Cardiology", doctor: "Dr. Kavita Rao", slot: "Today 10:40 AM", visitType: "Follow-up", status: "Checked-in", fee: 1200, billingStatus: "Unbilled", room: "Consult Room 03" },
+  { id: "apt-002", appointmentNo: "APT-5268", patientId: "pat-001", department: "Diagnostics Review", doctor: "Dr. Kavita Rao", slot: "Today 12:10 PM", visitType: "Review", status: "Scheduled", fee: 600, billingStatus: "Package covered", room: "Review Desk" },
+  { id: "apt-003", appointmentNo: "APT-5274", patientId: "pat-002", department: "Orthopedics", doctor: "Dr. Aman Verma", slot: "Today 11:20 AM", visitType: "New", status: "Waiting", fee: 900, billingStatus: "Unbilled", room: "Consult Room 05" },
+  { id: "apt-004", appointmentNo: "APT-5282", patientId: "pat-003", department: "General Medicine", doctor: "Dr. Neha Malik", slot: "Today 02:30 PM", visitType: "Teleconsult", status: "Scheduled", fee: 750, billingStatus: "Unbilled", room: "Virtual" },
 ];
 
 export const billingHints = [

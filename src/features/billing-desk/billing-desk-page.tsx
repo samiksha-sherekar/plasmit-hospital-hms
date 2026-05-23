@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import {
   billingApiEndpoints,
+  billingAppointments,
   billingDeskSteps,
   billingHints,
   billingPatients,
@@ -221,8 +222,74 @@ function ReferralWorkspace() {
   );
 }
 
-function AppointmentsWorkspace({ onAdd }: { onAdd: (service: BillingDeskService) => void }) {
-  return <div className="space-y-4"><FormCard title="Appointments" description="Appointment selection, doctor mapping, consultation fee, and slot details." fields={["Appointment", "Doctor mapping", "Slot details"]} /><ServiceGrid category="Appointment" onAdd={onAdd} lines={[]} /></div>;
+function AppointmentsWorkspace({ patient, onAdd }: { patient: BillingDeskPatient; onAdd: (service: BillingDeskService) => void }) {
+  const patientAppointments = billingAppointments.filter((appointment) => appointment.patientId === patient.id);
+  const appointments = patientAppointments.length ? patientAppointments : billingAppointments;
+  const [selectedId, setSelectedId] = React.useState(appointments[0].id);
+  const selected = appointments.find((appointment) => appointment.id === selectedId) ?? appointments[0];
+  const addAppointmentFee = () => {
+    onAdd({
+      id: `appt-fee-${selected.id}`,
+      name: `${selected.department} consultation fee`,
+      category: "Appointment",
+      group: selected.department,
+      price: selected.fee,
+      discount: selected.billingStatus === "Package covered" ? 100 : 0,
+      tax: 0,
+      meta: `${selected.appointmentNo} • ${selected.slot}`,
+    });
+  };
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <div>
+            <CardTitle>Appointment selection</CardTitle>
+            <CardDescription>Select the appointment, confirm doctor mapping, and add consultation fee to the bill.</CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid gap-3 lg:grid-cols-2">
+            {appointments.map((appointment) => (
+              <button key={appointment.id} onClick={() => { setSelectedId(appointment.id); toast.success(`${appointment.appointmentNo} selected`); }} className={cn("rounded-xl border bg-white p-4 text-left shadow-soft transition hover:-translate-y-0.5 hover:bg-primary-soft/40 hover:shadow-[0_12px_26px_rgba(39,37,54,0.08)]", selected.id === appointment.id ? "border-primary ring-2 ring-primary/15" : "border-border")}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-bold text-foreground">{appointment.appointmentNo}</div>
+                    <div className="mt-1 text-xs font-semibold text-muted-foreground">{appointment.department} • {appointment.doctor}</div>
+                  </div>
+                  <Badge tone={appointment.status === "Checked-in" || appointment.status === "Waiting" ? "success" : appointment.status === "Completed" ? "muted" : "info"}>{appointment.status}</Badge>
+                </div>
+                <div className="mt-3 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
+                  <span>{appointment.slot}</span>
+                  <span>{appointment.room}</span>
+                  <span>{appointment.visitType}</span>
+                  <span>{appointment.billingStatus}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Consultation fee mapping</CardTitle>
+          <CardDescription>Selected appointment details are used for billing audit, doctor revenue, and visit handoff.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-2">
+          <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Appointment</span><Input value={selected.appointmentNo} readOnly /></label>
+          <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Doctor</span><Input value={selected.doctor} readOnly /></label>
+          <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Department</span><Input value={selected.department} readOnly /></label>
+          <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Slot / Room</span><Input value={`${selected.slot} • ${selected.room}`} readOnly /></label>
+          <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Consultation fee</span><Input value={money(selected.fee)} readOnly /></label>
+          <label className="space-y-1"><span className="text-xs font-semibold text-muted-foreground">Billing status</span><Input value={selected.billingStatus} readOnly /></label>
+          <div className="flex flex-col gap-2 md:col-span-2 sm:flex-row">
+            <Button onClick={addAppointmentFee}><Plus className="h-4 w-4" />Add consultation fee</Button>
+            <Button variant="outline" onClick={() => toast.info("Doctor mapping confirmed")}>Confirm doctor mapping</Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
 
 function FormCard({ title, description, fields }: { title: string; description: string; fields: string[] }) {
@@ -333,7 +400,7 @@ export function BillingDeskPage({ initialStep = "patient" }: { initialStep?: Bil
           </div>
           {active === "patient" ? <PatientWorkspace selectedPatient={selectedPatient} onSelect={setSelectedPatient} /> : null}
           {active === "referral" ? <ReferralWorkspace /> : null}
-          {active === "appointments" ? <AppointmentsWorkspace onAdd={addService} /> : null}
+          {active === "appointments" ? <AppointmentsWorkspace patient={selectedPatient} onAdd={addService} /> : null}
           {active === "pathology" ? <ServiceGrid category="Pathology" onAdd={addService} lines={lines} /> : null}
           {active === "radiology" ? <ServiceGrid category="Radiology" onAdd={addService} lines={lines} /> : null}
           {active === "packages" ? <PackagesWorkspace onAdd={addService} lines={lines} /> : null}
