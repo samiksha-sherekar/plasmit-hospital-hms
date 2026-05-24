@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import type { ColumnDef } from "@tanstack/react-table";
-import { AlertTriangle, ArrowLeft, Bell, Brain, CheckCircle2, ClipboardList, Clock3, Droplets, Filter, Gauge, HeartPulse, Menu, MoreHorizontal, Pencil, Plus, Save, Search, Stethoscope, Trash2, TrendingUp, Waves } from "lucide-react";
+import { Activity, AlertTriangle, ArrowLeft, Bell, CheckCircle2, ClipboardList, Clock3, Filter, HeartPulse, Menu, MoreHorizontal, Pencil, Plus, Save, Search, Trash2, TrendingUp } from "lucide-react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { toast } from "sonner";
 
@@ -46,7 +46,6 @@ import {
   cvsParameterCards,
   cvsRecords,
   cvsTrendData,
-  icuModules,
   trendOptions,
   type AbdominalHourlyRecord,
   type AbdominalMetric,
@@ -66,7 +65,6 @@ import {
 } from "@/data/icu-monitoring";
 import { cn } from "@/lib/utils";
 
-const moduleIcons = [HeartPulse, Stethoscope, Gauge, Waves, Droplets, Brain, ClipboardList];
 const conditionOptions = ["Clean", "Redness", "Swelling", "Infection"];
 
 function PageMotion({ children }: { children: React.ReactNode }) {
@@ -75,20 +73,6 @@ function PageMotion({ children }: { children: React.ReactNode }) {
 
 function BackButton({ href = "/icu-monitoring/cvs" }: { href?: string }) {
   return <Button asChild variant="outline"><Link href={href}><ArrowLeft className="h-4 w-4" />Back</Link></Button>;
-}
-
-function IcuModuleTabs({ active = "cvs" }: { active?: string }) {
-  return (
-    <Tabs defaultValue={active}>
-      <TabsList className="bg-white shadow-sm">
-        {icuModules.map((module) => (
-          <TabsTrigger asChild key={module.label} value={module.label.toLowerCase().replaceAll(" ", "-").replaceAll("&", "and").replaceAll("--", "-")}>
-            <Link href={module.route}>{module.label}</Link>
-          </TabsTrigger>
-        ))}
-      </TabsList>
-    </Tabs>
-  );
 }
 
 function statusTone(status: CvsStatus) {
@@ -192,28 +176,12 @@ function HeaderBand({ title, subtitle, actions }: { title: string; subtitle?: st
 export function IcuMonitoringPage() {
   return (
     <PageMotion>
-      <HeaderBand title="ICU Monitoring" subtitle="Bedside clinical observations grouped by organ system with CVS monitoring ready for entry, trends, and review." actions={<Button asChild><Link href="/icu-monitoring/cvs">Open CVS</Link></Button>} />
-      <IcuModuleTabs />
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {icuModules.map((module, index) => {
-          const Icon = moduleIcons[index] ?? ClipboardList;
-          return (
-            <Card className="transition hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(39,37,54,0.08)]" key={module.label}>
-              <CardContent className="space-y-3 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-soft text-primary"><Icon className="h-5 w-5" /></div>
-                  <Badge tone={module.ready ? "success" : "muted"}>{module.ready ? "Ready" : "Placeholder"}</Badge>
-                </div>
-                <div>
-                  <div className="text-base font-bold text-foreground">{module.label}</div>
-                  <div className="mt-1 text-sm text-muted-foreground">{module.label === "CVS" ? "Cardiovascular observations, invasive pressures, trends, and records." : module.label === "Abdominal" ? "Abdominal pressure, outputs, hourly totals, notes, and insights." : module.label === "Drains & Tubes" ? "Drain output, tube status, site condition, alerts, and trends." : module.label === "Lines & Devices" ? "Line/device insertion state, lumen checks, alerts, and history." : "Clean placeholder for next ICU monitoring phase."}</div>
-                </div>
-                <Button asChild className="w-full" variant={module.ready ? "default" : "outline"}><Link href={module.route}>{module.ready ? "Open module" : "Preview placeholder"}</Link></Button>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      <HeaderBand title="ICU Monitoring" subtitle="Select CVS, Abdominal, Drains & Tubes, or Lines & Devices directly from the left sidebar." actions={<Button asChild><Link href="/icu-monitoring/cvs">Open CVS</Link></Button>} />
+      <Card>
+        <CardContent className="p-4">
+          <EmptyState icon={Activity} title="ICU modules moved to sidebar" description="The ICU module shortcuts are now available in the left sidebar for faster bedside navigation." />
+        </CardContent>
+      </Card>
     </PageMotion>
   );
 }
@@ -226,7 +194,6 @@ export function CvsDashboardPage() {
         subtitle="Live cardiovascular bedside snapshot for ICU review with compact entry pathways and trend context."
         actions={<><Button asChild><Link href="/icu-monitoring/cvs/add"><Plus className="h-4 w-4" />Add CVS Entry</Link></Button><Button asChild variant="outline"><Link href="/icu-monitoring/cvs/trends">View Trends</Link></Button><Button asChild variant="outline"><Link href="/icu-monitoring/cvs/records">View All Records</Link></Button></>}
       />
-      <IcuModuleTabs />
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{cvsMetrics.map((metric) => <MetricCard key={metric.id} metric={metric} />)}</div>
       <div className="grid gap-4 xl:grid-cols-[1fr_360px]">
         <Card>
@@ -535,7 +502,6 @@ export function AbdominalDashboardPage() {
   return (
     <PageMotion>
       <HeaderBand title="Abdominal Monitoring" subtitle="ICU abdominal pressure, gastric output, drain output, hourly totals, and notes in one bedside workflow." actions={<><Button asChild variant="outline"><Link href="/icu-monitoring/abdominal/trends">View Trends</Link></Button><Button asChild variant="outline"><Link href="/icu-monitoring/abdominal/records">View Records</Link></Button></>} />
-      <IcuModuleTabs active="abdominal" />
       <PatientHeaderCard />
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">{abdominalMetrics.map((metric) => <AbdominalMetricCard key={metric.id} metric={metric} />)}</div>
       <TimeRangePanel />
@@ -737,7 +703,6 @@ export function DrainsOverviewPage() {
   return (
     <PageMotion>
       <HeaderBand title="Drains & Tubes" subtitle="ICU bedside drain and tube monitoring with output state, site condition, trends, and alerts." actions={<><BackButton href="/icu-monitoring" /><Button asChild><Link href="/icu-monitoring/drains/add"><Plus className="h-4 w-4" />Add New Drain / Tube</Link></Button></>} />
-      <IcuModuleTabs active="drains-and-tubes" />
       <Card className="sticky top-20 z-20">
         <CardContent className="flex flex-col gap-3 p-3 md:flex-row md:items-center">
           <Filter className="hidden h-4 w-4 text-muted-foreground md:block" />
@@ -1003,7 +968,6 @@ export function LinesDevicesOverviewPage() {
   return (
     <PageMotion>
       <HeaderBand title="Lines & Devices" subtitle="ICU access line, catheter, lumen, dressing, waveform, and device safety monitoring." actions={<><Button variant="outline"><Menu className="h-4 w-4" />Menu</Button><Button asChild variant="outline"><Link href="/icu-monitoring/lines-devices/alerts"><Bell className="h-4 w-4" />Alerts</Link></Button><Button asChild><Link href="/icu-monitoring/lines-devices/add"><Plus className="h-4 w-4" />Add New Line / Device</Link></Button></>} />
-      <IcuModuleTabs active="lines-and-devices" />
       <Card className="sticky top-20 z-20">
         <CardContent className="flex flex-col gap-3 p-3 md:flex-row md:items-center">
           <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-border bg-white px-3 shadow-sm">

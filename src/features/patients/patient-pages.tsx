@@ -6,6 +6,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import {
   AlertTriangle,
   CalendarClock,
+  ChevronDown,
   Eye,
   FileCheck2,
   FileText,
@@ -87,7 +88,7 @@ export function PatientsPage() {
     { header: "Alerts", cell: ({ row }) => <PatientAlertChips alerts={row.original.alertFlags} /> },
     { header: "Docs", cell: ({ row }) => <StatusBadge status={row.original.documentStatus} /> },
     { header: "Status", cell: ({ row }) => <PatientStatusBadge status={row.original.status} /> },
-    { header: "Actions", cell: ({ row }) => <div className="flex gap-1"><Button size="sm" variant="outline" onClick={() => setSelected(row.original)}><Eye className="h-3.5 w-3.5" />Quick</Button><Button size="sm" asChild><Link href={`/patients/${row.original.id}`}>Open</Link></Button></div> },
+    { header: "Actions", cell: ({ row }) => <div className="flex gap-1"><Button size="sm" variant="outline" onClick={() => setSelected(row.original)}><Eye className="h-3.5 w-3.5" />Quick</Button><Button size="sm" asChild><Link href={`/patients/${row.original.id}`}>Open</Link></Button><Button size="sm" variant="outline" asChild><Link href={`/billing-desk/patient?patientId=${row.original.id}`}>Billing</Link></Button></div> },
   ], []);
 
   return (
@@ -130,6 +131,7 @@ function PatientQuickDrawer({ patient, onOpenChange }: { patient: PatientRecord 
           <DetailRow label="Documents" value={`${docs.length} documents • ${patient.documentStatus}`} />
           <div className="grid gap-2">
             <Button asChild><Link href={`/patients/${patient.id}`}>Open profile</Link></Button>
+            <Button variant="outline" asChild><Link href={`/billing-desk/patient?patientId=${patient.id}`}>Open billing desk</Link></Button>
             <Button variant="outline" onClick={() => toast.info("Appointment creation placeholder")}>Create appointment</Button>
           </div>
         </div>
@@ -172,18 +174,118 @@ export function PatientRegistrationPage() {
 }
 
 function RegistrationGrid({ onMobileChange, compact, section }: { onMobileChange: (value: string) => void; compact?: boolean; section?: string }) {
+  const required = ["First name", "Last name", "Age or DOB", "Gender", "Mobile number", "Department", "Visit type", "Emergency/unknown toggle"];
+  const sectionFields: Record<string, RegistrationFieldConfig[]> = {
+    "Basic details": [
+      { label: "First name", required: true },
+      { label: "Middle name" },
+      { label: "Last name", required: true },
+      { label: "Date of birth / Age", required: true, placeholder: "18 Apr 1984 / 42" },
+      { label: "Gender", required: true, options: ["Female", "Male", "Other", "Unknown"] },
+      { label: "Blood group", options: ["Unknown", "O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"] },
+    ],
+    "Contact details": [
+      { label: "Mobile number", required: true, placeholder: "+91 98765 44210" },
+      { label: "Alternate phone", placeholder: "+91 98765 44211" },
+      { label: "Email", placeholder: "patient@example.com" },
+      { label: "Address line", required: true, placeholder: "House, street, landmark" },
+      { label: "City", options: ["Pune", "Delhi", "Noida", "Gurugram", "Mumbai", "Other"] },
+      { label: "PIN code", placeholder: "411045" },
+    ],
+    "Identity details": [
+      { label: "ID type", options: ["Aadhaar", "PAN", "Passport", "Driving licence", "Birth certificate", "Not available"] },
+      { label: "ID number", placeholder: "Enter verified ID number" },
+      { label: "Nationality", options: ["Indian", "NRI", "Foreign national", "Unknown"] },
+      { label: "Occupation", placeholder: "Occupation" },
+      { label: "Marital status", options: ["Single", "Married", "Widowed", "Divorced", "Not disclosed"] },
+      { label: "Language", options: ["Hindi", "English", "Marathi", "Punjabi", "Bengali", "Other"] },
+    ],
+    "Guardian / emergency contact": [
+      { label: "Guardian name", placeholder: "Guardian / attendant name" },
+      { label: "Relationship", options: ["Self", "Spouse", "Parent", "Child", "Sibling", "Guardian", "Other"] },
+      { label: "Guardian mobile", placeholder: "+91 98765 44210" },
+      { label: "Emergency contact", placeholder: "Emergency contact name" },
+      { label: "Contact address", placeholder: "Emergency contact address" },
+      { label: "Consent holder", options: ["Patient", "Guardian", "Attendant", "Legal representative"] },
+    ],
+    "Insurance placeholder": [
+      { label: "Payer type", options: ["Self", "Insurance", "Corporate", "TPA", "CGHS", "Ayushman"] },
+      { label: "Insurance company", options: ["Not applicable", "Star Health", "ICICI Lombard", "HDFC Ergo", "CGHS", "Other"] },
+      { label: "Policy number", placeholder: "Policy / member ID" },
+      { label: "TPA", options: ["Not applicable", "Medi Assist", "Vidal Health", "MD India", "Health India", "Other"] },
+      { label: "Corporate code", placeholder: "Corporate employee code" },
+      { label: "Coverage remarks", placeholder: "Co-pay, limits, exclusions" },
+    ],
+    "ABHA / Health ID": [
+      { label: "ABHA number", placeholder: "14 digit ABHA number" },
+      { label: "Consent status", options: ["Not captured", "Consent required", "Consent captured", "Consent denied"] },
+      { label: "Linked mobile", placeholder: "+91 98765 44210" },
+      { label: "Health ID mode", options: ["ABHA number", "ABHA address", "Mobile OTP", "Aadhaar OTP", "Manual later"] },
+      { label: "Verification status", options: ["Pending", "Verified", "Failed", "Skipped"] },
+      { label: "Sync note", placeholder: "ABHA sync note" },
+    ],
+    Preferences: [
+      { label: "Preferred language", options: ["Hindi", "English", "Marathi", "Punjabi", "Other"] },
+      { label: "Communication channel", options: ["SMS", "WhatsApp", "Email", "Phone call", "No preference"] },
+      { label: "SMS consent", options: ["Allowed", "Blocked", "Emergency only"] },
+      { label: "WhatsApp consent", options: ["Allowed", "Blocked", "Emergency only"] },
+      { label: "Doctor preference", options: ["No preference", "Same consultant", "Female doctor", "Senior consultant"] },
+      { label: "Visit preference", options: ["OPD", "IPD", "Emergency", "Teleconsult", "Diagnostics only"] },
+    ],
+    "Risk & alerts": [
+      { label: "Allergy", placeholder: "Drug / food allergy" },
+      { label: "Chronic condition", placeholder: "Diabetes, HTN, asthma..." },
+      { label: "Critical flag", options: ["None", "High risk", "Medico-legal", "Isolation", "Fall risk", "VIP"] },
+      { label: "VIP / special note", options: ["None", "VIP", "Staff family", "Senior citizen", "International patient"] },
+      { label: "Fall risk", options: ["Not assessed", "Low", "Moderate", "High"] },
+      { label: "Infection alert", options: ["None", "Contact precaution", "Droplet precaution", "Airborne precaution"] },
+    ],
+  };
   const fields = compact
-    ? ["First name", "Last name", "Age or DOB", "Gender", "Mobile number", "Department", "Visit type", "Emergency/unknown toggle"]
-    : ["Field 1", "Field 2", "Field 3", "Field 4", "Field 5", "Field 6"].map((field) => `${section} ${field}`);
+    ? [
+      { label: "First name", required: true },
+      { label: "Last name", required: true },
+      { label: "Age or DOB", required: true, placeholder: "42 / 18 Apr 1984" },
+      { label: "Gender", required: true, options: ["Female", "Male", "Other", "Unknown"] },
+      { label: "Mobile number", required: true, placeholder: "+91 98765 44210" },
+      { label: "Department", required: true, options: ["Cardiology", "Orthopedics", "General Medicine", "Pediatrics", "Emergency", "Diagnostics"] },
+      { label: "Visit type", required: true, options: ["OPD", "IPD", "Emergency", "Lab", "Radiology", "Billing"] },
+      { label: "Emergency/unknown toggle", options: ["Regular patient", "Unknown emergency", "Identity pending"] },
+    ]
+    : sectionFields[section ?? ""] ?? [];
   return (
     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-      {fields.map((field) => (
-        <label className="space-y-1 text-sm" key={field}>
-          <span className="font-medium text-foreground">{field}</span>
-          <Input placeholder={field.includes("Mobile") ? "+91 98765 44210" : "Static placeholder"} onChange={field.includes("Mobile") ? (event) => onMobileChange(event.target.value) : undefined} />
-        </label>
-      ))}
+      {fields.map((field) => <RegistrationField key={field.label} field={field} required={field.required || required.includes(field.label)} onMobileChange={onMobileChange} />)}
     </div>
+  );
+}
+
+type RegistrationFieldConfig = {
+  label: string;
+  placeholder?: string;
+  required?: boolean;
+  options?: string[];
+};
+
+function RegistrationField({ field, required, onMobileChange }: { field: RegistrationFieldConfig; required?: boolean; onMobileChange: (value: string) => void }) {
+  const isMobile = field.label.toLowerCase().includes("mobile") || field.label.toLowerCase().includes("phone");
+  const placeholder = field.placeholder ?? (field.label.includes("Address") ? "House, street, landmark" : `Enter ${field.label.toLowerCase()}`);
+  return (
+    <label className="rounded-xl border border-border bg-white p-3 text-sm shadow-soft transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15">
+      <span className="mb-1 flex items-center gap-1 text-xs font-bold text-muted-foreground">{field.label}{required ? <span className="text-danger">*</span> : null}</span>
+      {field.options ? (
+        <span className="group relative block">
+          <select className="h-11 w-full appearance-none rounded-xl border border-input bg-white px-3.5 pr-11 text-sm font-semibold text-foreground shadow-sm outline-none transition hover:border-primary/45 focus:border-primary focus:ring-2 focus:ring-primary/15">
+            {field.options.map((option) => <option key={option}>{option}</option>)}
+          </select>
+          <span className="pointer-events-none absolute right-1.5 top-1.5 flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-surface-muted text-muted-foreground transition group-focus-within:border-primary/30 group-focus-within:bg-primary-soft group-focus-within:text-primary">
+            <ChevronDown className="h-4 w-4" />
+          </span>
+        </span>
+      ) : (
+        <Input className="h-11 border-0 bg-transparent px-0 font-semibold shadow-none focus:ring-0" placeholder={placeholder} onChange={isMobile ? (event) => onMobileChange(event.target.value) : undefined} />
+      )}
+    </label>
   );
 }
 
