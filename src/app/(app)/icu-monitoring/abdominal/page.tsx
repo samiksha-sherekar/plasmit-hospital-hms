@@ -1,5 +1,11 @@
+import { Suspense } from "react";
+
 import { AbdominalDashboardPage } from "@/features/icu-monitoring/icu-monitoring-pages";
 
 export default function Page() {
-  return <AbdominalDashboardPage />;
+  return (
+    <Suspense fallback={null}>
+      <AbdominalDashboardPage />
+    </Suspense>
+  );
 }
