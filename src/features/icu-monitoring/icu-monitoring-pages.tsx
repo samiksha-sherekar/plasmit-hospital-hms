@@ -2,10 +2,10 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Activity, AlertTriangle, ArrowLeft, Bell, CheckCircle2, ClipboardList, Clock3, Filter, HeartPulse, Menu, MoreHorizontal, Pencil, Plus, Save, Search, Trash2, TrendingUp } from "lucide-react";
+import { Activity, AlertTriangle, ArrowLeft, Bell, CheckCircle2, ClipboardList, Clock3, Filter, Menu, MoreHorizontal, Pencil, Plus, Save, Search, Trash2, TrendingUp } from "lucide-react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { toast } from "sonner";
 
@@ -24,7 +24,6 @@ import {
   abdominalHourlyRecords,
   abdominalInsights,
   abdominalMetrics,
-  abdominalPatient,
   abdominalTrendData,
   drainAlertTriggers,
   drainAlerts,
@@ -63,16 +62,89 @@ import {
   type LineDeviceSeverity,
   type LineDeviceStatus,
 } from "@/data/icu-monitoring";
+import { mockPatients, mockPatientVisits } from "@/data/patients";
 import { cn } from "@/lib/utils";
 
 const conditionOptions = ["Clean", "Redness", "Swelling", "Infection"];
+
+type IcuPatientContext = {
+  id: string;
+  uhid: string;
+  name: string;
+  ageGender: string;
+  encounter: string;
+  department: string;
+  bed: string;
+  consultant: string;
+  alerts: string[];
+};
+
+function patientName(patient: (typeof mockPatients)[number]) {
+  return `${patient.firstName} ${patient.lastName}`.trim();
+}
+
+function patientSearchText(patient: (typeof mockPatients)[number]) {
+  return [
+    patient.id,
+    patient.uhid,
+    patient.firstName,
+    patient.lastName,
+    patient.mobile,
+    patient.department,
+    patient.city,
+    patient.status,
+  ].join(" ").toLowerCase();
+}
+
+function consultantForDepartment(department: string) {
+  const consultants: Record<string, string> = {
+    Cardiology: "Dr. Kavita Rao",
+    Emergency: "Emergency desk",
+    Oncology: "Dr. Rakesh Menon",
+    Orthopedics: "Dr. Aman Verma",
+    Pediatrics: "Dr. Neha Malik",
+  };
+  return consultants[department] ?? "Duty consultant";
+}
+
+function icuPatientFromRecord(patient: (typeof mockPatients)[number]): IcuPatientContext {
+  const visits = mockPatientVisits.filter((visit) => visit.patientId === patient.id);
+  const activeVisit = visits.find((visit) => visit.status === "Active") ?? visits[0];
+  const encounter = activeVisit ? `${activeVisit.visitType} ${activeVisit.referenceNumber}` : "No active encounter";
+  const bed = activeVisit?.visitType === "IPD" ? `${activeVisit.department} Ward / ICU bed pending` : `${patient.department} - bedside review`;
+
+  return {
+    id: patient.id,
+    uhid: patient.uhid,
+    name: patientName(patient),
+    ageGender: `${patient.age}/${patient.gender}`,
+    encounter,
+    department: activeVisit?.department ?? patient.department,
+    bed,
+    consultant: activeVisit?.provider ?? consultantForDepartment(patient.department),
+    alerts: patient.alertFlags.length ? patient.alertFlags : ["No active risk flag"],
+  };
+}
+
+function useIcuPatientContext() {
+  const searchParams = useSearchParams();
+  const requestedPatientId = searchParams.get("patientId") ?? mockPatients[0].id;
+  const selectedRecord = mockPatients.find((patient) => patient.id === requestedPatientId) ?? mockPatients[0];
+  const patient = icuPatientFromRecord(selectedRecord);
+  const withPatient = React.useCallback((href: string) => {
+    const separator = href.includes("?") ? "&" : "?";
+    return `${href}${separator}patientId=${selectedRecord.id}`;
+  }, [selectedRecord.id]);
+
+  return { patient, selectedPatientId: selectedRecord.id, withPatient };
+}
 
 function PageMotion({ children }: { children: React.ReactNode }) {
   return <motion.div animate={{ opacity: 1, y: 0 }} className="space-y-4" initial={{ opacity: 0, y: 8 }} transition={{ duration: 0.22, ease: "easeOut" }}>{children}</motion.div>;
 }
 
-function BackButton({ href = "/icu-monitoring/cvs" }: { href?: string }) {
-  return <Button asChild variant="outline"><Link href={href}><ArrowLeft className="h-4 w-4" />Back</Link></Button>;
+function BackButton({ href = "/icu-monitoring/cvs", withPatient }: { href?: string; withPatient?: (href: string) => string }) {
+  return <Button asChild variant="outline"><Link href={withPatient ? withPatient(href) : href}><ArrowLeft className="h-4 w-4" />Back</Link></Button>;
 }
 
 function statusTone(status: CvsStatus) {
@@ -112,7 +184,10 @@ function Sparkline({ values, color }: { values: number[]; color: string }) {
 
 function ClientChart({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = React.useState(false);
-  React.useEffect(() => setMounted(true), []);
+  React.useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setMounted(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
   if (!mounted) {
     return (
       <div className="space-y-3 p-2">
@@ -126,10 +201,11 @@ function ClientChart({ children }: { children: React.ReactNode }) {
   return children;
 }
 
-function MetricCard({ metric }: { metric: CvsMetric }) {
+function MetricCard({ metric, withPatient }: { metric: CvsMetric; withPatient?: (href: string) => string }) {
   const Icon = metric.icon;
+  const href = `/icu-monitoring/cvs/${metric.id}`;
   return (
-    <Link href={`/icu-monitoring/cvs/${metric.id}`} className="group block">
+    <Link href={withPatient ? withPatient(href) : href} className="group block">
       <Card className="transition duration-200 hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(39,37,54,0.10)]">
         <CardContent className="space-y-4 p-4">
           <div className="flex items-start justify-between gap-3">
@@ -160,6 +236,98 @@ function MetricCard({ metric }: { metric: CvsMetric }) {
   );
 }
 
+function IcuPatientHeader({
+  patient,
+  description = "CVS readings, trends, and records are attached to this patient context.",
+}: {
+  patient: IcuPatientContext;
+  description?: string;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [patientSearch, setPatientSearch] = React.useState("");
+  const filteredPatients = React.useMemo(() => {
+    const query = patientSearch.trim().toLowerCase();
+    if (!query) return mockPatients;
+    return mockPatients.filter((record) => patientSearchText(record).includes(query));
+  }, [patientSearch]);
+  const fields = [
+    ["Patient", patient.name],
+    ["UHID", patient.uhid],
+    ["Age/Gender", patient.ageGender],
+    ["Encounter", patient.encounter],
+    ["Ward/Bed", patient.bed],
+    ["Consultant", patient.consultant],
+  ];
+  const selectPatient = React.useCallback((patientId: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("patientId", patientId);
+    router.push(`${pathname}?${params.toString()}`);
+    setPatientSearch("");
+  }, [pathname, router, searchParams]);
+
+  return (
+    <Card className="border-primary/20 bg-white">
+      <CardHeader className="flex-col gap-3 lg:flex-row">
+        <div>
+          <CardTitle>Monitoring patient</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </div>
+        <div className="flex w-full flex-col gap-2 lg:w-[420px]">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              className="pl-9"
+              onChange={(event) => setPatientSearch(event.target.value)}
+              placeholder="Search patient by name, UHID, mobile..."
+              value={patientSearch}
+            />
+          </div>
+          {patientSearch ? (
+            <div className="max-h-56 overflow-auto rounded-xl border border-border bg-white p-1 shadow-soft">
+              {filteredPatients.length ? filteredPatients.map((record) => (
+                <button
+                  className={cn(
+                    "flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-primary-soft",
+                    record.id === patient.id && "bg-primary-soft text-primary"
+                  )}
+                  key={record.id}
+                  onClick={() => selectPatient(record.id)}
+                  type="button"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate font-semibold">{patientName(record)}</span>
+                    <span className="block truncate text-xs text-muted-foreground">{record.uhid} • {record.mobile} • {record.department}</span>
+                  </span>
+                  <Badge tone={record.id === patient.id ? "info" : "muted"}>{record.status}</Badge>
+                </button>
+              )) : (
+                <div className="px-3 py-4 text-sm font-medium text-muted-foreground">No matching patient found</div>
+              )}
+            </div>
+          ) : null}
+        </div>
+        <Badge tone="info">{patient.department}</Badge>
+      </CardHeader>
+      <CardContent className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+        {fields.map(([label, value]) => (
+          <div className="rounded-xl border border-border bg-[#f8f9fc] p-3" key={label}>
+            <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{label}</div>
+            <div className="mt-1 text-sm font-semibold text-foreground">{value}</div>
+          </div>
+        ))}
+        <div className="rounded-xl border border-warning/20 bg-warning/10 p-3 md:col-span-3 xl:col-span-6">
+          <div className="text-[11px] font-bold uppercase tracking-wide text-warning">Risk flags</div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {patient.alerts.map((alert) => <Badge key={alert} tone="warning">{alert}</Badge>)}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function HeaderBand({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-border bg-white p-4 shadow-soft md:flex-row md:items-center md:justify-between">
@@ -174,9 +342,10 @@ function HeaderBand({ title, subtitle, actions }: { title: string; subtitle?: st
 }
 
 export function IcuMonitoringPage() {
+  const { withPatient } = useIcuPatientContext();
   return (
     <PageMotion>
-      <HeaderBand title="ICU Monitoring" subtitle="Select CVS, Abdominal, Drains & Tubes, or Lines & Devices directly from the left sidebar." actions={<Button asChild><Link href="/icu-monitoring/cvs">Open CVS</Link></Button>} />
+      <HeaderBand title="ICU Monitoring" subtitle="Select CVS, Abdominal, Drains & Tubes, or Lines & Devices directly from the left sidebar." actions={<Button asChild><Link href={withPatient("/icu-monitoring/cvs")}>Open CVS</Link></Button>} />
       <Card>
         <CardContent className="p-4">
           <EmptyState icon={Activity} title="ICU modules moved to sidebar" description="The ICU module shortcuts are now available in the left sidebar for faster bedside navigation." />
@@ -187,17 +356,19 @@ export function IcuMonitoringPage() {
 }
 
 export function CvsDashboardPage() {
+  const { patient, withPatient } = useIcuPatientContext();
   return (
     <PageMotion>
-      <HeaderBand
-        title="CVS Monitoring"
-        subtitle="Live cardiovascular bedside snapshot for ICU review with compact entry pathways and trend context."
-        actions={<><Button asChild><Link href="/icu-monitoring/cvs/add"><Plus className="h-4 w-4" />Add CVS Entry</Link></Button><Button asChild variant="outline"><Link href="/icu-monitoring/cvs/trends">View Trends</Link></Button><Button asChild variant="outline"><Link href="/icu-monitoring/cvs/records">View All Records</Link></Button></>}
-      />
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{cvsMetrics.map((metric) => <MetricCard key={metric.id} metric={metric} />)}</div>
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button asChild><Link href={withPatient("/icu-monitoring/cvs/add")}><Plus className="h-4 w-4" />Add CVS Entry</Link></Button>
+        <Button asChild variant="outline"><Link href={withPatient("/icu-monitoring/cvs/trends")}>View Trends</Link></Button>
+        <Button asChild variant="outline"><Link href={withPatient("/icu-monitoring/cvs/records")}>View All Records</Link></Button>
+      </div>
+      <IcuPatientHeader patient={patient} />
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{cvsMetrics.map((metric) => <MetricCard key={metric.id} metric={metric} withPatient={withPatient} />)}</div>
       <div className="grid gap-4 xl:grid-cols-[1fr_360px]">
         <Card>
-          <CardHeader><div><CardTitle>Bedside trend preview</CardTitle><CardDescription>Last seven cardiovascular readings</CardDescription></div><Button asChild size="sm" variant="outline"><Link href="/icu-monitoring/cvs/trends"><TrendingUp className="h-4 w-4" />Open trends</Link></Button></CardHeader>
+          <CardHeader><div><CardTitle>Bedside trend preview</CardTitle><CardDescription>Last seven cardiovascular readings</CardDescription></div><Button asChild size="sm" variant="outline"><Link href={withPatient("/icu-monitoring/cvs/trends")}><TrendingUp className="h-4 w-4" />Open trends</Link></Button></CardHeader>
           <CardContent className="h-64">
             <ClientChart>
               <ResponsiveContainer height="100%" width="100%">
@@ -218,14 +389,16 @@ export function CvsDashboardPage() {
 }
 
 export function CvsAddPage() {
+  const { patient, withPatient } = useIcuPatientContext();
   return (
     <PageMotion>
-      <HeaderBand title="Add CVS Entry" subtitle="Choose the cardiovascular parameter to document for this ICU bedside record." actions={<BackButton />} />
+      <HeaderBand title="Add CVS Entry" subtitle="Choose the cardiovascular parameter to document for this ICU bedside record." actions={<BackButton withPatient={withPatient} />} />
+      <IcuPatientHeader patient={patient} />
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {cvsParameterCards.map((item) => {
           const Icon = item.icon;
           return (
-            <Link href={item.route} key={item.id} className="group block">
+            <Link href={withPatient(item.route)} key={item.id} className="group block">
               <Card className="transition hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(39,37,54,0.10)]">
                 <CardContent className="flex items-start gap-3 p-4">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary"><Icon className="h-5 w-5" /></div>
@@ -254,6 +427,7 @@ const formFields: Record<CvsParameterId, { title: string; fields: string[] }> = 
 
 export function CvsParameterFormPage({ parameter }: { parameter: CvsParameterId }) {
   const router = useRouter();
+  const { patient, withPatient } = useIcuPatientContext();
   const config = formFields[parameter];
   const [values, setValues] = React.useState<Record<string, string>>({});
   const [submitted, setSubmitted] = React.useState(false);
@@ -261,7 +435,8 @@ export function CvsParameterFormPage({ parameter }: { parameter: CvsParameterId 
   const missing = required.filter((field) => !values[field]?.trim());
   return (
     <PageMotion>
-      <HeaderBand title={config.title} subtitle="Structured ICU bedside entry with validation, draft state, and audit-friendly save action." actions={<BackButton href="/icu-monitoring/cvs/add" />} />
+      <HeaderBand title={config.title} subtitle="Structured ICU bedside entry with validation, draft state, and audit-friendly save action." actions={<BackButton href="/icu-monitoring/cvs/add" withPatient={withPatient} />} />
+      <IcuPatientHeader patient={patient} />
       <div className="grid gap-4 xl:grid-cols-[1fr_340px]">
         <Card>
           <CardContent className="grid gap-3 p-4 md:grid-cols-2">
@@ -297,7 +472,7 @@ export function CvsParameterFormPage({ parameter }: { parameter: CvsParameterId 
             return;
           }
           toast.success(`${config.title} saved to CVS monitoring`);
-          router.push("/icu-monitoring/cvs/records");
+          router.push(withPatient("/icu-monitoring/cvs/records"));
         }}
         saveLabel="Save CVS entry"
       />
@@ -306,6 +481,7 @@ export function CvsParameterFormPage({ parameter }: { parameter: CvsParameterId 
 }
 
 export function CvsTrendsPage() {
+  const { patient, withPatient } = useIcuPatientContext();
   const [selected, setSelected] = React.useState<(typeof trendOptions)[number]>(trendOptions[0]);
   const columns = React.useMemo<ColumnDef<(typeof cvsTrendData)[number]>[]>(() => [
     { header: "Time", accessorKey: "time" },
@@ -313,7 +489,8 @@ export function CvsTrendsPage() {
   ], [selected]);
   return (
     <PageMotion>
-      <HeaderBand title="CVS Trends" subtitle="Parameter-specific line charts with bedside data table for ICU review." actions={<BackButton />} />
+      <HeaderBand title="CVS Trends" subtitle="Parameter-specific line charts with bedside data table for ICU review." actions={<BackButton withPatient={withPatient} />} />
+      <IcuPatientHeader patient={patient} />
       <Tabs value={selected.id} onValueChange={(value) => setSelected(trendOptions.find((item) => item.id === value) ?? trendOptions[0])}>
         <TabsList>{trendOptions.map((item) => <TabsTrigger key={item.id} value={item.id}>{item.label}</TabsTrigger>)}</TabsList>
         <TabsContent value={selected.id}>
@@ -334,6 +511,7 @@ export function CvsTrendsPage() {
 }
 
 export function CvsRecordsPage() {
+  const { patient, withPatient } = useIcuPatientContext();
   const columns = React.useMemo<ColumnDef<CvsRecord>[]>(() => [
     { header: "Date & Time", accessorKey: "dateTime" },
     { header: "HR", cell: ({ row }) => `${row.original.hr} bpm` },
@@ -346,29 +524,10 @@ export function CvsRecordsPage() {
   ], []);
   return (
     <PageMotion>
-      <HeaderBand title="CVS Records" subtitle="Complete mock cardiovascular monitoring table for ICU bedside review." actions={<><BackButton /><Button asChild><Link href="/icu-monitoring/cvs/add"><Plus className="h-4 w-4" />Add Entry</Link></Button></>} />
+      <HeaderBand title="CVS Records" subtitle="Complete mock cardiovascular monitoring table for ICU bedside review." actions={<><BackButton withPatient={withPatient} /><Button asChild><Link href={withPatient("/icu-monitoring/cvs/add")}><Plus className="h-4 w-4" />Add Entry</Link></Button></>} />
+      <IcuPatientHeader patient={patient} />
       <DataTable data={cvsRecords} columns={columns} />
     </PageMotion>
-  );
-}
-
-function PatientHeaderCard() {
-  return (
-    <Card>
-      <CardContent className="grid gap-3 p-4 md:grid-cols-4">
-        {[
-          ["Patient", abdominalPatient.name],
-          ["MRN", abdominalPatient.mrn],
-          ["Bed", abdominalPatient.bed],
-          ["Date & Time", abdominalPatient.dateTime],
-        ].map(([label, value]) => (
-          <div className="rounded-xl border border-border bg-[#f8f9fc] p-3" key={label}>
-            <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{label}</div>
-            <div className="mt-1 text-sm font-semibold text-foreground">{value}</div>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
   );
 }
 
@@ -499,10 +658,14 @@ function ClinicalInsightCard() {
 }
 
 export function AbdominalDashboardPage() {
+  const { patient, withPatient } = useIcuPatientContext();
   return (
     <PageMotion>
-      <HeaderBand title="Abdominal Monitoring" subtitle="ICU abdominal pressure, gastric output, drain output, hourly totals, and notes in one bedside workflow." actions={<><Button asChild variant="outline"><Link href="/icu-monitoring/abdominal/trends">View Trends</Link></Button><Button asChild variant="outline"><Link href="/icu-monitoring/abdominal/records">View Records</Link></Button></>} />
-      <PatientHeaderCard />
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button asChild variant="outline"><Link href={withPatient("/icu-monitoring/abdominal/trends")}>View Trends</Link></Button>
+        <Button asChild variant="outline"><Link href={withPatient("/icu-monitoring/abdominal/records")}>View Records</Link></Button>
+      </div>
+      <IcuPatientHeader description="Abdominal pressure, output trends, hourly records, and notes are attached to this patient context." patient={patient} />
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">{abdominalMetrics.map((metric) => <AbdominalMetricCard key={metric.id} metric={metric} />)}</div>
       <TimeRangePanel />
       <div className="grid gap-4 xl:grid-cols-2">{abdominalChartConfigs.map((config) => <AbdominalTrendCard config={config} key={config.id} />)}</div>
@@ -566,9 +729,11 @@ function ComparisonTable() {
 }
 
 export function AbdominalTrendsPage() {
+  const { patient, withPatient } = useIcuPatientContext();
   return (
     <PageMotion>
-      <HeaderBand title="Abdominal Trends" subtitle="Responsive trend cards for abdominal pressure and output monitoring." actions={<BackButton href="/icu-monitoring/abdominal" />} />
+      <HeaderBand title="Abdominal Trends" subtitle="Responsive trend cards for abdominal pressure and output monitoring." actions={<BackButton href="/icu-monitoring/abdominal" withPatient={withPatient} />} />
+      <IcuPatientHeader description="Abdominal pressure and output trends are attached to this patient context." patient={patient} />
       <TimeRangePanel />
       <div className="grid gap-4 xl:grid-cols-2">{abdominalChartConfigs.map((config) => <AbdominalTrendCard config={config} key={config.id} />)}</div>
       <EmptyState icon={ClipboardList} title="No device feed connected" description="Mock data is displayed now. API endpoints can be connected when bedside device integration is ready." />
@@ -577,9 +742,11 @@ export function AbdominalTrendsPage() {
 }
 
 export function AbdominalRecordsPage() {
+  const { patient, withPatient } = useIcuPatientContext();
   return (
     <PageMotion>
-      <HeaderBand title="Abdominal Records" subtitle="Hourly abdominal monitoring records with 12-hour and 24-hour totals." actions={<BackButton href="/icu-monitoring/abdominal" />} />
+      <HeaderBand title="Abdominal Records" subtitle="Hourly abdominal monitoring records with 12-hour and 24-hour totals." actions={<BackButton href="/icu-monitoring/abdominal" withPatient={withPatient} />} />
+      <IcuPatientHeader description="Hourly abdominal records and bedside notes are attached to this patient context." patient={patient} />
       <ComparisonTable />
       <div className="grid gap-4 xl:grid-cols-2">
         <HourlyRecordTable parameter="iap" title="Intra-abdominal Pressure" unit="mmHg" />

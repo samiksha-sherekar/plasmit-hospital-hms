@@ -1,5 +1,11 @@
+import { Suspense } from "react";
+
 import { CvsTrendsPage } from "@/features/icu-monitoring/icu-monitoring-pages";
 
 export default function Page() {
-  return <CvsTrendsPage />;
+  return (
+    <Suspense fallback={null}>
+      <CvsTrendsPage />
+    </Suspense>
+  );
 }

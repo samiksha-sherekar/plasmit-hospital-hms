@@ -1,5 +1,11 @@
+import { Suspense } from "react";
+
 import { CvsDashboardPage } from "@/features/icu-monitoring/icu-monitoring-pages";
 
 export default function Page() {
-  return <CvsDashboardPage />;
+  return (
+    <Suspense fallback={null}>
+      <CvsDashboardPage />
+    </Suspense>
+  );
 }

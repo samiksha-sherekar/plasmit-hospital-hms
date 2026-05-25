@@ -1,5 +1,11 @@
+import { Suspense } from "react";
+
 import { CvsParameterFormPage } from "@/features/icu-monitoring/icu-monitoring-pages";
 
 export default function Page() {
-  return <CvsParameterFormPage parameter="heart-rate" />;
+  return (
+    <Suspense fallback={null}>
+      <CvsParameterFormPage parameter="heart-rate" />
+    </Suspense>
+  );
 }
