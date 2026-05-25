@@ -77,7 +77,7 @@ export function BedManagerWorkspace() {
         </div>
         <Badge tone="info">Step 3</Badge>
       </CardHeader>
-      <CardContent className="grid gap-4 p-3 sm:p-[var(--density-card-padding)] xl:grid-cols-[minmax(0,1fr)_340px]">
+      <CardContent className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 space-y-4">
           <div className="rounded-lg border border-border p-3">
             <div className="text-xs font-medium text-muted-foreground">Active Request</div>
@@ -133,16 +133,16 @@ export function BedManagerWorkspace() {
             ))}
           </select>
 
-          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 lg:flex-wrap lg:overflow-visible lg:pb-0">
+          <div className="flex flex-wrap gap-2">
             {allStatuses.map((item) => (
-              <Button className="shrink-0" key={item} size="sm" variant={status === item ? "default" : "outline"} onClick={() => setStatus(item)}>
+              <Button key={item} size="sm" variant={status === item ? "default" : "outline"} onClick={() => setStatus(item)}>
                 {item}
               </Button>
             ))}
           </div>
 
           <div className="rounded-lg border border-border">
-            <div className="flex flex-col gap-2 border-b border-border px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center justify-between border-b border-border px-3 py-2">
               <div>
                 <div className="text-sm font-semibold">Bed list</div>
                 <div className="text-xs text-muted-foreground">{beds.length} beds found from 100 total beds</div>
@@ -211,7 +211,7 @@ export function BedManagerWorkspace() {
             </div>
           ))}
           <div className="rounded-lg border border-info/20 bg-info/10 p-3 text-sm font-semibold text-info">Recommendation score: 100/100</div>
-          <Button className="w-full whitespace-normal" disabled={!selected || selected.status !== "Available" || !activeRequest} onClick={allotSelectedBed}>
+          <Button className="w-full" disabled={!selected || selected.status !== "Available" || !activeRequest} onClick={allotSelectedBed}>
             Allot Selected Bed
           </Button>
         </aside>

@@ -41,7 +41,7 @@ export function PatientLookupWorkspace() {
         </div>
         <Badge tone="info">Start here</Badge>
       </CardHeader>
-      <CardContent className="grid gap-4 p-3 sm:p-[var(--density-card-padding)] xl:grid-cols-[minmax(0,1fr)_360px]">
+      <CardContent className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="min-w-0 space-y-3">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -59,7 +59,7 @@ export function PatientLookupWorkspace() {
               return (
                 <button
                   className={cn(
-                    "flex w-full flex-col items-start gap-2 border-b border-border px-3 py-3 text-left last:border-0 hover:bg-surface-muted sm:flex-row sm:items-center sm:justify-between sm:gap-3",
+                    "flex w-full items-center justify-between gap-3 border-b border-border px-3 py-3 text-left last:border-0 hover:bg-surface-muted",
                     selected && "bg-primary/5",
                   )}
                   key={patient.id}
@@ -96,19 +96,19 @@ export function PatientLookupWorkspace() {
           ) : null}
 
           <div className="mt-4 grid gap-2">
-            <Button variant="outline" className="w-full whitespace-normal border-info text-info" onClick={() => startScenario("Old Patient / Re-admission")}>
+            <Button variant="outline" className="border-info text-info" onClick={() => startScenario("Old Patient / Re-admission")}>
               <UserPlus className="h-4 w-4" />
               Old Patient / Re-admission
             </Button>
-            <Button variant="outline" className="w-full whitespace-normal" onClick={() => startScenario("New Patient Admission")}>
+            <Button variant="outline" onClick={() => startScenario("New Patient Admission")}>
               <UserPlus className="h-4 w-4" />
               New Patient Admission
             </Button>
-            <Button variant="outline" className="w-full whitespace-normal border-danger text-danger" onClick={() => startScenario("Emergency Unknown Patient")}>
+            <Button variant="outline" className="border-danger text-danger" onClick={() => startScenario("Emergency Unknown Patient")}>
               <AlertCircle className="h-4 w-4" />
               Emergency Unknown Patient
             </Button>
-            <Button asChild className="w-full whitespace-normal">
+            <Button asChild>
               <Link href="/admission/doctor">Continue to Doctor Order</Link>
             </Button>
           </div>

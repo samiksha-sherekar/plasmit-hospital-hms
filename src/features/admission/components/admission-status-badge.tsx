@@ -18,9 +18,5 @@ function toneFor(value: string): BadgeProps["tone"] {
 }
 
 export function AdmissionStatusBadge({ value }: { value: string }) {
-  return (
-    <Badge className="max-w-full whitespace-normal text-left leading-4" tone={toneFor(value)}>
-      {value}
-    </Badge>
-  );
+  return <Badge tone={toneFor(value)}>{value}</Badge>;
 }

@@ -23,7 +23,6 @@ export function NurseCareWorkspace() {
 
   React.useEffect(() => {
     const nextExisting = state.careRecords.find((record) => record.requestId === currentRequest?.id);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setBloodPressure(nextExisting?.bloodPressure ?? "");
     setPulse(nextExisting?.pulse ?? "");
     setTemperature(nextExisting?.temperature ?? "");
@@ -59,7 +58,7 @@ export function NurseCareWorkspace() {
         </div>
         <Badge tone="info">Step 5</Badge>
       </CardHeader>
-      <CardContent className="space-y-4 p-3 sm:p-[var(--density-card-padding)]">
+      <CardContent className="space-y-4">
         <div className="rounded-lg border border-border bg-surface-muted p-3">
           <div className="text-xs font-medium text-muted-foreground">Care patient</div>
           {currentRequest ? (
@@ -112,7 +111,7 @@ export function NurseCareWorkspace() {
         </div>
 
         <div className="flex justify-end">
-          <Button className="w-full whitespace-normal sm:w-auto" disabled={!currentRequest} onClick={startCare}>
+          <Button disabled={!currentRequest} onClick={startCare}>
             <HeartPulse className="h-4 w-4" />
             Start Patient Care
           </Button>

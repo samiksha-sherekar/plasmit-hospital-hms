@@ -115,9 +115,7 @@ function readState(): AdmissionStoreState {
 
 function writeState(state: AdmissionStoreState) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  window.queueMicrotask(() => {
-    window.dispatchEvent(new CustomEvent(STORE_EVENT, { detail: state }));
-  });
+  window.dispatchEvent(new CustomEvent(STORE_EVENT, { detail: state }));
 }
 
 function generatedUhid(prefix = "UHID") {
@@ -131,24 +129,17 @@ function estimateRisk(priority: AdmissionPriority): BillingClearance["risk"] {
 }
 
 export function useAdmissionStore() {
-  const [state, setState] = React.useState<AdmissionStoreState>(() => readState());
-  const stateRef = React.useRef(state);
+  const [state, setState] = React.useState<AdmissionStoreState>(() => initialState());
 
   React.useEffect(() => {
-    stateRef.current = state;
-  }, [state]);
+    setState(readState());
 
-  React.useEffect(() => {
     const handleStoreEvent = (event: Event) => {
-      const next = (event as CustomEvent<AdmissionStoreState>).detail ?? readState();
-      stateRef.current = next;
-      setState(next);
+      setState((event as CustomEvent<AdmissionStoreState>).detail ?? readState());
     };
     const handleStorage = (event: StorageEvent) => {
       if (event.key === STORAGE_KEY) {
-        const next = readState();
-        stateRef.current = next;
-        setState(next);
+        setState(readState());
       }
     };
 
@@ -161,18 +152,18 @@ export function useAdmissionStore() {
   }, []);
 
   const update = React.useCallback((recipe: (current: AdmissionStoreState) => AdmissionStoreState) => {
-    const next = recipe(stateRef.current);
-    stateRef.current = next;
-    setState(next);
-    writeState(next);
+    setState((current) => {
+      const next = recipe(current);
+      writeState(next);
+      return next;
+    });
   }, []);
 
   const actions = React.useMemo(() => ({
     resetDemo() {
       const next = initialState();
-      stateRef.current = next;
-      setState(next);
       writeState(next);
+      setState(next);
     },
     selectPatient(patientId: string) {
       update((current) => ({ ...current, selectedPatientId: patientId }));

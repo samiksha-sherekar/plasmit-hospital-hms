@@ -24,7 +24,6 @@ export function NurseReceiveWorkspace() {
 
   React.useEffect(() => {
     const nextExisting = state.receiveRecords.find((record) => record.requestId === currentRequest?.id);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setReceivedBy(nextExisting?.receivedBy ?? "");
     setReceivedTime(nextExisting?.receivedTime ?? "");
     setChecked(nextExisting?.checklist ?? []);
@@ -61,7 +60,7 @@ export function NurseReceiveWorkspace() {
         </div>
         <Badge tone="info">Step 4</Badge>
       </CardHeader>
-      <CardContent className="space-y-4 p-3 sm:p-[var(--density-card-padding)]">
+      <CardContent className="space-y-4">
         <div className="rounded-lg border border-border bg-surface-muted p-3">
           <div className="text-xs font-medium text-muted-foreground">Patient handover</div>
           {currentRequest ? (
@@ -75,7 +74,7 @@ export function NurseReceiveWorkspace() {
           ) : (
             <div className="mt-2 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
               <div className="text-sm text-muted-foreground">No patient is ready for nursing receive.</div>
-              <Button asChild className="w-full sm:w-auto" size="sm" variant="outline">
+              <Button asChild size="sm" variant="outline">
                 <Link href="/admission/bed-manager">Open Bed Manager</Link>
               </Button>
             </div>
@@ -116,11 +115,11 @@ export function NurseReceiveWorkspace() {
           </div>
         </div>
 
-        <div className="grid gap-2 sm:flex sm:flex-wrap sm:justify-end">
-          <Button asChild className="w-full sm:w-auto" variant="outline">
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button asChild variant="outline">
             <Link href="/admission/nurse-care">Open Care</Link>
           </Button>
-          <Button className="w-full whitespace-normal sm:w-auto" disabled={!currentRequest} onClick={confirmReceive}>
+          <Button disabled={!currentRequest} onClick={confirmReceive}>
             <CheckCircle2 className="h-4 w-4" />
             Confirm Patient Received
           </Button>

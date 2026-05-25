@@ -30,7 +30,6 @@ export function DoctorAdmissionOrder() {
   const [uhid, setUhid] = React.useState(selectedPatient?.uhid ?? "Auto generated");
 
   React.useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPatientName(selectedPatient?.name ?? "");
     setUhid(selectedPatient?.uhid ?? "Auto generated");
   }, [selectedPatient?.id, selectedPatient?.name, selectedPatient?.uhid]);
@@ -65,7 +64,7 @@ export function DoctorAdmissionOrder() {
         </div>
         <Badge tone="info">Step 1</Badge>
       </CardHeader>
-      <CardContent className="space-y-4 p-3 sm:p-[var(--density-card-padding)]">
+      <CardContent className="space-y-4">
         <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface-muted p-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="text-xs font-medium text-muted-foreground">Patient source</div>
@@ -74,7 +73,7 @@ export function DoctorAdmissionOrder() {
               {selectedPatient ? `${selectedPatient.name} | ${selectedPatient.uhid}` : "Go to reception and choose patient scenario first."}
             </div>
           </div>
-          <Button asChild className="w-full sm:w-auto" size="sm" variant="outline">
+          <Button asChild size="sm" variant="outline">
             <Link href="/admission/reception">Change Patient</Link>
           </Button>
         </div>
@@ -122,14 +121,14 @@ export function DoctorAdmissionOrder() {
             <span className="text-muted-foreground">
               Active request: {activeRequest ? `${activeRequest.patient} | ${activeRequest.status}` : "No admission request submitted yet."}
             </span>
-            <div className="grid gap-2 sm:flex sm:flex-wrap sm:justify-end">
-              <Button className="w-full sm:w-auto" type="button" variant="secondary" onClick={() => {
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button type="button" variant="secondary" onClick={() => {
                 setPatientName(selectedPatient?.name ?? "");
                 setUhid(selectedPatient?.uhid ?? "Auto generated");
               }}>
                 Clear
               </Button>
-              <Button className="w-full whitespace-normal sm:w-auto">
+              <Button>
                 <ClipboardPlus className="h-4 w-4" />
                 Submit Admission Request
               </Button>
