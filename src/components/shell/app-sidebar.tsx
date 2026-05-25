@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,13 +21,14 @@ export function AppSidebar({
 }) {
   const pathname = usePathname();
   const { role } = useRole();
+  const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
   const visibleItems = navigationItems.filter((item) => item.allowedRoles.includes(role));
   const groups = Array.from(new Set(visibleItems.map((item) => item.group)));
 
   return (
     <aside
       className={cn(
-        "hidden h-dvh shrink-0 border-r border-border bg-white text-sidebar-foreground shadow-[8px_0_28px_rgba(39,37,54,0.04)] transition-all lg:sticky lg:top-0 lg:z-50 lg:flex lg:flex-col",
+        "hidden h-dvh shrink-0 border-r border-border bg-white text-sidebar-foreground shadow-[8px_0_28px_rgba(39,37,54,0.04)] transition-all lg:fixed lg:left-0 lg:top-0 lg:z-50 lg:flex lg:flex-col",
         collapsed ? "w-[72px]" : "w-[264px]",
       )}
     >
@@ -63,13 +65,63 @@ export function AppSidebar({
                 .filter((item) => item.group === group)
                 .map((item) => {
                   const Icon = item.icon;
-                  const active = pathname === item.route || (item.route !== "/dashboard" && pathname.startsWith(item.route));
+                  const hasChildren = Boolean(item.children?.length);
+                  const childActive = item.children?.some((child) => pathname === child.route) ?? false;
+                  const active = pathname === item.route || childActive || (item.route !== "/dashboard" && pathname.startsWith(`${item.route}/`));
+                  const expanded = openItems[item.id] ?? active;
+                  const neuroIcu = item.id === "neuro-icu";
+
+                  if (hasChildren && !collapsed) {
+                    return (
+                      <div key={item.id}>
+                        <button
+                          className={cn(
+                            "group flex h-10 w-full items-center gap-3 rounded-lg px-2.5 text-sm font-semibold outline-none transition hover:bg-primary-soft hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/25",
+                            active && "bg-gradient-to-r from-[#7367f0] to-[#5b8def] text-sidebar-active-foreground shadow-[0_8px_20px_rgba(115,103,240,0.24)] hover:text-white",
+                            neuroIcu && !active && "hover:bg-[linear-gradient(90deg,rgba(79,110,247,0.10),rgba(124,107,255,0.10))] hover:text-[#4F6EF7]",
+                            neuroIcu && active && "bg-[linear-gradient(90deg,#4F6EF7,#7C6BFF)] shadow-[0_10px_26px_rgba(79,110,247,0.34),0_0_0_1px_rgba(124,107,255,0.22)]",
+                          )}
+                          onClick={() => setOpenItems((current) => ({ ...current, [item.id]: !expanded }))}
+                          type="button"
+                        >
+                          <Icon className="h-4 w-4 shrink-0" />
+                          <span className="min-w-0 flex-1 truncate text-left">{item.label}</span>
+                          <ChevronDown className={cn("h-4 w-4 shrink-0 transition", expanded && "rotate-180")} />
+                        </button>
+                        {expanded ? (
+                          <div className="ml-4 mt-1 space-y-1 border-l border-border pl-2">
+                            {item.children?.map((child) => {
+                              const childIsActive = pathname === child.route;
+                              return (
+                                <Link
+                                  className={cn(
+                                    "flex min-h-8 items-center rounded-md px-2 py-1.5 text-xs font-semibold outline-none transition hover:bg-primary-soft hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/25",
+                                    childIsActive && "bg-primary-soft text-primary",
+                                    neuroIcu && "hover:bg-[rgba(79,110,247,0.10)] hover:text-[#4F6EF7]",
+                                    neuroIcu && childIsActive && "bg-[rgba(79,110,247,0.12)] text-[#4F6EF7] shadow-[inset_2px_0_0_#7C6BFF]",
+                                  )}
+                                  href={child.route}
+                                  key={child.id}
+                                >
+                                  <span className="min-w-0 flex-1 truncate">{child.label}</span>
+                                  {child.status === "planned" ? <Badge tone="muted">Plan</Badge> : null}
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  }
+
                   return (
                     <Link
                       aria-label={collapsed ? item.label : undefined}
                       className={cn(
                         "group flex h-10 items-center gap-3 rounded-lg px-2.5 text-sm font-semibold outline-none transition hover:bg-primary-soft hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/25",
                         active && "bg-gradient-to-r from-[#7367f0] to-[#5b8def] text-sidebar-active-foreground shadow-[0_8px_20px_rgba(115,103,240,0.24)] hover:text-white",
+                        neuroIcu && !active && "hover:bg-[linear-gradient(90deg,rgba(79,110,247,0.10),rgba(124,107,255,0.10))] hover:text-[#4F6EF7]",
+                        neuroIcu && active && "bg-[linear-gradient(90deg,#4F6EF7,#7C6BFF)] shadow-[0_10px_26px_rgba(79,110,247,0.34),0_0_0_1px_rgba(124,107,255,0.22)]",
                         collapsed && "justify-center",
                       )}
                       href={item.route}

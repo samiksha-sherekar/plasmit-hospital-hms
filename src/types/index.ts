@@ -23,6 +23,14 @@ export type NavigationItem = {
   group: string;
   allowedRoles: Role[];
   status?: "ready" | "planned";
+  children?: NavigationChildItem[];
+};
+
+export type NavigationChildItem = {
+  id: string;
+  label: string;
+  route: string;
+  status?: "ready" | "planned";
 };
 
 export type NotificationPriority = "high" | "medium" | "low";

@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
+  Activity,
   AlertTriangle,
   CalendarClock,
   ChevronDown,
@@ -16,6 +17,7 @@ import {
   Printer,
   RefreshCcw,
   ShieldAlert,
+  Stethoscope,
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -88,7 +90,7 @@ export function PatientsPage() {
     { header: "Alerts", cell: ({ row }) => <PatientAlertChips alerts={row.original.alertFlags} /> },
     { header: "Docs", cell: ({ row }) => <StatusBadge status={row.original.documentStatus} /> },
     { header: "Status", cell: ({ row }) => <PatientStatusBadge status={row.original.status} /> },
-    { header: "Actions", cell: ({ row }) => <div className="flex gap-1"><Button size="sm" variant="outline" onClick={() => setSelected(row.original)}><Eye className="h-3.5 w-3.5" />Quick</Button><Button size="sm" asChild><Link href={`/patients/${row.original.id}`}>Open</Link></Button><Button size="sm" variant="outline" asChild><Link href={`/billing-desk/patient?patientId=${row.original.id}`}>Billing</Link></Button></div> },
+    { header: "Actions", cell: ({ row }) => <div className="flex flex-wrap gap-1"><Button size="sm" variant="outline" onClick={() => setSelected(row.original)}><Eye className="h-3.5 w-3.5" />Quick</Button><Button size="sm" asChild><Link href={`/patients/${row.original.id}`}>Open</Link></Button><Button size="sm" variant="outline" asChild><Link href={`/clinical-examination?patientId=${row.original.id}`}><Stethoscope className="h-3.5 w-3.5" />Clinical</Link></Button><Button size="sm" variant="outline" asChild><Link href={`/icu-monitoring/cvs?patientId=${row.original.id}`}><Activity className="h-3.5 w-3.5" />CVS</Link></Button><Button size="sm" variant="outline" asChild><Link href={`/billing-desk/patient?patientId=${row.original.id}`}>Billing</Link></Button></div> },
   ], []);
 
   return (
@@ -131,6 +133,8 @@ function PatientQuickDrawer({ patient, onOpenChange }: { patient: PatientRecord 
           <DetailRow label="Documents" value={`${docs.length} documents • ${patient.documentStatus}`} />
           <div className="grid gap-2">
             <Button asChild><Link href={`/patients/${patient.id}`}>Open profile</Link></Button>
+            <Button variant="outline" asChild><Link href={`/clinical-examination?patientId=${patient.id}`}>Open clinical examination</Link></Button>
+            <Button variant="outline" asChild><Link href={`/icu-monitoring/cvs?patientId=${patient.id}`}>Open CVS monitoring</Link></Button>
             <Button variant="outline" asChild><Link href={`/billing-desk/patient?patientId=${patient.id}`}>Open billing desk</Link></Button>
             <Button variant="outline" onClick={() => toast.info("Appointment creation placeholder")}>Create appointment</Button>
           </div>

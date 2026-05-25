@@ -6,6 +6,7 @@ import { useUiPreference } from "@/components/providers/ui-preference-provider";
 import { AppFooter } from "@/components/shell/app-footer";
 import { AppSidebar } from "@/components/shell/app-sidebar";
 import { TopHeader } from "@/components/shell/top-header";
+import { cn } from "@/lib/utils";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { preference, setPreference } = useUiPreference();
@@ -23,12 +24,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="min-h-dvh max-w-full bg-[#f8f9fc] text-foreground">
-      <div className="flex min-h-dvh min-w-0 max-w-full">
+    <div className="min-h-dvh max-w-full overflow-x-hidden bg-[#f8f9fc] text-foreground">
+      <div className="flex min-h-dvh min-w-0 max-w-full overflow-x-hidden">
         <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={handleCollapsedChange} />
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div
+          className={cn(
+            "flex min-w-0 max-w-full flex-1 flex-col overflow-x-hidden transition-[margin] duration-200 ease-out",
+            sidebarCollapsed ? "lg:ml-[72px]" : "lg:ml-[264px]",
+          )}
+        >
           <TopHeader />
-          <main className="min-w-0 max-w-full flex-1 px-4 pb-8 md:px-6">{children}</main>
+          <main className="min-w-0 max-w-full flex-1 overflow-x-hidden px-4 pb-8 md:px-6">{children}</main>
           <AppFooter />
         </div>
       </div>

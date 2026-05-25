@@ -103,6 +103,12 @@ export function PatientHeader({
             <Button asChild>
               <Link href={`/patients/${patient.id}`}>Open profile</Link>
             </Button>
+            <Button variant="outline" asChild>
+              <Link href={`/clinical-examination?patientId=${patient.id}`}>
+                <HeartPulse className="h-4 w-4" />
+                Clinical Exam
+              </Link>
+            </Button>
           </>
         }
       />
