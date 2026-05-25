@@ -3,6 +3,7 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { Activity, AlertTriangle, Bed, CheckCircle2, ClipboardCheck, ClipboardList, FileText, FlaskConical, HeartPulse, Mic, Pill, Plus, Printer, RefreshCcw, Save, Search, ShieldCheck, Star, Stethoscope } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { toast } from "sonner";
 
@@ -16,7 +17,6 @@ import { StickyActionBar } from "@/features/admin/admin-shared";
 import {
   backendApis,
   builderFields,
-  clinicalPatient,
   clinicalScores,
   clinicalSpecialties,
   clinicalTimeline,
@@ -29,6 +29,7 @@ import {
   type ClinicalSeverity,
   type SpecialtyId,
 } from "@/data/clinical-examination";
+import { mockPatients, mockPatientVisits } from "@/data/patients";
 import { cn } from "@/lib/utils";
 
 const severityTone: Record<ClinicalSeverity, "success" | "warning" | "danger" | "critical"> = {
@@ -41,20 +42,107 @@ const severityTone: Record<ClinicalSeverity, "success" | "warning" | "danger" | 
 
 const toggleOptions = ["Normal", "Mild", "Moderate", "Severe", "Absent", "Present", "Positive", "Negative"];
 
+type ClinicalPatientContext = {
+  id: string;
+  uhid: string;
+  name: string;
+  ageGender: string;
+  encounter: string;
+  wardBed: string;
+  consultant: string;
+  allergies: string;
+  flags: string[];
+};
+
+function patientName(patient: (typeof mockPatients)[number]) {
+  return `${patient.firstName} ${patient.middleName ? `${patient.middleName} ` : ""}${patient.lastName}`;
+}
+
+function consultantForDepartment(department: string) {
+  const mapping: Record<string, string> = {
+    Cardiology: "Dr. Kavita Rao",
+    Orthopedics: "Dr. Aman Verma",
+    Pediatrics: "Dr. Neha Malik",
+    Emergency: "Emergency Desk",
+    Oncology: "Dr. Neha Malik",
+  };
+  return mapping[department] ?? "Dr. Kavita Rao";
+}
+
+function clinicalPatientFromRecord(patient: (typeof mockPatients)[number]): ClinicalPatientContext {
+  const visits = mockPatientVisits.filter((visit) => visit.patientId === patient.id);
+  const encounter = visits.length ? visits.map((visit) => visit.referenceNumber).join(" / ") : "No active encounter";
+  const activeVisit = visits.find((visit) => visit.status === "Active") ?? visits[0];
+  const allergyFlags = patient.alertFlags.filter((flag) => flag.toLowerCase().includes("allergy"));
+  const nonAllergyFlags = patient.alertFlags.filter((flag) => !flag.toLowerCase().includes("allergy"));
+
+  return {
+    id: patient.id,
+    uhid: patient.uhid,
+    name: patientName(patient),
+    ageGender: `${patient.age}/${patient.gender.charAt(0)}`,
+    encounter,
+    wardBed: activeVisit?.visitType === "IPD" ? `${patient.department} Ward / Bed pending` : `${patient.department} ${activeVisit?.visitType ?? "OPD"}`,
+    consultant: activeVisit?.provider ?? consultantForDepartment(patient.department),
+    allergies: allergyFlags.length ? allergyFlags.map((flag) => flag.replace(/^Allergy:\s*/i, "")).join(", ") : "No known allergy",
+    flags: nonAllergyFlags.length ? nonAllergyFlags : ["No active risk flag"],
+  };
+}
+
 function PageMotion({ children }: { children: React.ReactNode }) {
   return <motion.div animate={{ opacity: 1, y: 0 }} className="space-y-4" initial={{ opacity: 0, y: 8 }} transition={{ duration: 0.22, ease: "easeOut" }}>{children}</motion.div>;
 }
 
-function PatientHeaderStrip() {
+function PatientHeaderStrip({ patient, selectedPatientId, onPatientChange }: { patient: ClinicalPatientContext; selectedPatientId: string; onPatientChange: (patientId: string) => void }) {
+  const [patientSearch, setPatientSearch] = React.useState("");
+  const patientResults = React.useMemo(() => {
+    const query = patientSearch.trim().toLowerCase();
+    if (!query) return [];
+    return mockPatients
+      .filter((item) => `${patientName(item)} ${item.uhid} ${item.mobile} ${item.department}`.toLowerCase().includes(query))
+      .slice(0, 8);
+  }, [patientSearch]);
+
   return (
     <Card className="overflow-hidden">
       <CardContent className="space-y-3 p-4">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div>
             <div className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Clinical examination workspace</div>
-            <h1 className="mt-1 text-2xl font-bold text-foreground">{clinicalPatient.name}</h1>
+            <h1 className="mt-1 text-2xl font-bold text-foreground">{patient.name}</h1>
+            <div className="mt-1 text-xs font-semibold text-muted-foreground">Selected from patient registry by patientId: {selectedPatientId}</div>
           </div>
           <div className="flex flex-wrap gap-2">
+            <div className="relative w-full sm:w-72">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                aria-label="Search clinical examination patient"
+                className="h-10 bg-white pl-9 font-semibold"
+                placeholder="Search patient / UHID"
+                value={patientSearch}
+                onChange={(event) => setPatientSearch(event.target.value)}
+              />
+              {patientSearch ? (
+                <div className="absolute right-0 top-11 z-50 max-h-72 w-full overflow-y-auto rounded-lg border border-border bg-white p-1 shadow-soft">
+                  {patientResults.length ? patientResults.map((item) => (
+                    <button
+                      className="flex w-full flex-col rounded-md px-3 py-2 text-left text-sm outline-none hover:bg-surface-muted focus-visible:bg-surface-muted"
+                      key={item.id}
+                      onClick={() => {
+                        onPatientChange(item.id);
+                        setPatientSearch("");
+                      }}
+                      type="button"
+                    >
+                      <span className="font-semibold text-foreground">{patientName(item)}</span>
+                      <span className="text-xs text-muted-foreground">{item.uhid} | {item.age}/{item.gender} | {item.department}</span>
+                    </button>
+                  )) : (
+                    <div className="px-3 py-3 text-sm text-muted-foreground">No patient found.</div>
+                  )}
+                </div>
+              ) : null}
+            </div>
             <Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4" />Print</Button>
             <Button variant="outline" onClick={() => toast.info("Last clinical draft restored")}><RefreshCcw className="h-4 w-4" />Restore draft</Button>
             <Button onClick={() => toast.success("Clinical draft autosaved")}><Save className="h-4 w-4" />Save draft</Button>
@@ -62,12 +150,12 @@ function PatientHeaderStrip() {
         </div>
         <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-6">
           {[
-            ["UHID", clinicalPatient.uhid],
-            ["Age/Gender", clinicalPatient.ageGender],
-            ["IPD/OPD No.", clinicalPatient.encounter],
-            ["Ward/Bed", clinicalPatient.wardBed],
-            ["Consultant", clinicalPatient.consultant],
-            ["Allergy", clinicalPatient.allergies],
+            ["UHID", patient.uhid],
+            ["Age/Gender", patient.ageGender],
+            ["IPD/OPD No.", patient.encounter],
+            ["Ward/Bed", patient.wardBed],
+            ["Consultant", patient.consultant],
+            ["Allergy", patient.allergies],
           ].map(([label, value]) => (
             <div className="rounded-lg border border-border bg-surface-muted px-3 py-2" key={label}>
               <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</div>
@@ -76,7 +164,7 @@ function PatientHeaderStrip() {
           ))}
         </div>
         <div className="flex flex-wrap gap-2">
-          {clinicalPatient.flags.map((flag) => <Badge key={flag} tone={flag.includes("BP") ? "warning" : "danger"}>{flag}</Badge>)}
+          {patient.flags.map((flag) => <Badge key={flag} tone={flag.includes("BP") || flag.includes("Outstanding") || flag.includes("Minor") ? "warning" : "danger"}>{flag}</Badge>)}
           <Badge tone="info">Autosave every 20 sec</Badge>
           <Badge tone="muted">Keyboard shortcuts ready</Badge>
         </div>
@@ -373,15 +461,17 @@ function MobileTabletOptimization() {
 
 type ClinicalActionRow = { time: string; type: string; owner: string; status: string; tone: "success" | "warning" | "danger" | "info" | "muted" };
 
-function ClinicalActionWorkspace({ action, specialty, rows, onAddRow, onOpenExamination }: { action: string; specialty: SpecialtyId; rows: ClinicalActionRow[]; onAddRow: (row: ClinicalActionRow) => void; onOpenExamination: () => void }) {
+function ClinicalActionWorkspace({ action, specialty, patient, rows, onAddRow, onOpenExamination }: { action: string; specialty: SpecialtyId; patient: ClinicalPatientContext; rows: ClinicalActionRow[]; onAddRow: (row: ClinicalActionRow) => void; onOpenExamination: () => void }) {
   if (action === "Clinical Examination") return <ExaminationWorkspace specialty={specialty} />;
+  return <ClinicalActionForm key={action} action={action} patient={patient} rows={rows} onAddRow={onAddRow} onOpenExamination={onOpenExamination} />;
+}
+
+function ClinicalActionForm({ action, patient, rows, onAddRow, onOpenExamination }: { action: string; patient: ClinicalPatientContext; rows: ClinicalActionRow[]; onAddRow: (row: ClinicalActionRow) => void; onOpenExamination: () => void }) {
   const config = clinicalActionConfigs[action] ?? clinicalActionConfigs["Progress Notes"];
-  const [fieldValues, setFieldValues] = React.useState<Record<string, string>>({});
+  const [fieldValues, setFieldValues] = React.useState<Record<string, string>>(() =>
+    Object.fromEntries(config.fields.map((field) => [field.label, field.value ?? field.options?.[0] ?? ""])),
+  );
   const [note, setNote] = React.useState(config.textarea?.value ?? "");
-  React.useEffect(() => {
-    setFieldValues(Object.fromEntries(config.fields.map((field) => [field.label, field.value ?? field.options?.[0] ?? ""])));
-    setNote(config.textarea?.value ?? "");
-  }, [action, config]);
   const addDynamicEntry = (buttonLabel: string) => {
     const primaryField = config.fields[0];
     const type = fieldValues[primaryField.label] || primaryField.value || primaryField.options?.[0] || config.title;
@@ -424,7 +514,7 @@ function ClinicalActionWorkspace({ action, specialty, rows, onAddRow, onOpenExam
         <ActionDataTable rows={rows} />
       </div>
       <div className="space-y-4">
-        <ActionPatientContext />
+        <ActionPatientContext patient={patient} />
         <Card>
           <CardHeader><CardTitle>Clinical handoff</CardTitle><CardDescription>Connected status for current encounter.</CardDescription></CardHeader>
           <CardContent className="space-y-2">
@@ -573,24 +663,35 @@ const actionRows: Record<string, ClinicalActionRow[]> = {
   "Discharge Summary": [{ time: "Today 11:15", type: "Draft summary", owner: "Dr. Kavita Rao", status: "Pending", tone: "warning" }, { time: "Yesterday 17:00", type: "Follow-up advice", owner: "Dr. Aman Verma", status: "Ready", tone: "info" }],
 };
 
-function ActionPatientContext() {
+function ActionPatientContext({ patient }: { patient: ClinicalPatientContext }) {
   return (
     <Card>
       <CardHeader><CardTitle>Patient context</CardTitle></CardHeader>
       <CardContent className="space-y-2 text-sm">
-        {[["Patient", clinicalPatient.name], ["UHID", clinicalPatient.uhid], ["Encounter", clinicalPatient.encounter], ["Ward/Bed", clinicalPatient.wardBed], ["Consultant", clinicalPatient.consultant]].map(([label, value]) => <div className="flex justify-between gap-3 border-b border-border py-1.5 last:border-0" key={label}><span className="text-xs font-semibold text-muted-foreground">{label}</span><span className="text-right font-semibold">{value}</span></div>)}
+        {[["Patient", patient.name], ["UHID", patient.uhid], ["Encounter", patient.encounter], ["Ward/Bed", patient.wardBed], ["Consultant", patient.consultant]].map(([label, value]) => <div className="flex justify-between gap-3 border-b border-border py-1.5 last:border-0" key={label}><span className="text-xs font-semibold text-muted-foreground">{label}</span><span className="text-right font-semibold">{value}</span></div>)}
       </CardContent>
     </Card>
   );
 }
 
 export function ClinicalExaminationPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedPatientId = searchParams.get("patientId") ?? mockPatients[0]?.id;
+  const selectedPatientRecord = mockPatients.find((patient) => patient.id === requestedPatientId) ?? mockPatients[0];
+  const selectedPatient = clinicalPatientFromRecord(selectedPatientRecord);
   const [specialty, setSpecialty] = React.useState<SpecialtyId>("cvs");
   const [activeTab, setActiveTab] = React.useState("dashboard");
   const [activeAction, setActiveAction] = React.useState("Clinical Examination");
   const [inlineSpecialty, setInlineSpecialty] = React.useState<SpecialtyId | null>(null);
   const [actionActivity, setActionActivity] = React.useState<Record<string, ClinicalActionRow[]>>(actionRows);
   const inlineExamRef = React.useRef<HTMLDivElement | null>(null);
+  const selectPatient = React.useCallback(
+    (patientId: string) => {
+      router.push(`/clinical-examination?patientId=${patientId}`);
+    },
+    [router],
+  );
   const openSpecialty = (id: SpecialtyId) => {
     setSpecialty(id);
     setInlineSpecialty(id);
@@ -600,6 +701,12 @@ export function ClinicalExaminationPage() {
   };
   const openAction = (action: string) => {
     setActiveAction(action);
+    if (action === "Clinical Examination") {
+      setActiveTab("dashboard");
+      setInlineSpecialty(null);
+      toast.success(`${action} dashboard opened`);
+      return;
+    }
     setActiveTab("action");
     toast.success(`${action} opened`);
   };
@@ -608,7 +715,7 @@ export function ClinicalExaminationPage() {
   };
   return (
     <PageMotion>
-      <PatientHeaderStrip />
+      <PatientHeaderStrip patient={selectedPatient} selectedPatientId={selectedPatientRecord.id} onPatientChange={selectPatient} />
       <QuickActions active={activeAction} onSelect={openAction} />
       <SummaryCards />
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
@@ -629,7 +736,7 @@ export function ClinicalExaminationPage() {
           {inlineSpecialty ? <div ref={inlineExamRef} className="scroll-mt-24"><ExaminationWorkspace specialty={inlineSpecialty} /></div> : null}
         </TabsContent>
         <TabsContent value="graphs" className="space-y-4"><TrendCard /><ClinicalScorePanel /></TabsContent>
-        <TabsContent value="action"><ClinicalActionWorkspace action={activeAction} specialty={specialty} rows={actionActivity[activeAction] ?? []} onAddRow={(row) => addActionRow(activeAction, row)} onOpenExamination={() => openAction("Clinical Examination")} /></TabsContent>
+        <TabsContent value="action"><ClinicalActionWorkspace action={activeAction} specialty={specialty} patient={selectedPatient} rows={actionActivity[activeAction] ?? []} onAddRow={(row) => addActionRow(activeAction, row)} onOpenExamination={() => openAction("Clinical Examination")} /></TabsContent>
       </Tabs>
       <div className="fixed inset-x-3 bottom-3 z-30 flex gap-2 rounded-xl border border-border bg-white/95 p-2 shadow-[0_16px_40px_rgba(39,37,54,0.18)] backdrop-blur md:hidden">
         {["Exam", "Scores", "Notes", "Save"].map((item, index) => <Button className="flex-1" key={item} size="sm" variant={index === 3 ? "default" : "outline"}>{item}</Button>)}
