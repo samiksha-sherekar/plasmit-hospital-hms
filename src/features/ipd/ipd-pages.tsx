@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Ambulance, BedDouble, ClipboardCheck, FileText, HeartPulse, Pill, Plus, Printer, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
@@ -19,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ConfirmDrawer, DetailRow, StickyActionBar } from "@/features/admin/admin-shared";
 import { PatientMini } from "@/features/appointments/appointment-shared";
 import { BedCard, InpatientHeader, InpatientSafetyPanel, IpdStatus, ProtectedIpd, TriageBadge } from "@/features/ipd/ipd-shared";
+import { AbdominalDashboardPage, CvsDashboardPage, DrainsOverviewPage, LinesDevicesOverviewPage } from "@/features/icu-monitoring/icu-monitoring-pages";
 import {
   getAdmissionById,
   mockAdmissions,
@@ -42,6 +44,54 @@ function SummaryGrid({ children }: { children: React.ReactNode }) {
 
 function PrintButton({ label = "Print" }: { label?: string }) {
   return <Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4" />{label}</Button>;
+}
+
+const ipdUnifiedTabs = ["ipd", "cvs", "abdominal", "drains", "lines-devices"] as const;
+type IpdUnifiedTab = (typeof ipdUnifiedTabs)[number];
+
+function getIpdUnifiedTab(value: string | null): IpdUnifiedTab {
+  return ipdUnifiedTabs.includes(value as IpdUnifiedTab) ? (value as IpdUnifiedTab) : "ipd";
+}
+
+export function IpdUnifiedModulePage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeTab = getIpdUnifiedTab(searchParams.get("tab"));
+
+  function setActiveTab(value: string) {
+    router.push(value === "ipd" ? "/ipd" : `/ipd?tab=${value}`, { scroll: false });
+  }
+
+  return (
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <TabsList>
+        <TabsTrigger value="ipd">IPD</TabsTrigger>
+        <TabsTrigger value="cvs">CVS</TabsTrigger>
+        <TabsTrigger value="abdominal">Abdominal</TabsTrigger>
+        <TabsTrigger value="drains">Drains & Tubes</TabsTrigger>
+        <TabsTrigger value="lines-devices">Lines & Devices</TabsTrigger>
+      </TabsList>
+      <TabsContent value="ipd">
+        <IpdDashboardPage />
+      </TabsContent>
+      <TabsContent value="cvs">
+        <React.Suspense fallback={null}>
+          <CvsDashboardPage />
+        </React.Suspense>
+      </TabsContent>
+      <TabsContent value="abdominal">
+        <React.Suspense fallback={null}>
+          <AbdominalDashboardPage />
+        </React.Suspense>
+      </TabsContent>
+      <TabsContent value="drains">
+        <DrainsOverviewPage />
+      </TabsContent>
+      <TabsContent value="lines-devices">
+        <LinesDevicesOverviewPage />
+      </TabsContent>
+    </Tabs>
+  );
 }
 
 export function IpdDashboardPage() {

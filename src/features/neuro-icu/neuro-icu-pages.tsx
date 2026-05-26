@@ -1,510 +1,854 @@
 "use client";
 
 import * as React from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { motion, Reorder } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Activity,
   AlertTriangle,
+  BarChart3,
   Bell,
   Brain,
-  ChevronDown,
-  ClipboardCheck,
-  Download,
+  CalendarClock,
+  CheckCircle2,
+  ChevronUp,
+  ClipboardList,
+  Droplets,
+  Eye,
+  FileDown,
   FileText,
-  GripVertical,
-  Mic,
-  PhoneCall,
+  Gauge,
   Pill,
   Printer,
-  Radio,
+  RadioTower,
+  RefreshCcw,
   Save,
   Search,
-  Send,
   ShieldAlert,
   Stethoscope,
   Syringe,
-  UserRound,
-  Waves,
-  Zap,
+  Wifi,
 } from "lucide-react";
-import { Area, AreaChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { mockPatients, mockPatientVisits } from "@/data/patients";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { mockPatients } from "@/data/patients";
 import { cn } from "@/lib/utils";
 
-type Tone = "success" | "warning" | "danger" | "info" | "critical" | "muted";
-type NeuroModuleId = "gcs" | "sedation" | "evd" | "delirium" | "pupil" | "motor" | "reflexes" | "ventilation" | "seizure" | "timeline";
+type NeuroTab = "overview" | "gcs" | "sedation" | "evd" | "delirium" | "pupil" | "analytics" | "reports";
+type Severity = "stable" | "watch" | "critical" | "emergency";
 
-type NeuroPatient = {
-  id: string;
-  name: string;
-  uhid: string;
-  ageGender: string;
-  bed: string;
-  consultant: string;
-  encounter: string;
-  allergies: string;
-  riskFlags: string[];
+type TrendPoint = {
+  time: string;
+  gcs: number;
+  icp: number;
+  sedation: number;
+  evd: number;
+  delirium: number;
+  pupil: number;
+  seizure: number;
 };
 
-type NeuroModule = {
-  id: NeuroModuleId;
-  title: string;
-  subtitle: string;
+type GcsScore = {
+  eye: number;
+  verbal: number;
+  motor: number;
+};
+
+type SedationState = {
   status: string;
-  tone: Tone;
-  owner: string;
-  updatedAt: string;
+  drug: string;
+  dosage: string;
+  route: string;
+  rass: string;
+  goal: string;
 };
 
-const neuroRoutes = [
-  { label: "Overview", href: "/neuro-icu" },
-  { label: "GCS", href: "/neuro-icu/gcs" },
-  { label: "Sedation", href: "/neuro-icu/sedation" },
-  { label: "EVD", href: "/neuro-icu/evd" },
-  { label: "Delirium", href: "/neuro-icu/delirium" },
-  { label: "Pupil", href: "/neuro-icu/pupil" },
-  { label: "Motor", href: "/neuro-icu/motor-sensory" },
-  { label: "Timeline", href: "/neuro-icu/timeline" },
-  { label: "Seizure", href: "/neuro-icu/seizure" },
-  { label: "Ventilation", href: "/neuro-icu/ventilation" },
-  { label: "Reports", href: "/neuro-icu/reports" },
-  { label: "Analytics", href: "/neuro-icu/analytics" },
+type EvdState = {
+  output: string;
+  height: string;
+  icp: string;
+  waveform: string;
+  colour: string;
+};
+
+type DeliriumState = {
+  camPositive: boolean;
+  attentionScore: string;
+};
+
+type PupilState = {
+  rightSize: string;
+  leftSize: string;
+  rightNpi: string;
+  leftNpi: string;
+  reactivity: string;
+};
+
+const patient = mockPatients[1] ?? mockPatients[0];
+
+const tabItems: Array<{ value: NeuroTab; label: string; icon: typeof Brain }> = [
+  { value: "overview", label: "Overview", icon: Brain },
+  { value: "gcs", label: "GCS", icon: ClipboardList },
+  { value: "sedation", label: "Sedation", icon: Pill },
+  { value: "evd", label: "EVD", icon: Droplets },
+  { value: "delirium", label: "Delirium", icon: ShieldAlert },
+  { value: "pupil", label: "Pupil", icon: Eye },
+  { value: "analytics", label: "Analytics", icon: BarChart3 },
+  { value: "reports", label: "Reports", icon: FileText },
 ];
 
-const neuroTrendData = [
-  { time: "00", gcs: 14, icp: 17, map: 82, cpp: 65, sedation: -1, spo2: 97, drain: 12, delirium: 1 },
-  { time: "04", gcs: 13, icp: 19, map: 80, cpp: 61, sedation: -2, spo2: 96, drain: 16, delirium: 1 },
-  { time: "08", gcs: 13, icp: 21, map: 79, cpp: 58, sedation: -2, spo2: 96, drain: 18, delirium: 2 },
-  { time: "12", gcs: 12, icp: 23, map: 78, cpp: 55, sedation: -3, spo2: 95, drain: 22, delirium: 2 },
-  { time: "16", gcs: 11, icp: 24, map: 77, cpp: 53, sedation: -2, spo2: 96, drain: 31, delirium: 3 },
-  { time: "20", gcs: 11, icp: 24, map: 78, cpp: 54, sedation: -2, spo2: 96, drain: 36, delirium: 3 },
+const baseTrend: TrendPoint[] = [
+  { time: "00:00", gcs: 14, icp: 15, sedation: -1, evd: 7, delirium: 0, pupil: 4, seizure: 1 },
+  { time: "02:00", gcs: 14, icp: 16, sedation: -1, evd: 8, delirium: 0, pupil: 4, seizure: 1 },
+  { time: "04:00", gcs: 13, icp: 18, sedation: -2, evd: 9, delirium: 1, pupil: 4, seizure: 2 },
+  { time: "06:00", gcs: 13, icp: 20, sedation: -2, evd: 11, delirium: 1, pupil: 3.8, seizure: 2 },
+  { time: "08:00", gcs: 12, icp: 22, sedation: -2, evd: 15, delirium: 1, pupil: 3.7, seizure: 3 },
+  { time: "10:00", gcs: 12, icp: 23, sedation: -2, evd: 18, delirium: 0, pupil: 3.8, seizure: 3 },
+  { time: "12:00", gcs: 12, icp: 21, sedation: -1, evd: 16, delirium: 0, pupil: 3.9, seizure: 2 },
 ];
 
-const overviewStats = [
-  { label: "GCS", value: "11", unit: "/15", status: "Watch", tone: "warning" as Tone, color: "#F5A524", key: "gcs", trend: [15, 14, 13, 12, 11, 11] },
-  { label: "ICP", value: "24", unit: "mmHg", status: "High", tone: "critical" as Tone, color: "#E5484D", key: "icp", trend: [18, 19, 21, 23, 24, 24] },
-  { label: "MAP", value: "78", unit: "mmHg", status: "Target", tone: "success" as Tone, color: "#18B67A", key: "map", trend: [74, 76, 79, 78, 77, 78] },
-  { label: "CPP", value: "54", unit: "mmHg", status: "Low", tone: "warning" as Tone, color: "#F5A524", key: "cpp", trend: [62, 60, 58, 55, 53, 54] },
-  { label: "Sedation", value: "-2", unit: "RASS", status: "Goal", tone: "info" as Tone, color: "#4F6EF7", key: "sedation", trend: [-3, -2, -2, -1, -2, -2] },
-  { label: "SpO2", value: "96", unit: "%", status: "Stable", tone: "success" as Tone, color: "#18B67A", key: "spo2", trend: [97, 96, 96, 95, 96, 96] },
-  { label: "Drain Output", value: "146", unit: "ml/24h", status: "Rising", tone: "danger" as Tone, color: "#E5484D", key: "drain", trend: [18, 22, 24, 29, 31, 36] },
-  { label: "Delirium", value: "CAM+", unit: "", status: "Risk", tone: "warning" as Tone, color: "#7C6BFF", key: "delirium", trend: [0, 1, 1, 2, 2, 3] },
+const gcsRows = [
+  ["10:30", "4", "5", "3", "12", "Watch", "Dr. Neha"],
+  ["09:30", "4", "4", "4", "12", "Watch", "Nurse Asha"],
+  ["08:30", "3", "4", "4", "11", "Moderate", "Dr. Neha"],
+  ["07:30", "3", "4", "4", "11", "Moderate", "Resident"],
+  ["06:30", "2", "3", "4", "9", "Severe", "Night nurse"],
 ];
 
-const initialModules: NeuroModule[] = [
-  { id: "gcs", title: "GCS Assessment", subtitle: "Eye, verbal, motor response with calculated severity", status: "Autosaved", tone: "warning", owner: "Dr. Kavita Rao", updatedAt: "2 min ago" },
-  { id: "sedation", title: "Sedation Monitoring", subtitle: "RASS target, active infusion and protocol safety", status: "Protocol active", tone: "info", owner: "Nurse Anika", updatedAt: "4 min ago" },
-  { id: "evd", title: "EVD Monitoring", subtitle: "Drain output, pressure, waveform and thresholds", status: "Alert", tone: "critical", owner: "Dr. Rakesh Menon", updatedAt: "6 min ago" },
-  { id: "delirium", title: "Delirium Assessment", subtitle: "CAM-ICU scoring and cognitive trend markers", status: "CAM positive", tone: "warning", owner: "Neuro team", updatedAt: "12 min ago" },
-  { id: "pupil", title: "Pupillary Tracking", subtitle: "Pupil size, NPi, reactivity and asymmetry", status: "Reactive", tone: "success", owner: "Nurse Dev", updatedAt: "18 min ago" },
-  { id: "motor", title: "Motor Response", subtitle: "Limb power, tone, sensory level and laterality", status: "Compare", tone: "info", owner: "Registrar", updatedAt: "22 min ago" },
-  { id: "reflexes", title: "Neuro Reflexes", subtitle: "Brainstem, plantar and cranial reflex checks", status: "Stable", tone: "success", owner: "Resident team", updatedAt: "28 min ago" },
-  { id: "ventilation", title: "Ventilation Status", subtitle: "CO2, oxygenation and neuro pressure correlation", status: "Synced", tone: "info", owner: "RT team", updatedAt: "34 min ago" },
-  { id: "seizure", title: "Seizure Events", subtitle: "Events, EEG handoff and rescue readiness", status: "No event", tone: "success", owner: "Neuro ICU", updatedAt: "41 min ago" },
-  { id: "timeline", title: "Neuro Timeline", subtitle: "Hourly observations and deterioration heatmap", status: "Live", tone: "info", owner: "Bedside team", updatedAt: "Now" },
+const evdRows = [
+  ["10:30", "18 ml/hr", "Xanthochromic", "23 mmHg", "Critical"],
+  ["09:30", "16 ml/hr", "Xanthochromic", "22 mmHg", "Critical"],
+  ["08:30", "12 ml/hr", "Pink", "20 mmHg", "Watch"],
+  ["07:30", "9 ml/hr", "Clear", "18 mmHg", "Stable"],
+  ["06:30", "11 ml/hr", "Pink", "19 mmHg", "Watch"],
 ];
 
-function patientName(patient: (typeof mockPatients)[number]) {
+const sedationRows = [
+  ["10:30", "Propofol", "40 mcg/kg/min", "IV", "-2", "Goal"],
+  ["09:30", "Propofol", "40 mcg/kg/min", "IV", "-2", "Goal"],
+  ["08:30", "Propofol", "35 mcg/kg/min", "IV", "-1", "Light"],
+  ["07:30", "Midazolam", "2 mg/hr", "IV", "-3", "Deep"],
+  ["06:30", "Midazolam", "2 mg/hr", "IV", "-3", "Deep"],
+];
+
+const deliriumRows = [
+  ["10:30", "CAM Negative", "No", "Stable attention", "Low"],
+  ["08:30", "CAM Negative", "No", "Follows command", "Low"],
+  ["06:30", "CAM Positive", "Yes", "Agitated, pulling lines", "High"],
+  ["04:30", "CAM Positive", "Yes", "Restless", "High"],
+];
+
+function patientName() {
   return `${patient.firstName} ${patient.lastName}`.trim();
 }
 
-function neuroPatientFromRecord(patient: (typeof mockPatients)[number]): NeuroPatient {
-  const visits = mockPatientVisits.filter((visit) => visit.patientId === patient.id);
-  const activeVisit = visits.find((visit) => visit.status === "Active") ?? visits[0];
-  const allergy = patient.alertFlags.find((flag) => flag.toLowerCase().includes("allergy"));
-  return {
-    id: patient.id,
-    name: patientName(patient),
-    uhid: patient.uhid,
-    ageGender: `${patient.age}/${patient.gender.charAt(0)}`,
-    bed: activeVisit?.visitType === "IPD" ? `${activeVisit.department} ICU / Bed 07` : `${patient.department} ICU / Bed 07`,
-    consultant: activeVisit?.provider ?? "Dr. Kavita Rao",
-    encounter: activeVisit ? `${activeVisit.visitType}-${activeVisit.referenceNumber}` : "ICU-NEURO-1042",
-    allergies: allergy?.replace(/^Allergy:\s*/i, "") ?? "No known allergy",
-    riskFlags: patient.alertFlags.length ? patient.alertFlags : ["High acuity watch", "Fall risk"],
-  };
+function severityTone(severity: Severity): BadgeProps["tone"] {
+  if (severity === "stable") return "success";
+  if (severity === "watch") return "warning";
+  if (severity === "critical") return "danger";
+  return "critical";
 }
 
-function useNeuroPatient() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const selectedId = searchParams.get("patientId") ?? mockPatients[0].id;
-  const record = mockPatients.find((patient) => patient.id === selectedId) ?? mockPatients[0];
-  const patient = neuroPatientFromRecord(record);
-  const withPatient = React.useCallback((href: string) => `${href}${href.includes("?") ? "&" : "?"}patientId=${record.id}`, [record.id]);
-  const selectPatient = React.useCallback((patientId: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("patientId", patientId);
-    router.push(`${pathname}?${params.toString()}`);
-  }, [pathname, router, searchParams]);
-  return { patient, selectedPatientId: record.id, withPatient, selectPatient };
+function numericValue(value: string, fallback = 0) {
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function PageMotion({ children }: { children: React.ReactNode }) {
-  return <motion.div animate={{ opacity: 1, y: 0 }} className="space-y-4" initial={{ opacity: 0, y: 8 }} transition={{ duration: 0.22, ease: "easeOut" }}>{children}</motion.div>;
+function useLiveNeuroStream() {
+  const [trend, setTrend] = React.useState(baseTrend);
+  const [updatedAt, setUpdatedAt] = React.useState("10:30:24");
+  const [syncing, setSyncing] = React.useState(true);
+
+  React.useEffect(() => {
+    const interval = window.setInterval(() => {
+      setSyncing((value) => !value);
+      setUpdatedAt(new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+      setTrend((current) => {
+        const last = current[current.length - 1];
+        const next: TrendPoint = {
+          time: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+          gcs: Math.max(8, Math.min(15, last.gcs + (Math.random() > 0.72 ? 1 : 0))),
+          icp: Math.max(12, Math.min(28, last.icp + (Math.random() > 0.55 ? 1 : -1))),
+          sedation: Math.max(-4, Math.min(0, last.sedation + (Math.random() > 0.7 ? 1 : 0))),
+          evd: Math.max(4, Math.min(24, last.evd + (Math.random() > 0.6 ? 1 : -1))),
+          delirium: Math.random() > 0.82 ? 1 : 0,
+          pupil: Math.max(2.8, Math.min(4.2, last.pupil + (Math.random() > 0.6 ? 0.1 : -0.1))),
+          seizure: Math.max(0, Math.min(5, last.seizure + (Math.random() > 0.8 ? 1 : 0))),
+        };
+        return [...current.slice(-10), next];
+      });
+    }, 4500);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  return { trend, updatedAt, syncing };
 }
 
-function MiniSparkline({ values, color }: { values: number[]; color: string }) {
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const points = values.map((value, index) => {
-    const x = (index / Math.max(values.length - 1, 1)) * 72;
-    const y = 28 - ((value - min) / Math.max(max - min, 1)) * 22;
-    return `${x},${y}`;
-  }).join(" ");
-  return (
-    <svg aria-hidden className="h-8 w-[76px]" viewBox="0 0 76 32">
-      <path d={`M0 30 L${points.split(" ").join(" L")} L72 30 Z`} fill={color} opacity="0.08" />
-      <polyline fill="none" points={points} stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" />
-    </svg>
-  );
-}
+export function NeuroDoctorWorkspace({ initialTab = "overview" }: { initialTab?: NeuroTab }) {
+  const [activeTab, setActiveTab] = React.useState<NeuroTab>(initialTab);
+  const [timeRange, setTimeRange] = React.useState("24 Hours");
+  const [search, setSearch] = React.useState("");
+  const [gcsScore, setGcsScore] = React.useState<GcsScore>({ eye: 4, verbal: 5, motor: 3 });
+  const [sedation, setSedation] = React.useState<SedationState>({ status: "Sedated", drug: "Propofol", dosage: "40 mcg/kg/min", route: "IV infusion", rass: "-2", goal: "-1 to -2" });
+  const [evd, setEvd] = React.useState<EvdState>({ output: "18", height: "10 cmH2O", icp: "23", waveform: "Present", colour: "Xanthochromic" });
+  const [delirium, setDelirium] = React.useState<DeliriumState>({ camPositive: false, attentionScore: "4/5" });
+  const [pupil, setPupil] = React.useState<PupilState>({ rightSize: "3.2", leftSize: "3.1", rightNpi: "3.8", leftNpi: "3.9", reactivity: "Brisk" });
+  const { trend, updatedAt, syncing } = useLiveNeuroStream();
+  const gcsTotal = gcsScore.eye + gcsScore.verbal + gcsScore.motor;
+  const rassValue = numericValue(sedation.rass, -2);
+  const evdOutputValue = numericValue(evd.output, 0);
+  const icpValue = numericValue(evd.icp, 0);
+  const pupilNpi = Math.min(numericValue(pupil.rightNpi, 0), numericValue(pupil.leftNpi, 0));
+  const displayTrend = React.useMemo(() => {
+    const latestIndex = trend.length - 1;
+    return trend.map((point, index) => index === latestIndex ? { ...point, gcs: gcsTotal, sedation: rassValue, evd: evdOutputValue, icp: icpValue, delirium: delirium.camPositive ? 1 : 0, pupil: pupilNpi } : point);
+  }, [delirium.camPositive, evdOutputValue, gcsTotal, icpValue, pupilNpi, rassValue, trend]);
+  const latest = displayTrend[displayTrend.length - 1];
 
-function NeuroCommandCenter({ patient, selectedPatientId, selectPatient }: { patient: NeuroPatient; selectedPatientId: string; selectPatient: (patientId: string) => void }) {
-  const [query, setQuery] = React.useState("");
-  const patientResults = React.useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    if (!normalized) return [];
-    return mockPatients.filter((item) => `${patientName(item)} ${item.uhid} ${item.mobile} ${item.department}`.toLowerCase().includes(normalized)).slice(0, 6);
-  }, [query]);
-  return (
-    <div className="sticky top-0 z-30 -mx-2 rounded-b-[28px] border border-t-0 border-[rgba(15,23,42,0.08)] bg-[#F4F7FC]/92 px-2 pb-3 pt-2 shadow-[0_18px_44px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-      <div className="rounded-[24px] border border-white/70 bg-[linear-gradient(135deg,#ffffff_0%,#f7f9ff_54%,#eef2ff_100%)] p-3 shadow-[0_12px_34px_rgba(31,41,55,0.08)]">
-        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_420px]">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#4F6EF7,#7C6BFF)] text-lg font-black text-white shadow-[0_10px_24px_rgba(79,110,247,0.32)]">
-              {patient.name.split(" ").map((part) => part[0]).join("").slice(0, 2)}
-              <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-[#18B67A] shadow-[0_0_0_5px_rgba(24,182,122,0.16)]" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="truncate text-xl font-black text-[#111827]">{patient.name}</h1>
-                <Badge tone="info">Neuro ICU</Badge>
-                <Badge tone="critical">High acuity</Badge>
-                <span className="inline-flex items-center gap-1 rounded-full border border-[#18B67A]/20 bg-[#18B67A]/10 px-2 py-0.5 text-[11px] font-bold text-[#15845b]"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#18B67A]" />Live monitoring</span>
-              </div>
-              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-[#6B7280]">
-                <span>UHID {patient.uhid}</span>
-                <span>MRN {selectedPatientId.toUpperCase()}</span>
-                <span>{patient.bed}</span>
-                <span>ICU census 18/24</span>
-                <span>Last synced 42 sec ago</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" />
-              <Input className="h-11 rounded-2xl border-[rgba(15,23,42,0.08)] bg-white/90 pl-9 text-sm font-semibold shadow-inner" placeholder="Search patient, UHID, MRN..." value={query} onChange={(event) => setQuery(event.target.value)} />
-              {query ? (
-                <div className="absolute right-0 top-12 z-50 max-h-72 w-full overflow-auto rounded-2xl border border-[rgba(15,23,42,0.08)] bg-white p-1 shadow-[0_18px_48px_rgba(15,23,42,0.16)]">
-                  {patientResults.length ? patientResults.map((item) => (
-                    <button className="w-full rounded-xl px-3 py-2 text-left text-sm transition hover:bg-[#F4F7FC]" key={item.id} onClick={() => { selectPatient(item.id); setQuery(""); }} type="button">
-                      <span className="block font-bold text-[#111827]">{patientName(item)}</span>
-                      <span className="text-xs font-semibold text-[#6B7280]">{item.uhid} | {item.mobile} | {item.department}</span>
-                    </button>
-                  )) : <div className="px-3 py-4 text-sm font-semibold text-[#6B7280]">No matching patient found.</div>}
-                </div>
-              ) : null}
-            </div>
-            <div className="flex flex-wrap justify-end gap-2">
-              <Button size="sm" variant="outline" onClick={() => toast.info("Shift handover opened")}><ClipboardCheck className="h-4 w-4" />Shift handover</Button>
-              <Button size="sm" variant="outline" onClick={() => toast.warning("Emergency neuro pathway armed")}><ShieldAlert className="h-4 w-4" />Emergency</Button>
-              <Button size="sm" onClick={() => toast.success("Neuro ICU state saved")}><Save className="h-4 w-4" />Saved</Button>
-            </div>
-          </div>
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Badge tone="danger">3 critical alerts</Badge>
-          <Badge tone="warning">ICP threshold active</Badge>
-          <Badge tone="info">Consultant note pending</Badge>
-          <Badge tone="success">Device feed connected</Badge>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function NeuroStatRibbon() {
-  return (
-    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8">
-      {overviewStats.map((stat) => (
-        <motion.button whileHover={{ y: -2 }} className="rounded-[20px] border border-white/70 bg-white/76 p-3 text-left shadow-[0_10px_28px_rgba(15,23,42,0.07)] backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-[#4F6EF7]/20" key={stat.label} type="button">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <div className="text-[11px] font-black uppercase tracking-[0.14em] text-[#6B7280]">{stat.label}</div>
-              <div className="mt-1 flex items-baseline gap-1"><span className="text-2xl font-black text-[#111827]">{stat.value}</span><span className="text-xs font-bold text-[#6B7280]">{stat.unit}</span></div>
-            </div>
-            <span className="relative flex h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: `${stat.color}14` }}>
-              <span className="absolute h-7 w-7 rounded-full border-2" style={{ borderColor: stat.color }} />
-              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: stat.color }} />
-            </span>
-          </div>
-          <div className="mt-2 flex items-center justify-between gap-2">
-            <MiniSparkline color={stat.color} values={stat.trend} />
-            <Badge tone={stat.tone}>{stat.status}</Badge>
-          </div>
-        </motion.button>
-      ))}
-    </div>
-  );
-}
-
-function NeuroTabs({ withPatient }: { withPatient: (href: string) => string }) {
-  const pathname = usePathname();
-  return (
-    <div className="overflow-x-auto rounded-[22px] border border-[rgba(15,23,42,0.08)] bg-white/80 p-1 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
-      <div className="flex min-w-max gap-1">
-        {neuroRoutes.map((route) => {
-          const active = pathname === route.href;
-          return <Button asChild className={cn("rounded-2xl", active && "bg-[linear-gradient(135deg,#4F6EF7,#7C6BFF)] text-white")} key={route.href} size="sm" variant={active ? "default" : "ghost"}><a href={withPatient(route.href)}>{route.label}</a></Button>;
-        })}
-      </div>
-    </div>
-  );
-}
-
-function NeuroModuleShell({ module, children }: { module: NeuroModule; children: React.ReactNode }) {
-  const [open, setOpen] = React.useState(true);
-  return (
-    <Reorder.Item value={module} as="div" className="min-w-0">
-      <motion.section layout className="overflow-hidden rounded-[24px] border border-[rgba(15,23,42,0.08)] bg-white/88 shadow-[0_14px_42px_rgba(15,23,42,0.07)] backdrop-blur">
-        <button className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left focus:outline-none focus:ring-2 focus:ring-[#4F6EF7]/20" onClick={() => setOpen((value) => !value)} type="button">
-          <div className="flex min-w-0 items-center gap-3">
-            <GripVertical className="h-4 w-4 shrink-0 text-[#9CA3AF]" />
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2"><h2 className="truncate text-sm font-black text-[#111827]">{module.title}</h2><Badge tone={module.tone}>{module.status}</Badge></div>
-              <p className="mt-0.5 truncate text-xs font-semibold text-[#6B7280]">{module.subtitle}</p>
-            </div>
-          </div>
-          <div className="hidden shrink-0 text-right text-[11px] font-bold text-[#6B7280] sm:block"><div>{module.owner}</div><div>{module.updatedAt}</div></div>
-          <ChevronDown className={cn("h-4 w-4 shrink-0 text-[#6B7280] transition", open && "rotate-180")} />
-        </button>
-        {open ? <motion.div layout className="border-t border-[rgba(15,23,42,0.08)] px-4 py-4">{children}</motion.div> : null}
-      </motion.section>
-    </Reorder.Item>
-  );
-}
-
-function GcsWorkflow() {
-  const [eye, setEye] = React.useState(3);
-  const [verbal, setVerbal] = React.useState(3);
-  const [motor, setMotor] = React.useState(5);
-  const score = eye + verbal + motor;
-  const color = score <= 8 ? "#E5484D" : score <= 12 ? "#F5A524" : "#18B67A";
-  const groups = [
-    { label: "Eye", value: eye, setValue: setEye, options: [[4, "Spontaneous"], [3, "Voice"], [2, "Pain"], [1, "None"]] },
-    { label: "Verbal", value: verbal, setValue: setVerbal, options: [[5, "Oriented"], [4, "Confused"], [3, "Words"], [2, "Sounds"], [1, "None"]] },
-    { label: "Motor", value: motor, setValue: setMotor, options: [[6, "Obeys"], [5, "Localizes"], [4, "Withdraws"], [3, "Flexion"], [2, "Extension"], [1, "None"]] },
+  const kpis = [
+    { label: "GCS Score", value: `${latest.gcs}/15`, previous: "-1 from baseline", severity: latest.gcs < 9 ? "critical" : latest.gcs < 13 ? "watch" : "stable", icon: Brain, dataKey: "gcs", threshold: "Notify if < 9" },
+    { label: "Sedation Status", value: sedation.drug, previous: `RASS ${sedation.rass || "-"} goal`, severity: rassValue <= -4 ? "critical" : rassValue <= -3 ? "watch" : "stable", icon: Pill, dataKey: "sedation", threshold: `Goal ${sedation.goal}` },
+    { label: "EVD Output", value: `${latest.evd} ml/hr`, previous: "+4 ml/hr", severity: latest.evd > 16 ? "critical" : latest.evd > 10 ? "watch" : "stable", icon: Droplets, dataKey: "evd", threshold: "Alert > 15" },
+    { label: "EVD Color", value: evd.colour, previous: "latest drain colour", severity: evd.colour === "Bloody" ? "critical" : evd.colour === "Xanthochromic" ? "watch" : "stable", icon: Eye, dataKey: "evd", threshold: "Review CSF" },
+    { label: "Delirium Status", value: latest.delirium ? "CAM+" : "CAM-", previous: latest.delirium ? "new risk" : "stable", severity: latest.delirium ? "critical" : "stable", icon: ShieldAlert, dataKey: "delirium", threshold: "CAM+" },
+    { label: "ICP Trend", value: `${latest.icp} mmHg`, previous: "+2 mmHg", severity: latest.icp > 22 ? "critical" : latest.icp > 18 ? "watch" : "stable", icon: Gauge, dataKey: "icp", threshold: "Alert > 20" },
+    { label: "Pupil Reactivity", value: `${latest.pupil.toFixed(1)} NPi`, previous: pupil.reactivity, severity: latest.pupil < 3 ? "critical" : latest.pupil < 3.5 ? "watch" : "stable", icon: Eye, dataKey: "pupil", threshold: "Alert < 3" },
+    { label: "Seizure Risk", value: `${latest.seizure}/5`, previous: "EEG ready", severity: latest.seizure > 3 ? "emergency" : latest.seizure > 2 ? "watch" : "stable", icon: RadioTower, dataKey: "seizure", threshold: "Risk >= 4" },
   ] as const;
+
   return (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_210px]">
-      <div className="space-y-3">
-        {groups.map((group) => (
-          <div className="rounded-2xl border border-[rgba(15,23,42,0.08)] bg-[#F8FAFF] p-3" key={group.label}>
-            <div className="mb-2 flex items-center justify-between"><span className="text-xs font-black uppercase tracking-[0.12em] text-[#6B7280]">{group.label} response</span><Badge tone="info">{group.value}</Badge></div>
-            <div className="grid grid-cols-2 gap-1.5 md:grid-cols-3">
-              {group.options.map(([value, label]) => <button className={cn("rounded-xl border px-2 py-2 text-xs font-black transition", group.value === value ? "border-[#4F6EF7] bg-[#4F6EF7] text-white shadow-[0_8px_20px_rgba(79,110,247,0.25)]" : "border-[rgba(15,23,42,0.08)] bg-white text-[#4B5563] hover:border-[#4F6EF7]/35")} key={label} onClick={() => group.setValue(value)} type="button">{value} - {label}</button>)}
+    <div className="min-h-screen bg-[#f5f7fb] text-[#111827]">
+      <main className="min-w-0 space-y-4">
+        <NeuroHeader
+          alertCount={3}
+          lastUpdated={updatedAt}
+          syncing={syncing}
+          timeRange={timeRange}
+          onTimeRangeChange={setTimeRange}
+        />
+
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {kpis.map((kpi) => <KpiCard key={kpi.label} kpi={kpi} trend={displayTrend} />)}
+        </section>
+
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as NeuroTab)} className="space-y-4">
+          <Card className="sticky top-0 z-20 overflow-hidden border-[#dbe4f0]">
+            <CardContent className="p-2">
+              <TabsList className="w-full rounded-lg bg-[#eef3f9] p-1">
+                {tabItems.map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <TabsTrigger key={tab.value} value={tab.value} className="h-10 flex-1 gap-2 rounded-md text-sm data-[state=active]:bg-white data-[state=active]:text-[#155eef]">
+                      <Icon className="h-4 w-4" />
+                      {tab.label}
+                    </TabsTrigger>
+                  );
+                })}
+              </TabsList>
+            </CardContent>
+          </Card>
+
+          <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_280px]">
+            <div className="min-w-0 space-y-4">
+              <TabsContent value="overview">
+                <OverviewSection delirium={delirium} evd={evd} gcsScore={gcsScore} pupil={pupil} sedation={sedation} trend={displayTrend} />
+              </TabsContent>
+              <TabsContent value="gcs"><GcsPanel expanded value={gcsScore} onChange={setGcsScore} /></TabsContent>
+              <TabsContent value="sedation"><SedationPanel expanded value={sedation} onChange={setSedation} /></TabsContent>
+              <TabsContent value="evd"><EvdPanel expanded value={evd} onChange={setEvd} /></TabsContent>
+              <TabsContent value="delirium"><DeliriumPanel expanded value={delirium} onChange={setDelirium} /></TabsContent>
+              <TabsContent value="pupil"><PupilPanel expanded value={pupil} onChange={setPupil} /></TabsContent>
+              <TabsContent value="analytics"><AnalyticsSection trend={displayTrend} search={search} onSearch={setSearch} /></TabsContent>
+              <TabsContent value="reports"><ReportsSection /></TabsContent>
+            </div>
+            <QuickActionsPanel />
+          </div>
+        </Tabs>
+      </main>
+    </div>
+  );
+}
+
+function NeuroHeader({
+  alertCount,
+  lastUpdated,
+  syncing,
+  timeRange,
+  onTimeRangeChange,
+}: {
+  alertCount: number;
+  lastUpdated: string;
+  syncing: boolean;
+  timeRange: string;
+  onTimeRangeChange: (value: string) => void;
+}) {
+  return (
+    <Card className="overflow-hidden border-[#dbe4f0]">
+      <CardContent className="grid gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_auto]">
+        <div className="flex min-w-0 items-center gap-4">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[#155eef] text-lg font-bold text-white">{patient.firstName[0]}{patient.lastName[0]}</div>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="truncate text-xl font-bold text-[#101828]">{patientName()}</h1>
+              <Badge tone="info">MRN {patient.uhid}</Badge>
+              <Badge tone="warning">ICU Bed N-07</Badge>
+              <Badge tone="success">Admitted</Badge>
+              <span className="inline-flex items-center gap-1 rounded-full border border-[#12b76a]/30 bg-[#ecfdf3] px-2 py-0.5 text-xs font-semibold text-[#027a48]"><Wifi className="h-3 w-3" />Live</span>
+            </div>
+            <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs font-medium text-[#667085]">
+              <span>Consultant: Dr. Aman Verma</span>
+              <span>Diagnosis: Post traumatic brain injury</span>
+              <span>Last updated {lastUpdated}</span>
+              <span className="inline-flex items-center gap-1"><RefreshCcw className={cn("h-3 w-3", syncing && "animate-spin text-[#155eef]")} />Auto refresh</span>
             </div>
           </div>
-        ))}
-        <textarea className="min-h-24 w-full rounded-2xl border border-[rgba(15,23,42,0.08)] bg-white p-3 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#4F6EF7]/20" defaultValue="GCS reduced compared with previous score. Repeat pupils and ICP correlation advised." />
-      </div>
-      <div className="rounded-[22px] border border-[rgba(15,23,42,0.08)] bg-[linear-gradient(180deg,#ffffff,#f7f9ff)] p-4 text-center">
-        <motion.div key={score} animate={{ scale: [0.96, 1.04, 1] }} className={cn("mx-auto flex h-28 w-28 items-center justify-center rounded-full border-[10px] text-4xl font-black", score <= 8 && "animate-pulse")} style={{ borderColor: `${color}55`, color }}>{score}</motion.div>
-        <div className="mt-3 text-xs font-black uppercase tracking-[0.16em] text-[#6B7280]">Live GCS</div>
-        <div className="mt-1 text-sm font-black text-[#111827]">{score <= 8 ? "Severe injury" : score <= 12 ? "Moderate injury" : "Mild injury"}</div>
-        <div className="mt-3 flex flex-col gap-2"><Button size="sm" variant="outline"><Mic className="h-4 w-4" />Dictate</Button><Button size="sm"><PhoneCall className="h-4 w-4" />Consult Neuro</Button></div>
-      </div>
-    </div>
-  );
-}
-
-function SedationWorkflow() {
-  const [rate, setRate] = React.useState(18);
-  const [target, setTarget] = React.useState("-2");
-  return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_240px]">
-      <div className="space-y-3">
-        <div className="grid gap-3 md:grid-cols-3">
-          {["Propofol", "Fentanyl", "Dexmedetomidine"].map((drug, index) => <button className={cn("rounded-2xl border p-3 text-left transition", index === 0 ? "border-[#4F6EF7]/35 bg-[#4F6EF7]/10 text-[#2446d8]" : "border-[rgba(15,23,42,0.08)] bg-white")} key={drug} type="button"><Syringe className="mb-2 h-4 w-4" /><span className="text-sm font-black">{drug}</span><span className="mt-1 block text-xs font-semibold text-[#6B7280]">{index === 0 ? "Active infusion" : "Available"}</span></button>)}
         </div>
-        <label className="block rounded-2xl border border-[rgba(15,23,42,0.08)] bg-[#F8FAFF] p-3"><div className="flex items-center justify-between text-sm font-black"><span>Propofol infusion rate</span><span>{rate} mcg/kg/min</span></div><input className="mt-3 w-full accent-[#4F6EF7]" max="60" min="0" onChange={(event) => setRate(Number(event.target.value))} type="range" value={rate} /></label>
-        <div className="flex flex-wrap gap-2">{["0", "-1", "-2", "-3", "-4", "-5"].map((score) => <button className={cn("rounded-xl border px-3 py-2 text-xs font-black", target === score ? "border-[#7C6BFF] bg-[#7C6BFF] text-white" : "border-[rgba(15,23,42,0.08)] bg-white")} key={score} onClick={() => setTarget(score)} type="button">RASS {score}</button>)}</div>
-      </div>
-      <div className="space-y-3 rounded-[22px] border border-[#18B67A]/20 bg-[#18B67A]/10 p-3"><Badge tone="success">Within protocol</Badge><div className="text-2xl font-black text-[#166b4b]">Target RASS {target}</div><p className="text-xs font-semibold text-[#166b4b]">Maintain current rate, repeat sedation score in 30 minutes, watch MAP if titrating upward.</p><div className="rounded-xl bg-white/70 p-2 text-xs font-bold text-[#6B7280]">Interaction watch: fentanyl + propofol respiratory depression risk monitored.</div></div>
-    </div>
-  );
-}
-
-function EvdWorkflow() {
-  return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_240px]">
-      <ChartCard title="ICP and EVD Output" dataKeys={[["icp", "#E5484D"], ["drain", "#4F6EF7"]]} />
-      <div className="space-y-2">{[["Drain pressure", "18 cmH2O", "warning"], ["Output this hour", "36 ml", "danger"], ["24h cumulative", "146 ml", "info"], ["Fluid color", "Xanthochromic", "warning"]].map(([label, value, tone]) => <div className="rounded-2xl border border-[rgba(15,23,42,0.08)] bg-white p-3" key={label}><div className="text-[11px] font-black uppercase tracking-[0.12em] text-[#6B7280]">{label}</div><div className="mt-1 flex items-center justify-between gap-2"><span className="text-lg font-black text-[#111827]">{value}</span><Badge tone={tone as Tone}>{tone}</Badge></div></div>)}</div>
-      <div className="grid gap-2 md:grid-cols-3 lg:col-span-2">{["Waveform dampening detected", "Height changed +2 cm", "Output velocity above baseline"].map((item) => <div className="rounded-2xl border border-[#E5484D]/20 bg-[#E5484D]/10 p-3 text-sm font-bold text-[#b4232a]" key={item}>{item}</div>)}</div>
-    </div>
-  );
-}
-
-function DeliriumWorkflow() {
-  return (
-    <div className="grid gap-3 md:grid-cols-2">
-      {["Acute onset/fluctuating course", "Inattention", "Altered consciousness", "Disorganized thinking"].map((question, index) => <div className="rounded-2xl border border-[rgba(15,23,42,0.08)] bg-[#F8FAFF] p-3" key={question}><div className="text-sm font-black text-[#111827]">{question}</div><div className="mt-3 grid grid-cols-2 gap-2"><button className={cn("rounded-xl px-3 py-2 text-xs font-black", index < 2 ? "bg-[#F5A524] text-white" : "bg-white text-[#6B7280]")} type="button">Yes</button><button className={cn("rounded-xl px-3 py-2 text-xs font-black", index >= 2 ? "bg-[#18B67A] text-white" : "bg-white text-[#6B7280]")} type="button">No</button></div></div>)}
-      <div className="rounded-2xl border border-[#F5A524]/20 bg-[#F5A524]/10 p-3 md:col-span-2"><div className="flex flex-wrap items-center justify-between gap-2"><div className="font-black text-[#8a5c00]">CAM-ICU positive risk pattern</div><Badge tone="success">Consultant verified</Badge></div><p className="mt-1 text-sm font-semibold text-[#8a5c00]">Sleep disturbance and agitation markers increased overnight. Reorientation protocol and medication review recommended.</p></div>
-    </div>
-  );
-}
-
-function CompactWorkflow({ icon: Icon, title, rows }: { icon: typeof Brain; title: string; rows: string[] }) {
-  return (
-    <div className="space-y-3"><div className="flex items-center gap-2"><Icon className="h-5 w-5 text-[#4F6EF7]" /><div className="text-sm font-black text-[#111827]">{title}</div></div><div className="grid gap-2 md:grid-cols-2">{rows.map((row) => <div className="rounded-2xl border border-[rgba(15,23,42,0.08)] bg-[#F8FAFF] px-3 py-2 text-sm font-bold text-[#374151]" key={row}>{row}</div>)}</div></div>
-  );
-}
-
-function TimelineWorkflow() {
-  return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-6 gap-1">{Array.from({ length: 24 }).map((_, index) => <div className={cn("h-8 rounded-lg", index > 15 ? "bg-[#E5484D]/70" : index > 10 ? "bg-[#F5A524]/65" : "bg-[#18B67A]/55")} key={index} title={`${index}:00 neuro observation`} />)}</div>
-      {["20:00 GCS 11, ICP 24, drain 36 ml", "18:00 Pupils equal, NPi 3.8/3.7", "16:00 Sedation target adjusted to RASS -2"].map((event) => <div className="rounded-2xl border border-[rgba(15,23,42,0.08)] bg-white px-3 py-2 text-sm font-bold text-[#374151]" key={event}>{event}</div>)}
-    </div>
-  );
-}
-
-function ModuleContent({ id }: { id: NeuroModuleId }) {
-  if (id === "gcs") return <GcsWorkflow />;
-  if (id === "sedation") return <SedationWorkflow />;
-  if (id === "evd") return <EvdWorkflow />;
-  if (id === "delirium") return <DeliriumWorkflow />;
-  if (id === "timeline") return <TimelineWorkflow />;
-  const content: Record<Exclude<NeuroModuleId, "gcs" | "sedation" | "evd" | "delirium" | "timeline">, { icon: typeof Brain; title: string; rows: string[] }> = {
-    pupil: { icon: UserRound, title: "Pupil and NPi checks", rows: ["Right 3.2 mm reactive", "Left 3.1 mm reactive", "NPi R 3.8 / L 3.7", "No anisocoria"] },
-    motor: { icon: Activity, title: "Motor and sensory map", rows: ["RUL 4/5, LUL 5/5", "RLL 4/5, LLL 5/5", "No sensory level", "Tone mildly increased R"] },
-    reflexes: { icon: Zap, title: "Reflex documentation", rows: ["Corneal reflex present", "Cough reflex weak", "Plantar equivocal R", "Doll eye deferred"] },
-    ventilation: { icon: Waves, title: "Ventilation correlation", rows: ["EtCO2 36 mmHg", "SIMV VC synced", "PaCO2 target met", "SpO2 96% FiO2 35"] },
-    seizure: { icon: Radio, title: "Seizure surveillance", rows: ["No observed event", "EEG order prepared", "Levetiracetam active", "Rescue med checked"] },
-  };
-  return <CompactWorkflow {...content[id]} />;
-}
-
-function MonitoringGrid() {
-  const [modules, setModules] = React.useState(initialModules);
-  return <Reorder.Group axis="y" className="grid gap-4 xl:grid-cols-2" values={modules} onReorder={setModules}>{modules.map((module) => <NeuroModuleShell key={module.id} module={module}><ModuleContent id={module.id} /></NeuroModuleShell>)}</Reorder.Group>;
-}
-
-function ChartCard({ title, dataKeys }: { title: string; dataKeys: [string, string][] }) {
-  return (
-    <Card className="rounded-[24px] border-[rgba(15,23,42,0.08)] bg-white/88 shadow-[0_14px_42px_rgba(15,23,42,0.07)]">
-      <CardHeader><CardTitle>{title}</CardTitle><CardDescription>Last 24h bedside feed</CardDescription></CardHeader>
-      <CardContent className="h-56 p-4">
-        <ResponsiveContainer height="100%" width="100%">
-          <LineChart data={neuroTrendData}><CartesianGrid stroke="#E6EAF4" vertical={false} /><XAxis dataKey="time" tick={{ fill: "#6B7280", fontSize: 11 }} /><YAxis tick={{ fill: "#6B7280", fontSize: 11 }} /><Tooltip contentStyle={{ borderRadius: 14, border: "1px solid rgba(15,23,42,0.08)" }} />{dataKeys.map(([key, color]) => <Line dataKey={key} dot={false} key={key} stroke={color} strokeWidth={2.5} type="monotone" />)}</LineChart>
-        </ResponsiveContainer>
+        <div className="flex flex-wrap items-center justify-start gap-2 xl:justify-end">
+          <Badge tone={alertCount > 0 ? "critical" : "success"}>{alertCount} critical alerts</Badge>
+          {["12 Hours", "24 Hours", "48 Hours", "Custom"].map((item) => (
+            <button className={cn("h-8 rounded-md border px-3 text-xs font-semibold transition", timeRange === item ? "border-[#155eef] bg-[#155eef] text-white" : "border-[#d0d5dd] bg-white text-[#475467] hover:border-[#155eef]/50")} key={item} onClick={() => onTimeRangeChange(item)} type="button">{item}</button>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );
 }
 
-function ChartDeck() {
-  return <div className="grid gap-4 xl:grid-cols-3"><ChartCard title="GCS / ICP Trend" dataKeys={[["gcs", "#4F6EF7"], ["icp", "#E5484D"]]} /><ChartCard title="Sedation / SpO2" dataKeys={[["sedation", "#7C6BFF"], ["spo2", "#18B67A"]]} /><ChartCard title="Drain / CPP" dataKeys={[["drain", "#4F6EF7"], ["cpp", "#F5A524"]]} /></div>;
+function KpiCard({ kpi, trend }: { kpi: { label: string; value: string; previous: string; severity: string; icon: typeof Brain; dataKey: keyof TrendPoint; threshold: string }; trend: TrendPoint[] }) {
+  const Icon = kpi.icon;
+  const color = kpi.severity === "emergency" ? "#7c3aed" : kpi.severity === "critical" ? "#d92d20" : kpi.severity === "watch" ? "#f79009" : "#12b76a";
+  return (
+    <motion.div whileHover={{ y: -3 }} transition={{ duration: 0.16 }}>
+      <Card className={cn("h-full overflow-hidden border-[#dbe4f0] transition", kpi.severity === "critical" && "border-[#f04438]/40", kpi.severity === "emergency" && "border-[#7c3aed]/40")}>
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-xs font-bold uppercase tracking-wide text-[#667085]">{kpi.label}</div>
+              <div className="mt-2 truncate text-2xl font-bold text-[#101828]">{kpi.value}</div>
+              <div className="mt-1 flex items-center gap-1 text-xs font-semibold text-[#667085]"><ChevronUp className="h-3 w-3" />{kpi.previous}</div>
+            </div>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: `${color}14`, color }}>
+              <Icon className="h-5 w-5" />
+            </div>
+          </div>
+          <div className="mt-3 h-12">
+            <ResponsiveContainer height="100%" width="100%">
+              <AreaChart data={trend}>
+                <Area dataKey={kpi.dataKey} fill={color} fillOpacity={0.12} stroke={color} strokeWidth={2} type="monotone" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-3 flex items-center justify-between gap-2">
+            <Badge tone={severityTone(kpi.severity as Severity)}>{kpi.severity}</Badge>
+            <span className="truncate text-xs font-medium text-[#667085]">{kpi.threshold}</span>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
 }
 
-function IntelligenceRail({ patient }: { patient: NeuroPatient }) {
-  const cards = [
-    { title: "Clinical AI Summary", icon: Brain, tone: "info" as Tone, body: "GCS down 2 points in 12h with ICP above target. Sedation in goal range; drainage velocity increased after 16:00." },
-    { title: "Deterioration Warnings", icon: AlertTriangle, tone: "critical" as Tone, body: "ICP > 22 mmHg sustained, CAM positive, drain output rising. Escalation criteria partially met." },
-    { title: "Critical Labs", icon: Stethoscope, tone: "warning" as Tone, body: "Na 132, K 4.2, Hb 10.8, WBC 13.2. Osmolality review pending." },
-    { title: "Medication Conflicts", icon: Pill, tone: "success" as Tone, body: "No hard conflict. Sedation + opioid respiratory depression warning monitored." },
+function OverviewSection({
+  trend,
+  gcsScore,
+  sedation,
+  evd,
+  delirium,
+  pupil,
+}: {
+  trend: TrendPoint[];
+  gcsScore: GcsScore;
+  sedation: SedationState;
+  evd: EvdState;
+  delirium: DeliriumState;
+  pupil: PupilState;
+}) {
+  const latest = trend[trend.length - 1];
+  const gcsSeverity = latest.gcs <= 8 ? "Severe" : latest.gcs <= 12 ? "Moderate" : "Mild";
+  const priorities = [
+    { title: "Neurologist review", detail: "ICP remains above threshold with rising EVD output.", tone: "critical" as BadgeProps["tone"], icon: Stethoscope },
+    { title: "Repeat neuro obs", detail: "GCS, pupils and CAM reassessment due in 30 minutes.", tone: "warning" as BadgeProps["tone"], icon: CalendarClock },
+    { title: "Device safety", detail: "EVD waveform present. Lines secured and drain height documented.", tone: "success" as BadgeProps["tone"], icon: Syringe },
   ];
+  const recentEvents = [
+    ["10:30", "GCS", `${latest.gcs}/15`, `${gcsSeverity} - E${gcsScore.eye} V${gcsScore.verbal} M${gcsScore.motor}`],
+    ["10:30", "ICP", `${latest.icp} mmHg`, "Above threshold"],
+    ["10:20", "Sedation", `${sedation.drug} / RASS ${sedation.rass}`, sedation.status],
+    ["10:18", "EVD", `${evd.output || "-"} ml/hr`, `${evd.colour}, ${evd.waveform}`],
+    ["10:16", "Pupil", `R ${pupil.rightNpi || "-"} / L ${pupil.leftNpi || "-"} NPi`, `${pupil.reactivity}, ${pupil.rightSize || "-"}/${pupil.leftSize || "-"} mm`],
+    ["10:15", "CAM", delirium.camPositive ? "Positive" : "Negative", delirium.camPositive ? "Review needed" : "Stable"],
+  ];
+
   return (
-    <aside className="space-y-4 xl:sticky xl:top-48 xl:self-start">
-      <Card className="rounded-[24px] border-[rgba(15,23,42,0.08)] bg-[#111827] text-white shadow-[0_18px_48px_rgba(15,23,42,0.18)]">
-        <CardContent className="space-y-3 p-4"><div className="flex items-center justify-between"><div><div className="text-xs font-black uppercase tracking-[0.16em] text-white/55">Patient intelligence</div><div className="mt-1 text-lg font-black">{patient.name}</div></div><Bell className="h-5 w-5 text-[#F5A524]" /></div><div className="grid grid-cols-2 gap-2">{[["NEWS", "6"], ["Fall", "High"], ["Pressure", "Mod"], ["Tasks", "9"]].map(([label, value]) => <div className="rounded-2xl bg-white/8 p-3" key={label}><div className="text-[11px] font-bold uppercase text-white/50">{label}</div><div className="text-xl font-black">{value}</div></div>)}</div></CardContent>
+    <div className="space-y-4">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+        <Card className="overflow-hidden border-[#dbe4f0]">
+          <CardHeader className="flex-row items-start justify-between gap-4">
+            <div>
+              <CardTitle>Neuro Command Overview</CardTitle>
+              <p className="mt-1 text-sm font-medium text-[#667085]">Read-only clinical summary for rapid ICU handover and consultant review.</p>
+            </div>
+            <Badge tone="info"><Activity className="h-3 w-3" />Live trend</Badge>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px]">
+              <ResponsiveContainer height="100%" width="100%">
+                <LineChart data={trend}>
+                  <CartesianGrid stroke="#e5e7eb" vertical={false} />
+                  <XAxis dataKey="time" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip contentStyle={{ borderRadius: 10, border: "1px solid #dbe4f0" }} />
+                  <ReferenceLine label="ICP alert" stroke="#d92d20" y={20} />
+                  <Line dataKey="gcs" name="GCS" dot={false} stroke="#155eef" strokeWidth={3} type="monotone" />
+                  <Line dataKey="icp" name="ICP" dot={false} stroke="#d92d20" strokeWidth={3} type="monotone" />
+                  <Line dataKey="evd" name="EVD" dot={false} stroke="#06aed4" strokeWidth={3} type="monotone" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-[#dbe4f0]">
+          <CardHeader>
+            <CardTitle>Clinical Priorities</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3">
+            {priorities.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div className="rounded-lg border border-[#dbe4f0] bg-white p-3" key={item.title}>
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#e8f1ff] text-[#155eef]"><Icon className="h-4 w-4" /></div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="font-semibold text-[#101828]">{item.title}</div>
+                        <Badge tone={item.tone}>{item.tone}</Badge>
+                      </div>
+                      <p className="mt-1 text-sm font-medium text-[#667085]">{item.detail}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-3">
+        <Card className="border-[#dbe4f0] xl:col-span-2">
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Recent Neuro Events</CardTitle>
+            <Badge tone="success"><CheckCircle2 className="h-3 w-3" />Audit synced</Badge>
+          </CardHeader>
+          <CardContent className="p-0">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-[#f2f6fb] text-[#667085]">
+                <tr>{["Time", "Type", "Value", "Clinical note"].map((header) => <th className="px-4 py-3 font-bold" key={header}>{header}</th>)}</tr>
+              </thead>
+              <tbody>
+                {recentEvents.map((row) => (
+                  <tr className="border-t border-[#eef2f7]" key={`${row[0]}-${row[1]}`}>
+                    {row.map((cell) => <td className={cn("px-4 py-3 font-semibold text-[#344054]", /above|review|moderate/i.test(cell) && "text-[#b42318]")} key={cell}>{cell}</td>)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+
+        <Card className="border-[#dbe4f0]">
+          <CardHeader><CardTitle>Shift Snapshot</CardTitle></CardHeader>
+          <CardContent className="grid gap-3">
+            {[
+              ["Active orders", "7", "Neuro obs hourly"],
+              ["Drafts saved", "3", "Ready for signature"],
+              ["Alerts cleared", "11", "Last 24 hours"],
+            ].map(([label, value, note]) => (
+              <div className="rounded-lg bg-[#f8fafc] p-3" key={label}>
+                <div className="text-xs font-bold uppercase text-[#667085]">{label}</div>
+                <div className="mt-1 flex items-end justify-between gap-3">
+                  <span className="text-2xl font-bold text-[#101828]">{value}</span>
+                  <span className="text-right text-xs font-semibold text-[#667085]">{note}</span>
+                </div>
+              </div>
+            ))}
+            <Button onClick={() => toast.success("Overview draft saved")}><Save className="h-4 w-4" />Save Handover Draft</Button>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+function GcsPanel({ expanded, value, onChange }: { expanded?: boolean; value?: GcsScore; onChange?: (value: GcsScore) => void }) {
+  const [localScore, setLocalScore] = React.useState<GcsScore>(value ?? { eye: 4, verbal: 5, motor: 3 });
+  const score = value ?? localScore;
+  const setScore = React.useCallback((next: GcsScore) => {
+    setLocalScore(next);
+    onChange?.(next);
+  }, [onChange]);
+  const setEye = React.useCallback((eye: number) => setScore({ ...score, eye }), [score, setScore]);
+  const setVerbal = React.useCallback((verbal: number) => setScore({ ...score, verbal }), [score, setScore]);
+  const setMotor = React.useCallback((motor: number) => setScore({ ...score, motor }), [score, setScore]);
+  const { eye, verbal, motor } = score;
+  const total = eye + verbal + motor;
+  const severity = total <= 8 ? "Severe" : total <= 12 ? "Moderate" : "Mild";
+  return (
+    <ClinicalPanel title="GCS Assessment" subtitle="Glasgow Coma Scale with auto score and deterioration warning" icon={ClipboardList}>
+      <div className={cn("grid gap-4", expanded ? "xl:grid-cols-[1fr_260px]" : "")}>
+        <div className="grid gap-3 md:grid-cols-3">
+          <RadioCards label="Eye Response" value={eye} onChange={setEye} options={[[4, "Spontaneous"], [3, "To speech"], [2, "To pain"], [1, "None"]]} />
+          <RadioCards label="Verbal Response" value={verbal} onChange={setVerbal} options={[[5, "Oriented"], [4, "Confused"], [3, "Words"], [2, "Sounds"], [1, "None"]]} />
+          <RadioCards label="Motor Response" value={motor} onChange={setMotor} options={[[6, "Obeys"], [5, "Localizes"], [4, "Withdraws"], [3, "Flexion"], [2, "Extension"], [1, "None"]]} />
+        </div>
+        <div className="rounded-lg border border-[#dbe4f0] bg-[#f8fafc] p-4">
+          <div className="text-xs font-bold uppercase text-[#667085]">Instant total score</div>
+          <div className="mt-2 text-4xl font-bold text-[#101828]">{total}/15</div>
+          <Badge className="mt-2" tone={severity === "Severe" ? "critical" : severity === "Moderate" ? "warning" : "success"}>{severity}</Badge>
+          <p className="mt-3 text-sm font-medium text-[#667085]">AI warning: GCS below baseline. Repeat pupils and review ICP correlation.</p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <Input defaultValue="Dr. Neha Malik" />
+            <Input defaultValue="10:30 AM" />
+          </div>
+          <Button className="mt-3 w-full" onClick={() => toast.success(`GCS updated to ${total}/15`)}><Save className="h-4 w-4" />Save GCS</Button>
+        </div>
+      </div>
+    </ClinicalPanel>
+  );
+}
+
+function SedationPanel({ expanded, value, onChange }: { expanded?: boolean; value?: SedationState; onChange?: (value: SedationState) => void }) {
+  const [localValue, setLocalValue] = React.useState<SedationState>(value ?? { status: "Sedated", drug: "Propofol", dosage: "40 mcg/kg/min", route: "IV infusion", rass: "-2", goal: "-1 to -2" });
+  const sedation = value ?? localValue;
+  const rassValue = numericValue(sedation.rass, -2);
+  const update = React.useCallback((patch: Partial<SedationState>) => {
+    const next = { ...sedation, ...patch };
+    setLocalValue(next);
+    onChange?.(next);
+  }, [onChange, sedation]);
+
+  return (
+    <ClinicalPanel title="Sedation Management" subtitle="Drug, infusion and RASS goal validation" icon={Pill}>
+      <div className={cn("grid gap-3", expanded ? "md:grid-cols-2 xl:grid-cols-3" : "md:grid-cols-2")}>
+        <ClinicalField label="Sedation status" onChange={(status) => update({ status })} value={sedation.status} />
+        <ClinicalField label="Drug" onChange={(drug) => update({ drug })} value={sedation.drug} />
+        <ClinicalField label="Dosage" onChange={(dosage) => update({ dosage })} value={sedation.dosage} />
+        <ClinicalField label="Route" onChange={(route) => update({ route })} value={sedation.route} />
+        <ClinicalField label="RASS score" onChange={(rass) => update({ rass })} value={sedation.rass} />
+        <ClinicalField label="Sedation goal" onChange={(goal) => update({ goal })} value={sedation.goal} />
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Badge tone={rassValue <= -4 ? "danger" : "success"}>{rassValue <= -4 ? "Deep sedation alert" : "Dose within range"}</Badge>
+        <Badge tone="warning">Respiratory depression watch</Badge>
+        <Badge tone="info">Trend prediction {rassValue <= -3 ? "watch" : "stable"}</Badge>
+      </div>
+      <ClinicalTextarea defaultValue="Maintain current infusion. Reassess after CT review and next neurological observation." />
+      <Button className="mt-3" onClick={() => toast.success(`Sedation updated: ${sedation.drug}, RASS ${sedation.rass || "-"}`)}><Save className="h-4 w-4" />Save Sedation</Button>
+    </ClinicalPanel>
+  );
+}
+
+function EvdPanel({ expanded, value, onChange }: { expanded?: boolean; value?: EvdState; onChange?: (value: EvdState) => void }) {
+  const [localValue, setLocalValue] = React.useState<EvdState>(value ?? { output: "18", height: "10 cmH2O", icp: "23", waveform: "Present", colour: "Xanthochromic" });
+  const evd = value ?? localValue;
+  const evdOutputValue = numericValue(evd.output, 0);
+  const icpValue = numericValue(evd.icp, 0);
+  const update = React.useCallback((patch: Partial<EvdState>) => {
+    const next = { ...evd, ...patch };
+    setLocalValue(next);
+    onChange?.(next);
+  }, [evd, onChange]);
+
+  return (
+    <ClinicalPanel title="EVD Monitoring" subtitle="Drain output, colour, height, waveform and ICP integration" icon={Droplets}>
+      <div className={cn("grid gap-3", expanded ? "md:grid-cols-2 xl:grid-cols-4" : "md:grid-cols-2")}>
+        <ClinicalField label="EVD output" onChange={(output) => update({ output })} value={evd.output} />
+        <ClinicalField label="Drain height" onChange={(height) => update({ height })} value={evd.height} />
+        <ClinicalField label="ICP" onChange={(icp) => update({ icp })} value={evd.icp} />
+        <ClinicalField label="Waveform" onChange={(waveform) => update({ waveform })} value={evd.waveform} />
+      </div>
+      <div className="mt-3">
+        <div className="mb-2 text-xs font-bold uppercase text-[#667085]">Fluid colour</div>
+        <div className="flex flex-wrap gap-2">
+          {["Clear", "Pink", "Xanthochromic", "Bloody"].map((item) => <button className={cn("rounded-md border px-3 py-1.5 text-xs font-semibold", item === evd.colour ? "border-[#f79009] bg-[#fffaeb] text-[#b54708]" : "border-[#d0d5dd] bg-white text-[#475467]")} key={item} onClick={() => update({ colour: item })} type="button">{item}</button>)}
+        </div>
+      </div>
+      <div className={cn("mt-3 rounded-lg border p-3 text-sm font-semibold", icpValue > 20 || evdOutputValue > 15 ? "border-[#fedf89] bg-[#fffaeb] text-[#b54708]" : "border-[#abefc6] bg-[#ecfdf3] text-[#027a48]")}>
+        {icpValue > 20 || evdOutputValue > 15 ? "Critical threshold: ICP/output above target. Notify neurologist if sustained." : "EVD parameters currently within target range."}
+      </div>
+      <Button className="mt-3" onClick={() => toast.success(`EVD updated: ${evd.output || "-"} ml/hr, ICP ${evd.icp || "-"}`)}><Save className="h-4 w-4" />Save EVD</Button>
+    </ClinicalPanel>
+  );
+}
+
+function DeliriumPanel({ expanded, value, onChange }: { expanded?: boolean; value?: DeliriumState; onChange?: (value: DeliriumState) => void }) {
+  const [localValue, setLocalValue] = React.useState<DeliriumState>(value ?? { camPositive: false, attentionScore: "4/5" });
+  const delirium = value ?? localValue;
+  const update = React.useCallback((patch: Partial<DeliriumState>) => {
+    const next = { ...delirium, ...patch };
+    setLocalValue(next);
+    onChange?.(next);
+  }, [delirium, onChange]);
+
+  return (
+    <ClinicalPanel title="Delirium / CAM Assessment" subtitle="Binary CAM assessment with cognitive status and risk classification" icon={ShieldAlert}>
+      <div className={cn("grid gap-3", expanded ? "md:grid-cols-[260px_1fr]" : "")}>
+        <div className="grid grid-cols-2 gap-2">
+          <Button className={cn("h-16", delirium.camPositive ? "bg-[#d92d20] hover:bg-[#b42318]" : "border-[#f04438]/30 text-[#b42318]")} onClick={() => update({ camPositive: true })} variant={delirium.camPositive ? "default" : "outline"}>YES</Button>
+          <Button className={cn("h-16", !delirium.camPositive && "bg-[#12b76a] hover:bg-[#039855]")} onClick={() => update({ camPositive: false })} variant={delirium.camPositive ? "outline" : "default"}>NO</Button>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          <ClinicalField label="CAM result" value={delirium.camPositive ? "CAM Positive" : "CAM Negative"} />
+          <ClinicalField label="Attention score" onChange={(attentionScore) => update({ attentionScore })} value={delirium.attentionScore} />
+          <ClinicalField label="Risk class" value={delirium.camPositive ? "High" : "Low"} />
+        </div>
+      </div>
+      <ClinicalTextarea defaultValue={delirium.camPositive ? "Delirium present. Review reversible causes, lines safety, sleep cycle and medication burden." : "No delirium currently. Continue sleep hygiene and line safety precautions."} />
+      <Button className="mt-3" onClick={() => toast.success(`Delirium updated: ${delirium.camPositive ? "CAM Positive" : "CAM Negative"}`)}><Save className="h-4 w-4" />Save CAM</Button>
+    </ClinicalPanel>
+  );
+}
+
+function PupilPanel({ expanded, value, onChange }: { expanded?: boolean; value?: PupilState; onChange?: (value: PupilState) => void }) {
+  const [localValue, setLocalValue] = React.useState<PupilState>(value ?? { rightSize: "3.2", leftSize: "3.1", rightNpi: "3.8", leftNpi: "3.9", reactivity: "Brisk" });
+  const pupil = value ?? localValue;
+  const lowestNpi = Math.min(numericValue(pupil.rightNpi, 0), numericValue(pupil.leftNpi, 0));
+  const asymmetry = Math.abs(numericValue(pupil.rightSize, 0) - numericValue(pupil.leftSize, 0));
+  const update = React.useCallback((patch: Partial<PupilState>) => {
+    const next = { ...pupil, ...patch };
+    setLocalValue(next);
+    onChange?.(next);
+  }, [onChange, pupil]);
+
+  return (
+    <ClinicalPanel title="Pupil Reactivity" subtitle="Pupil size, NPi, laterality and neurological reactivity tracking" icon={Eye}>
+      <div className={cn("grid gap-3", expanded ? "md:grid-cols-2 xl:grid-cols-5" : "md:grid-cols-2")}>
+        <ClinicalField label="Right size mm" onChange={(rightSize) => update({ rightSize })} value={pupil.rightSize} />
+        <ClinicalField label="Left size mm" onChange={(leftSize) => update({ leftSize })} value={pupil.leftSize} />
+        <ClinicalField label="Right NPi" onChange={(rightNpi) => update({ rightNpi })} value={pupil.rightNpi} />
+        <ClinicalField label="Left NPi" onChange={(leftNpi) => update({ leftNpi })} value={pupil.leftNpi} />
+        <ClinicalField label="Reactivity" onChange={(reactivity) => update({ reactivity })} value={pupil.reactivity} />
+      </div>
+      <div className="mt-3 grid gap-3 md:grid-cols-3">
+        <div className="rounded-lg border border-[#dbe4f0] bg-[#f8fafc] p-3">
+          <div className="text-xs font-bold uppercase text-[#667085]">Lowest NPi</div>
+          <div className="mt-1 text-2xl font-bold text-[#101828]">{lowestNpi.toFixed(1)}</div>
+          <Badge tone={lowestNpi < 3 ? "critical" : lowestNpi < 3.5 ? "warning" : "success"}>{lowestNpi < 3 ? "Critical" : lowestNpi < 3.5 ? "Watch" : "Reactive"}</Badge>
+        </div>
+        <div className="rounded-lg border border-[#dbe4f0] bg-[#f8fafc] p-3">
+          <div className="text-xs font-bold uppercase text-[#667085]">Asymmetry</div>
+          <div className="mt-1 text-2xl font-bold text-[#101828]">{asymmetry.toFixed(1)} mm</div>
+          <Badge tone={asymmetry >= 1 ? "warning" : "success"}>{asymmetry >= 1 ? "Review" : "Symmetric"}</Badge>
+        </div>
+        <div className="rounded-lg border border-[#dbe4f0] bg-[#f8fafc] p-3">
+          <div className="text-xs font-bold uppercase text-[#667085]">Clinical action</div>
+          <p className="mt-2 text-sm font-semibold text-[#475467]">{lowestNpi < 3 ? "Escalate neurological review and correlate with ICP." : "Continue scheduled pupil checks."}</p>
+        </div>
+      </div>
+      <Button className="mt-3" onClick={() => toast.success(`Pupil updated: lowest NPi ${lowestNpi.toFixed(1)}`)}><Save className="h-4 w-4" />Save Pupil</Button>
+    </ClinicalPanel>
+  );
+}
+
+function AnalyticsSection({ trend, search, onSearch }: { trend: TrendPoint[]; search: string; onSearch: (value: string) => void }) {
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="flex-row items-center justify-between">
+          <CardTitle>Real-time Neuro Graph Engine</CardTitle>
+          <Button size="sm" variant="outline">Fullscreen</Button>
+        </CardHeader>
+        <CardContent className="h-[360px]">
+          <ResponsiveContainer height="100%" width="100%">
+            <LineChart data={trend}>
+              <CartesianGrid stroke="#e5e7eb" vertical={false} />
+              <XAxis dataKey="time" tick={{ fontSize: 11 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 11 }} />
+              <YAxis orientation="right" yAxisId="right" tick={{ fontSize: 11 }} />
+              <Tooltip contentStyle={{ borderRadius: 10, border: "1px solid #dbe4f0" }} />
+              <ReferenceLine label="ICP threshold" stroke="#d92d20" y={20} yAxisId="left" />
+              <Line dataKey="gcs" dot={false} stroke="#155eef" strokeWidth={3} type="monotone" yAxisId="left" />
+              <Line dataKey="icp" dot={false} stroke="#d92d20" strokeWidth={3} type="monotone" yAxisId="left" />
+              <Line dataKey="evd" dot={false} stroke="#06aed4" strokeWidth={3} type="monotone" yAxisId="right" />
+              <Line dataKey="sedation" dot={false} stroke="#7c3aed" strokeWidth={3} type="monotone" yAxisId="right" />
+              <Line dataKey="pupil" dot={false} stroke="#0f766e" strokeWidth={3} type="monotone" yAxisId="right" />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
       </Card>
-      {cards.map((card) => { const Icon = card.icon; return <Card className="rounded-[24px] border-[rgba(15,23,42,0.08)] bg-white/90 shadow-[0_14px_42px_rgba(15,23,42,0.07)]" key={card.title}><CardContent className="space-y-2 p-4"><div className="flex items-center justify-between gap-2"><div className="flex items-center gap-2"><Icon className="h-4 w-4 text-[#4F6EF7]" /><div className="text-sm font-black text-[#111827]">{card.title}</div></div><Badge tone={card.tone}>{card.tone}</Badge></div><p className="text-sm font-semibold leading-6 text-[#4B5563]">{card.body}</p></CardContent></Card>; })}
-      <Card className="rounded-[24px] border-[rgba(15,23,42,0.08)] bg-white/90 shadow-[0_14px_42px_rgba(15,23,42,0.07)]"><CardHeader><CardTitle>Live task timeline</CardTitle><CardDescription>Next 90 minutes</CardDescription></CardHeader><CardContent className="space-y-2">{["Repeat GCS and pupils - 10 min", "Neuro consultant review - 15 min", "ICP threshold audit - 30 min", "Sedation reassessment - 45 min", "Print ICU neuro sheet - shift end"].map((task) => <div className="flex gap-2 rounded-2xl border border-[rgba(15,23,42,0.08)] bg-[#F8FAFF] p-3 text-sm font-bold text-[#374151]" key={task}><span className="mt-1 h-2 w-2 rounded-full bg-[#4F6EF7]" />{task}</div>)}</CardContent></Card>
+      <div className="grid gap-4 xl:grid-cols-2">
+        <LogTable title="GCS Trend Log" headers={["Time", "Eye", "Verbal", "Motor", "Total", "Severity", "By"]} rows={gcsRows} search={search} onSearch={onSearch} />
+        <LogTable title="EVD Output Log" headers={["Time", "Output", "Colour", "ICP", "Severity"]} rows={evdRows} search={search} onSearch={onSearch} />
+        <LogTable title="Sedation Log" headers={["Time", "Drug", "Dose", "Route", "RASS", "Status"]} rows={sedationRows} search={search} onSearch={onSearch} />
+        <LogTable title="Delirium Log" headers={["Time", "CAM", "Present", "Notes", "Risk"]} rows={deliriumRows} search={search} onSearch={onSearch} />
+      </div>
+    </div>
+  );
+}
+
+function ReportsSection() {
+  return (
+    <div className="grid gap-4 xl:grid-cols-[1fr_320px]">
+      <Card>
+        <CardHeader><CardTitle>Clinical Intelligence</CardTitle></CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-2">
+          {[
+            ["Predictive neurological decline", "GCS and ICP pattern suggests closer review in 30 minutes.", "warning"],
+            ["Duplicate entry prevention", "No duplicate GCS entry detected for current observation window.", "success"],
+            ["Offline recovery sync", "Drafts are autosaved locally until network returns.", "info"],
+            ["Audit logging", "All clinical edits require doctor/nurse signature.", "info"],
+          ].map(([title, body, tone]) => <InsightCard body={body} key={title} title={title} tone={tone as BadgeProps["tone"]} />)}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle>Generate Reports</CardTitle></CardHeader>
+        <CardContent className="grid gap-2">
+          {["Neuro ICU summary", "GCS trend PDF", "EVD output CSV", "Shift handover", "Audit history"].map((item) => <Button key={item} variant="outline"><FileDown className="h-4 w-4" />{item}</Button>)}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function QuickActionsPanel() {
+  return (
+    <aside className="sticky top-20 hidden self-start 2xl:block">
+      <Card className="border-[#dbe4f0]">
+        <CardHeader><CardTitle>Quick Actions</CardTitle></CardHeader>
+        <CardContent className="grid gap-2">
+          <Button variant="outline" onClick={() => toast.success("GCS entry opened")}><ClipboardList className="h-4 w-4" />Add GCS Entry</Button>
+          <Button variant="outline" onClick={() => toast.success("Sedation entry opened")}><Pill className="h-4 w-4" />Add Sedation</Button>
+          <Button variant="outline" onClick={() => toast.success("EVD entry opened")}><Droplets className="h-4 w-4" />Add EVD</Button>
+          <Button variant="outline" onClick={() => toast.success("CAM assessment opened")}><ShieldAlert className="h-4 w-4" />Add Delirium</Button>
+          <Button className="bg-[#d92d20] hover:bg-[#b42318]" onClick={() => toast.error("Emergency Neuro Alert triggered")}><AlertTriangle className="h-4 w-4" />Emergency Alert</Button>
+          <Button onClick={() => toast.success("Doctor notified")}><Bell className="h-4 w-4" />Notify Doctor</Button>
+          <div className="rounded-lg border border-[#dbe4f0] bg-[#f8fafc] p-3 text-xs font-medium text-[#667085]">
+            Shortcuts: G for GCS, S for Sedation, E for EVD, D for Delirium.
+          </div>
+        </CardContent>
+      </Card>
     </aside>
   );
 }
 
-function ActionDock() {
-  const actions = [["Save", Save], ["Final submit", Send], ["Escalate care", ShieldAlert], ["Call consultant", PhoneCall], ["Print ICU sheet", Printer], ["Export PDF", Download], ["Compare visits", Activity]] as const;
-  return <div className="sticky bottom-3 z-40 rounded-[24px] border border-white/70 bg-white/90 p-2 shadow-[0_18px_52px_rgba(15,23,42,0.16)] backdrop-blur-xl"><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-7">{actions.map(([label, Icon], index) => <Button className={cn("rounded-2xl", index === 1 && "bg-[linear-gradient(135deg,#4F6EF7,#7C6BFF)]")} key={label} variant={index === 1 ? "default" : "outline"} onClick={() => toast.success(`${label} queued`)}><Icon className="h-4 w-4" />{label}</Button>)}</div></div>;
-}
-
-function NeuroShell({ children }: { children: React.ReactNode }) {
-  const { patient, selectedPatientId, withPatient, selectPatient } = useNeuroPatient();
+function ClinicalPanel({ title, subtitle, icon: Icon, children }: { title: string; subtitle: string; icon: typeof Brain; children: React.ReactNode }) {
   return (
-    <PageMotion>
-      <div className="min-h-screen rounded-[28px] bg-[#F4F7FC] p-2 text-[#111827]">
-        <NeuroCommandCenter patient={patient} selectedPatientId={selectedPatientId} selectPatient={selectPatient} />
-        <div className="mt-4 space-y-4">
-          <NeuroTabs withPatient={withPatient} />
-          {children}
+    <Card className="overflow-hidden border-[#dbe4f0]">
+      <CardHeader className="bg-white">
+        <div className="flex items-start gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#e8f1ff] text-[#155eef]"><Icon className="h-5 w-5" /></div>
+          <div>
+            <CardTitle>{title}</CardTitle>
+            <p className="mt-1 text-xs font-medium text-[#667085]">{subtitle}</p>
+          </div>
         </div>
-        <ActionDock />
-      </div>
-    </PageMotion>
+      </CardHeader>
+      <CardContent className="p-4">{children}</CardContent>
+    </Card>
   );
 }
 
-export function NeuroOverviewPage() {
-  const { patient } = useNeuroPatient();
+function RadioCards({ label, options, value, onChange }: { label: string; options: Array<[number, string]>; value: number; onChange: (value: number) => void }) {
   return (
-    <NeuroShell>
-      <NeuroStatRibbon />
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
-        <main className="min-w-0 space-y-4"><ChartDeck /><MonitoringGrid /></main>
-        <IntelligenceRail patient={patient} />
+    <div>
+      <div className="mb-2 text-xs font-bold uppercase text-[#667085]">{label}</div>
+      <div className="grid gap-2">
+        {options.map(([score, text]) => (
+          <button className={cn("flex items-center justify-between rounded-lg border px-3 py-2 text-left text-xs font-semibold transition", value === score ? "border-[#155eef] bg-[#e8f1ff] text-[#155eef]" : "border-[#d0d5dd] bg-white text-[#475467] hover:border-[#155eef]/50")} key={score} onClick={() => onChange(score)} type="button">
+            <span>{text}</span>
+            <span>{score}</span>
+          </button>
+        ))}
       </div>
-    </NeuroShell>
+    </div>
   );
 }
 
-function DedicatedPage({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
-  const { patient } = useNeuroPatient();
+function ClinicalField({ label, value = "", onChange }: { label: string; value?: string; onChange?: (value: string) => void }) {
   return (
-    <NeuroShell>
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
-        <main className="min-w-0 space-y-4">
-          <Card className="rounded-[24px] border-[rgba(15,23,42,0.08)] bg-white/88 shadow-[0_14px_42px_rgba(15,23,42,0.07)]"><CardHeader><div><CardTitle>{title}</CardTitle><CardDescription>{description}</CardDescription></div><Badge tone="info">Autosave live</Badge></CardHeader><CardContent>{children}</CardContent></Card>
-          <ChartDeck />
-        </main>
-        <IntelligenceRail patient={patient} />
-      </div>
-    </NeuroShell>
+    <label className="space-y-1 text-xs font-bold uppercase text-[#667085]">
+      <span>{label}</span>
+      <Input className="h-9 bg-white normal-case" onChange={(event) => onChange?.(event.target.value)} readOnly={!onChange} value={value ?? ""} />
+    </label>
   );
 }
 
-export function NeuroGcsPage() { return <DedicatedPage title="GCS Monitoring" description="Advanced Glasgow Coma Scale workflow with live calculation and recommendations."><GcsWorkflow /></DedicatedPage>; }
-export function NeuroSedationPage() { return <DedicatedPage title="Sedation & RASS" description="ICU sedation, drug infusion rates, RASS score and protocol safety."><SedationWorkflow /></DedicatedPage>; }
-export function NeuroEvdPage() { return <DedicatedPage title="EVD / Drain Monitoring" description="Drain pressure, output logs, waveform review and anomaly detection."><EvdWorkflow /></DedicatedPage>; }
-export function NeuroDeliriumPage() { return <DedicatedPage title="Delirium Assessment" description="CAM-ICU workflow with cognitive trend, sleep markers and verification."><DeliriumWorkflow /></DedicatedPage>; }
-export function NeuroPupilPage() { return <DedicatedPage title="Pupillary Assessment" description="Pupil size, NPi, reactivity, laterality and neuro checks."><CompactWorkflow icon={UserRound} title="Pupillary examination" rows={["Right 3.2 mm reactive", "Left 3.1 mm reactive", "NPi R 3.8 / L 3.7", "No anisocoria", "Light reflex brisk", "Repeat in 30 min"]} /></DedicatedPage>; }
-export function NeuroMotorSensoryPage() { return <DedicatedPage title="Motor & Sensory" description="Power, tone, sensory level and side-by-side deficit mapping."><CompactWorkflow icon={Activity} title="Motor and sensory map" rows={["RUL 4/5, LUL 5/5", "RLL 4/5, LLL 5/5", "No sensory level", "Tone mildly increased R", "Grip weaker R", "Pain response localizes"]} /></DedicatedPage>; }
-export function NeuroTimelinePage() { return <DedicatedPage title="Neuro Observation Timeline" description="Hourly observations, deterioration heatmap and bedside audit history."><TimelineWorkflow /></DedicatedPage>; }
-export function NeuroSeizurePage() { return <DedicatedPage title="Seizure Monitoring" description="Event log, EEG handoff, rescue medication and seizure-free intervals."><CompactWorkflow icon={Radio} title="Seizure surveillance" rows={["No observed event", "EEG order prepared", "Levetiracetam active", "Rescue med checked", "Last event: none in 24h", "Family counseling pending"]} /></DedicatedPage>; }
-export function NeuroVentilationPage() { return <DedicatedPage title="Ventilation Correlation" description="CO2, oxygenation, sedation and neuro pressure overlay."><CompactWorkflow icon={Waves} title="Ventilation correlation" rows={["EtCO2 36 mmHg", "SIMV VC synced", "PaCO2 target met", "SpO2 96% FiO2 35", "PEEP 5 cmH2O", "ABG review pending"]} /></DedicatedPage>; }
-export function NeuroReportsPage() { return <DedicatedPage title="Neuro Reports" description="Printable ICU sheets, consultant summaries and PDF exports."><CompactWorkflow icon={FileText} title="Reports queue" rows={["Neuro ICU sheet ready", "Consultant summary draft", "EVD output PDF queued", "GCS trend report ready", "Nursing handover printable", "EMR sync complete"]} /></DedicatedPage>; }
-export function NeuroAnalyticsPage() {
+function ClinicalTextarea({ defaultValue }: { defaultValue: string }) {
+  return <textarea className="mt-3 min-h-20 w-full resize-none rounded-lg border border-[#d0d5dd] bg-white px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-[#155eef]/20" defaultValue={defaultValue} />;
+}
+
+function LogTable({ title, headers, rows, search, onSearch }: { title: string; headers: string[]; rows: string[][]; search: string; onSearch: (value: string) => void }) {
+  const filteredRows = rows.filter((row) => row.join(" ").toLowerCase().includes(search.toLowerCase()));
   return (
-    <DedicatedPage title="ICU Analytics" description="Unit-level neuro critical care analytics and outcomes signals.">
-      <div className="grid gap-3 md:grid-cols-3">
-        {[["Deterioration index", "72", "warning"], ["Median ICP", "21 mmHg", "danger"], ["Protocol adherence", "94%", "success"], ["RASS in target", "82%", "info"], ["Drain anomalies", "3", "warning"], ["Consult response", "11 min", "success"]].map(([label, value, tone]) => <div className="rounded-2xl border border-[rgba(15,23,42,0.08)] bg-[#F8FAFF] p-4" key={label}><div className="text-xs font-black uppercase tracking-[0.12em] text-[#6B7280]">{label}</div><div className="mt-2 flex items-center justify-between"><span className="text-2xl font-black text-[#111827]">{value}</span><Badge tone={tone as Tone}>{tone}</Badge></div></div>)}
-      </div>
-      <div className="mt-4 h-72 rounded-2xl border border-[rgba(15,23,42,0.08)] bg-white p-4">
-        <ResponsiveContainer height="100%" width="100%">
-          <AreaChart data={neuroTrendData}><CartesianGrid stroke="#E6EAF4" vertical={false} /><XAxis dataKey="time" /><YAxis /><Tooltip /><Area dataKey="icp" fill="#E5484D" fillOpacity={0.12} stroke="#E5484D" /><Area dataKey="cpp" fill="#4F6EF7" fillOpacity={0.12} stroke="#4F6EF7" /></AreaChart>
-        </ResponsiveContainer>
-      </div>
-    </DedicatedPage>
+    <Card className="overflow-hidden border-[#dbe4f0]">
+      <CardHeader className="flex-row items-center justify-between gap-3">
+        <CardTitle>{title}</CardTitle>
+        <div className="relative w-48">
+          <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-[#667085]" />
+          <Input className="h-8 pl-8 text-xs" onChange={(event) => onSearch(event.target.value)} placeholder="Search logs" value={search ?? ""} />
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="max-h-72 overflow-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="sticky top-0 z-10 bg-[#f2f6fb] text-[#667085]">
+              <tr>{headers.map((header) => <th className="px-3 py-2 font-bold" key={header}>{header}</th>)}</tr>
+            </thead>
+            <tbody>
+              {filteredRows.map((row, rowIndex) => (
+                <tr className="border-t border-[#eef2f7] hover:bg-[#f8fafc]" key={`${title}-${rowIndex}`}>
+                  {row.map((cell, cellIndex) => <td className={cn("px-3 py-2 font-medium text-[#344054]", /critical|severe|high|cam positive/i.test(cell) && "text-[#b42318]")} key={`${title}-${rowIndex}-${cellIndex}`}>{cell}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="flex justify-end gap-2 border-t border-[#eef2f7] p-3">
+          <Button size="sm" variant="outline"><FileDown className="h-4 w-4" />CSV</Button>
+          <Button size="sm" variant="outline"><Printer className="h-4 w-4" />PDF</Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
+
+function InsightCard({ title, body, tone }: { title: string; body: string; tone: BadgeProps["tone"] }) {
+  return (
+    <div className="rounded-lg border border-[#dbe4f0] bg-white p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="font-semibold text-[#101828]">{title}</div>
+        <Badge tone={tone}>{tone}</Badge>
+      </div>
+      <p className="mt-2 text-sm font-medium text-[#667085]">{body}</p>
+    </div>
+  );
+}
+
+export function NeuroOverviewPage() { return <NeuroDoctorWorkspace initialTab="overview" />; }
+export function NeuroGcsPage() { return <NeuroDoctorWorkspace initialTab="gcs" />; }
+export function NeuroSedationPage() { return <NeuroDoctorWorkspace initialTab="sedation" />; }
+export function NeuroEvdPage() { return <NeuroDoctorWorkspace initialTab="evd" />; }
+export function NeuroDeliriumPage() { return <NeuroDoctorWorkspace initialTab="delirium" />; }
+export function NeuroPupilPage() { return <NeuroDoctorWorkspace initialTab="pupil" />; }
+export function NeuroMotorSensoryPage() { return <NeuroDoctorWorkspace initialTab="gcs" />; }
+export function NeuroTimelinePage() { return <NeuroDoctorWorkspace initialTab="analytics" />; }
+export function NeuroSeizurePage() { return <NeuroDoctorWorkspace initialTab="overview" />; }
+export function NeuroVentilationPage() { return <NeuroDoctorWorkspace initialTab="overview" />; }
+export function NeuroReportsPage() { return <NeuroDoctorWorkspace initialTab="reports" />; }
+export function NeuroAnalyticsPage() { return <NeuroDoctorWorkspace initialTab="analytics" />; }
