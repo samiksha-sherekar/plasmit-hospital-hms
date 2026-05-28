@@ -72,12 +72,24 @@ type BillingAction =
   | { type: "saveInvoice"; invoice: BillingInvoice };
 
 const invoiceStorageKey = "plasmit-billing-desk-static-invoices";
+const manualServiceStorageKey = "plasmit-billing-desk-manual-services";
 
 function readStoredInvoices(): BillingInvoice[] {
   if (typeof window === "undefined") return [];
   try {
     const stored = window.localStorage.getItem(invoiceStorageKey);
     return stored ? JSON.parse(stored) as BillingInvoice[] : [];
+  } catch {
+    return [];
+  }
+}
+
+function readManualServices(category: BillingDeskService["category"]) {
+  if (typeof window === "undefined") return [];
+  try {
+    const stored = window.localStorage.getItem(manualServiceStorageKey);
+    const parsed = stored ? JSON.parse(stored) as BillingDeskService[] : [];
+    return parsed.filter((service) => service.category === category);
   } catch {
     return [];
   }
@@ -817,10 +829,11 @@ function ServiceGrid({ category, onAdd, lines }: { category: BillingDeskService[
   const [search, setSearch] = React.useState("");
   const [group, setGroup] = React.useState("All groups");
   const [urgency, setUrgency] = React.useState("All urgency");
-  const [manualServices, setManualServices] = React.useState<BillingDeskService[]>([]);
+  const [manualServices, setManualServices] = React.useState<BillingDeskService[]>(() => readManualServices(category));
   const [manualOpen, setManualOpen] = React.useState(false);
   const defaultManualGroup = category === "Radiology" ? "X-ray" : category === "Package" ? "Preventive" : category === "Quick Test" ? "Favorites" : "Biochemistry";
   const [draft, setDraft] = React.useState({ name: "", group: defaultManualGroup, price: "", tax: "5", urgency: "Routine", meta: "", tat: "", sample: "", modality: category === "Radiology" ? "X-ray" : "" });
+  const createLabel = category === "Package" ? "Create package" : category === "Quick Test" ? "Create quick test" : "Create service";
   const baseServices = [...billingServices.filter((service) => service.category === category), ...manualServices];
   const groups = ["All groups", ...Array.from(new Set(baseServices.map((service) => service.group)))];
   const urgencies = ["All urgency", "Routine", "Urgent", "Stat"];
@@ -829,6 +842,17 @@ function ServiceGrid({ category, onAdd, lines }: { category: BillingDeskService[
     return matchesSearch && (group === "All groups" || service.group === group) && (urgency === "All urgency" || service.urgency === urgency);
   });
   const canCreateManual = category === "Pathology" || category === "Radiology" || category === "Package" || category === "Quick Test";
+  React.useEffect(() => {
+    if (!canCreateManual) return;
+    try {
+      const saved = window.localStorage.getItem(manualServiceStorageKey);
+      const parsed = saved ? JSON.parse(saved) as BillingDeskService[] : [];
+      const otherCategories = parsed.filter((service) => service.category !== category);
+      window.localStorage.setItem(manualServiceStorageKey, JSON.stringify([...otherCategories, ...manualServices]));
+    } catch {
+      // localStorage is only a convenience for this static billing desk.
+    }
+  }, [canCreateManual, category, manualServices]);
   const createManualService = () => {
     if (!draft.name.trim() || !Number(draft.price)) {
       toast.error("Service name and valid price are required");
@@ -878,7 +902,7 @@ function ServiceGrid({ category, onAdd, lines }: { category: BillingDeskService[
             </label>
             <PatientFilter label="Category" value={group} onChange={setGroup} options={groups} />
             <PatientFilter label="Urgency" value={urgency} onChange={setUrgency} options={urgencies} />
-            {canCreateManual ? <Button className="h-10" variant={manualOpen ? "default" : "outline"} onClick={() => setManualOpen((open) => !open)}><Plus className="h-4 w-4" />Create item</Button> : null}
+            {canCreateManual ? <Button className="h-10" variant={manualOpen ? "default" : "outline"} onClick={() => setManualOpen((open) => !open)}><Plus className="h-4 w-4" />{createLabel}</Button> : null}
           </div>
         </CardContent>
       </Card>
@@ -899,7 +923,7 @@ function ServiceGrid({ category, onAdd, lines }: { category: BillingDeskService[
                 <QuickRegisterField label="TAT" value={draft.tat} placeholder="Same day" onChange={(value) => setDraft((current) => ({ ...current, tat: value }))} />
                 {category === "Pathology" || category === "Quick Test" ? <QuickRegisterField label="Sample" value={draft.sample} placeholder="Serum / EDTA / Capillary" onChange={(value) => setDraft((current) => ({ ...current, sample: value }))} /> : null}
                 {category === "Radiology" ? <QuickRegisterField label="Modality" value={draft.modality} placeholder="X-ray / CT / USG" onChange={(value) => setDraft((current) => ({ ...current, modality: value }))} /> : null}
-                <QuickRegisterField label={category === "Package" ? "Included services / instruction" : "Meta / instruction"} value={draft.meta} placeholder={category === "Package" ? "CBC, LFT, ECG, X-ray" : "Fasting / contrast / notes"} onChange={(value) => setDraft((current) => ({ ...current, meta: value }))} className="md:col-span-2" />
+                <QuickRegisterField label={category === "Package" ? "Included services / package notes" : "Meta / instruction"} value={draft.meta} placeholder={category === "Package" ? "CBC, LFT, ECG, X-ray" : "Fasting / contrast / notes"} onChange={(value) => setDraft((current) => ({ ...current, meta: value }))} className="md:col-span-2" />
               </div>
               <aside className="rounded-lg border border-border bg-surface-muted p-3">
                 <div className="text-xs font-bold uppercase text-muted-foreground">Preview</div>
@@ -927,8 +951,16 @@ function ServiceGrid({ category, onAdd, lines }: { category: BillingDeskService[
 function PackagesWorkspace({ onAdd, lines }: { onAdd: (service: BillingDeskService) => void; lines: BillLine[] }) {
   return (
     <div className="space-y-4">
-      <AlertHint text="High-value billing package detected." />
-      <ServiceGrid category="Package" onAdd={onAdd} lines={lines} />
+      <Card>
+        <CardContent className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+          <div>
+            <div className="text-sm font-bold text-foreground">Package Builder</div>
+            <p className="mt-1 text-sm text-muted-foreground">Create manual packages, add existing packages, and keep static package data saved on this browser without any API.</p>
+          </div>
+          <Badge tone="info">Static package desk</Badge>
+        </CardContent>
+      </Card>
+      <ServiceGrid key="Package" category="Package" onAdd={onAdd} lines={lines} />
     </div>
   );
 }
@@ -1269,11 +1301,11 @@ function BillingDeskInner({ initialStep }: { initialStep: BillingDeskStep }) {
           {active === "patient" ? <PatientWorkspace selectedPatient={state.activePatient} patients={state.patients} onSelect={(patient) => dispatch({ type: "selectPatient", patient })} onRegister={(patient) => dispatch({ type: "registerPatient", patient })} /> : null}
           {active === "referral" ? <ReferralWorkspace activeReferral={state.activeReferral} onSelect={(referral) => dispatch({ type: "selectReferral", referral })} /> : null}
           {active === "appointments" ? <AppointmentsWorkspace patient={state.activePatient} onAdd={addService} /> : null}
-          {active === "pathology" ? <ServiceGrid category="Pathology" onAdd={addService} lines={state.lines} /> : null}
-          {active === "radiology" ? <ServiceGrid category="Radiology" onAdd={addService} lines={state.lines} /> : null}
+          {active === "pathology" ? <ServiceGrid key="Pathology" category="Pathology" onAdd={addService} lines={state.lines} /> : null}
+          {active === "radiology" ? <ServiceGrid key="Radiology" category="Radiology" onAdd={addService} lines={state.lines} /> : null}
           {active === "packages" ? <PackagesWorkspace onAdd={addService} lines={state.lines} /> : null}
-          {active === "quick-tests" ? <ServiceGrid category="Quick Test" onAdd={addService} lines={state.lines} /> : null}
-          {active === "individual-tests" ? <ServiceGrid category="Individual Test" onAdd={addService} lines={state.lines} /> : null}
+          {active === "quick-tests" ? <ServiceGrid key="Quick Test" category="Quick Test" onAdd={addService} lines={state.lines} /> : null}
+          {active === "individual-tests" ? <ServiceGrid key="Individual Test" category="Individual Test" onAdd={addService} lines={state.lines} /> : null}
           {active === "summary" ? <SummaryTable lines={state.lines} totals={totals} removedLine={state.removedLine} discountPercent={state.discountPercent} onDiscount={(value) => dispatch({ type: "discount", value })} onQty={(id, delta) => dispatch({ type: "qty", id, delta })} onSetQty={(id, qty) => dispatch({ type: "setQty", id, qty })} onRemove={(id) => dispatch({ type: "remove", id })} onUndo={() => dispatch({ type: "undoRemove" })} /> : null}
           {active === "payment" ? <PaymentWorkspace total={totals.patientPayable} balance={totals.balance} paid={totals.paid} payments={state.payments} onPay={(mode, amount) => dispatch({ type: "pay", mode, amount })} onRemovePayment={(id) => dispatch({ type: "removePayment", id })} /> : null}
         </main>
