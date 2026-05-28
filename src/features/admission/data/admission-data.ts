@@ -51,10 +51,9 @@ export const admissionScreens: AdmissionScreenConfig[] = [
     route: "/admission/bed-manager",
     role: "Bed Manager",
     roleSummary: "Bed allotment and transfer",
-    workspaceTitle: "Bed Manager Workspace",
-    workspaceDescription:
-      "Manage bed availability, reservations, cleaning, maintenance, isolation needs, transfers, and final bed allotment.",
-    chips: ["100-bed view", "Ward filter", "Bed status", "Transfer"],
+    workspaceTitle: "",
+    workspaceDescription: "",
+    chips: [],
     steps: ["1. Bed Manager"],
   },
   {

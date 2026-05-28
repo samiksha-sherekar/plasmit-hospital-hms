@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAdmissionStore } from "@/features/admission/admission-store";
 import { admissionBeds } from "@/features/admission/data/admission-data";
@@ -70,13 +70,6 @@ export function BedManagerWorkspace() {
 
   return (
     <Card>
-      <CardHeader>
-        <div>
-          <CardTitle>Bed Manager</CardTitle>
-          <CardDescription>Review patient requests, room/ward availability, and bed manager actions.</CardDescription>
-        </div>
-        <Badge tone="info">Step 3</Badge>
-      </CardHeader>
       <CardContent className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 space-y-4">
           <div className="rounded-lg border border-border p-3">

@@ -5,9 +5,8 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { CheckCircle2, CreditCard, PauseCircle } from "lucide-react";
 import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
 import { useAdmissionStore } from "@/features/admission/admission-store";
 import type { BillingClearance } from "@/features/admission/types";
@@ -71,13 +70,6 @@ export function BillingClearanceWorkspace() {
 
   return (
     <Card>
-      <CardHeader>
-        <div>
-          <CardTitle>Billing & Insurance Clearance</CardTitle>
-          <CardDescription>Approve billing holds before bed confirmation or final admission.</CardDescription>
-        </div>
-        <Badge tone="info">Finance check</Badge>
-      </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-3 md:grid-cols-3">
           <div className="rounded-lg border border-border p-4">

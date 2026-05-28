@@ -28,7 +28,6 @@ export function NotificationPopover() {
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <div>
               <div className="text-sm font-semibold text-foreground">Notifications</div>
-              <div className="text-xs text-muted-foreground">{unread} unread operational alerts</div>
             </div>
             <Button size="sm" variant="ghost">
               <CheckCheck className="h-4 w-4" />

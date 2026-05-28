@@ -4,9 +4,8 @@ import * as React from "react";
 import { HeartPulse } from "lucide-react";
 import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAdmissionStore } from "@/features/admission/admission-store";
 import { AdmissionStatusBadge } from "@/features/admission/components/admission-status-badge";
@@ -51,13 +50,6 @@ export function NurseCareWorkspace() {
 
   return (
     <Card>
-      <CardHeader>
-        <div>
-          <CardTitle>Patient Care</CardTitle>
-          <CardDescription>Start initial nursing care after patient receiving.</CardDescription>
-        </div>
-        <Badge tone="info">Step 5</Badge>
-      </CardHeader>
       <CardContent className="space-y-4">
         <div className="rounded-lg border border-border bg-surface-muted p-3">
           <div className="text-xs font-medium text-muted-foreground">Care patient</div>

@@ -1,13 +1,11 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { ClipboardPlus } from "lucide-react";
 import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAdmissionStore } from "@/features/admission/admission-store";
 import type { AdmissionPriority } from "@/features/admission/types";
@@ -57,27 +55,7 @@ export function DoctorAdmissionOrder() {
 
   return (
     <Card>
-      <CardHeader>
-        <div>
-          <CardTitle>Admission Order</CardTitle>
-          <CardDescription>Create admission request after doctor consultation.</CardDescription>
-        </div>
-        <Badge tone="info">Step 1</Badge>
-      </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface-muted p-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="text-xs font-medium text-muted-foreground">Patient source</div>
-            <div className="text-sm font-semibold text-foreground">{state.selectedScenario ?? "Patient not selected"}</div>
-            <div className="text-xs text-muted-foreground">
-              {selectedPatient ? `${selectedPatient.name} | ${selectedPatient.uhid}` : "Go to reception and choose patient scenario first."}
-            </div>
-          </div>
-          <Button asChild size="sm" variant="outline">
-            <Link href="/admission/reception">Change Patient</Link>
-          </Button>
-        </div>
-
         <form className="space-y-4" onSubmit={submit}>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             <Field label="Patient Name">

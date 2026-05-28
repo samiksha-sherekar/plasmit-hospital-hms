@@ -5,9 +5,8 @@ import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAdmissionStore } from "@/features/admission/admission-store";
 import { nurseReceiveChecklist } from "@/features/admission/data/admission-data";
@@ -53,13 +52,6 @@ export function NurseReceiveWorkspace() {
 
   return (
     <Card>
-      <CardHeader>
-        <div>
-          <CardTitle>Receive Patient</CardTitle>
-          <CardDescription>Unit nurse verifies patient arrival and handover.</CardDescription>
-        </div>
-        <Badge tone="info">Step 4</Badge>
-      </CardHeader>
       <CardContent className="space-y-4">
         <div className="rounded-lg border border-border bg-surface-muted p-3">
           <div className="text-xs font-medium text-muted-foreground">Patient handover</div>

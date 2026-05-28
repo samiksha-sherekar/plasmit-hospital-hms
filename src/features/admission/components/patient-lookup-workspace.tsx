@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAdmissionStore } from "@/features/admission/admission-store";
 import { AdmissionStatusBadge } from "@/features/admission/components/admission-status-badge";
@@ -34,13 +34,6 @@ export function PatientLookupWorkspace() {
 
   return (
     <Card>
-      <CardHeader>
-        <div>
-          <CardTitle>Patient Lookup</CardTitle>
-          <CardDescription>Search first, then continue with the correct admission scenario.</CardDescription>
-        </div>
-        <Badge tone="info">Start here</Badge>
-      </CardHeader>
       <CardContent className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="min-w-0 space-y-3">
           <div className="relative">

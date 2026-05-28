@@ -6,9 +6,8 @@ import Link from "next/link";
 import { BedDouble, CheckCircle2, CreditCard, Search } from "lucide-react";
 import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { useAdmissionStore } from "@/features/admission/admission-store";
@@ -92,13 +91,6 @@ export function AdmissionRequestsWorkspace() {
 
   return (
     <Card>
-      <CardHeader>
-        <div>
-          <CardTitle>Admission Requests</CardTitle>
-          <CardDescription>Requests waiting for review and bed allotment.</CardDescription>
-        </div>
-        <Badge tone="info">Step 2</Badge>
-      </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="relative w-full lg:max-w-sm">

@@ -87,6 +87,7 @@ import type { StatusTone } from "@/types";
 
 type OverviewActionType = "entry" | "review" | "labs" | "order" | "billing" | "alert";
 type RenalEntryMode = "io" | "intake" | "output";
+type RenalDashboardTab = "dashboard" | "patient-chart" | "fluid-balance" | "drains" | "labs" | "reports" | "alert-queue" | "priority-queue" | "actions";
 
 type OverviewActionRequest = {
   type: OverviewActionType;
@@ -562,9 +563,10 @@ function useRenalChartColumns(onOpen: (chart: RenalPatientChart) => void) {
   ], [onOpen]);
 }
 
-export function RenalDashboardPage() {
+export function RenalDashboardPage({ initialTab = "dashboard" }: { initialTab?: RenalDashboardTab }) {
   const [selected, setSelected] = React.useState<RenalPatientChart | null>(null);
   const [action, setAction] = React.useState<OverviewActionRequest | null>(null);
+  const [activeTab, setActiveTab] = React.useState<RenalDashboardTab>(initialTab);
   const [patientSearch, setPatientSearch] = React.useState("");
   const [patientSort, setPatientSort] = React.useState("Priority");
   const [alertSearch, setAlertSearch] = React.useState("");
@@ -600,21 +602,14 @@ export function RenalDashboardPage() {
 
         return (
           <div className="space-y-5">
-            <PageHeader
-              eyebrow="Renal System"
-              title="Renal Command Center"
-              description="Role-aware renal monitoring for inpatient fluid balance, hourly urine output, drains, labs, dialysis review, and signed reporting."
-              actions={
-                <>
-                  <PrintButton label="Print renal list" />
-                  <Button variant="outline" asChild><Link href="/renal/fluid-balance">Fluid balance</Link></Button>
-                  <Button disabled={!access.canEnterIO} onClick={() => setAction({ type: "entry" })}>
-                    <Plus className="h-4 w-4" />
-                    New renal entry
-                  </Button>
-                </>
-              }
-            />
+            <div className="flex flex-wrap justify-end gap-2">
+              <PrintButton label="Print renal list" />
+              <Button variant="outline" asChild><Link href="/renal/fluid-balance">Fluid balance</Link></Button>
+              <Button disabled={!access.canEnterIO} onClick={() => setAction({ type: "entry" })}>
+                <Plus className="h-4 w-4" />
+                New renal entry
+              </Button>
+            </div>
 
             <RenalRoleBanner role={access.role} />
 
@@ -625,7 +620,7 @@ export function RenalDashboardPage() {
               <StatCard label="Dialysis queue" value={mockDialysisSessions.filter((item) => item.status !== "Completed").length} change="Renal" context="Sessions" tone="danger" icon={Activity} />
             </SummaryGrid>
 
-            <Tabs defaultValue="dashboard" className="space-y-4">
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as RenalDashboardTab)} className="space-y-4">
               <TabsList className="w-full justify-start">
                 <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
                 <TabsTrigger value="patient-chart">Patient Chart</TabsTrigger>

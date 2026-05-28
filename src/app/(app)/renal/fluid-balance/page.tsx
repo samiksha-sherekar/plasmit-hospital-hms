@@ -1,5 +1,5 @@
-import { RenalFluidBalancePage } from "@/features/renal/renal-pages";
+import { RenalDashboardPage } from "@/features/renal/renal-pages";
 
 export default function Page() {
-  return <RenalFluidBalancePage />;
+  return <RenalDashboardPage initialTab="fluid-balance" />;
 }

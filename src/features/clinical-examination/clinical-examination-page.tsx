@@ -268,10 +268,132 @@ function SpecialtyPicker({ selected, onSelect }: { selected: SpecialtyId; onSele
 }
 
 function ToggleMatrix({ findings, specialtyLabel }: { findings: typeof examinationFindings[SpecialtyId]; specialtyLabel: string }) {
-  const [selected, setSelected] = React.useState<Record<string, string>>({
-    [findings[0]?.label ?? "Primary finding"]: findings[0]?.severity ?? "Normal",
-    [findings[1]?.label ?? "Secondary finding"]: findings[1]?.severity ?? "Normal",
+  const isCvs = specialtyLabel === "CVS";
+  const [selected, setSelected] = React.useState<Record<string, string>>(() => {
+    if (isCvs) {
+      return {
+        "Heart sounds": "Present",
+        Murmur: "Absent",
+        Pulse: "Present",
+        BP: "Present",
+        "Peripheral edema": "Absent",
+        JVP: "Absent",
+      };
+    }
+    return {
+      [findings[0]?.label ?? "Primary finding"]: findings[0]?.severity ?? "Normal",
+      [findings[1]?.label ?? "Secondary finding"]: findings[1]?.severity ?? "Normal",
+    };
   });
+  const [heartSoundDetails, setHeartSoundDetails] = React.useState({
+    s1: "Normal",
+    s2: "Normal",
+    addedSounds: "None",
+    rhythm: "Regular",
+  });
+  const [heartSoundEditing, setHeartSoundEditing] = React.useState(false);
+  const [murmurDetails, setMurmurDetails] = React.useState({
+    timing: "Systolic",
+    grade: "Grade 2",
+    site: "Apex",
+    radiation: "None",
+  });
+  const [murmurEditing, setMurmurEditing] = React.useState(false);
+  const [cvsDetails, setCvsDetails] = React.useState<Record<string, Record<string, string>>>({
+    Pulse: { rate: "86 bpm", rhythm: "Regular", volume: "Normal", equality: "Equal" },
+    BP: { reading: "148/92 mmHg", arm: "Right arm", position: "Sitting", method: "Manual" },
+    "Peripheral edema": { grade: "Grade 1", site: "Ankle", type: "Pitting", side: "Bilateral" },
+    JVP: { level: "Raised", height: "4 cm", position: "45 degrees", waveform: "Normal" },
+  });
+  const [cvsEditing, setCvsEditing] = React.useState<Record<string, boolean>>({});
+  const [genericDetails, setGenericDetails] = React.useState<Record<string, { severity: ClinicalSeverity; note: string }>>(() => Object.fromEntries(findings.slice(0, 6).map((finding) => [finding.label, { severity: finding.severity, note: finding.value }])));
+  const [genericEditing, setGenericEditing] = React.useState<Record<string, boolean>>({});
+  const cvsStructuredLabels = ["Heart sounds", "Murmur", "Pulse", "BP", "Peripheral edema", "JVP"];
+
+  function selectOption(label: string, option: string) {
+    setSelected((current) => ({ ...current, [label]: option }));
+    if (label === "Heart sounds") setHeartSoundEditing(false);
+    if (label === "Murmur") setMurmurEditing(false);
+    if (cvsStructuredLabels.includes(label)) setCvsEditing((current) => ({ ...current, [label]: false }));
+  }
+  function updateHeartSoundDetail(key: keyof typeof heartSoundDetails, value: string) {
+    setHeartSoundDetails((current) => ({ ...current, [key]: value }));
+  }
+  function updateMurmurDetail(key: keyof typeof murmurDetails, value: string) {
+    setMurmurDetails((current) => ({ ...current, [key]: value }));
+  }
+  function updateCvsDetail(label: string, key: string, value: string) {
+    setCvsDetails((current) => ({ ...current, [label]: { ...current[label], [key]: value } }));
+  }
+  function getCvsFields(label: string) {
+    if (label === "Heart sounds") return [
+      { label: "S1", key: "s1", value: heartSoundDetails.s1, options: ["Normal", "Loud", "Soft"] },
+      { label: "S2", key: "s2", value: heartSoundDetails.s2, options: ["Normal", "Loud", "Soft"] },
+      { label: "Added", key: "addedSounds", value: heartSoundDetails.addedSounds, options: ["None", "S3", "S4", "Click", "Rub"] },
+      { label: "Rhythm", key: "rhythm", value: heartSoundDetails.rhythm, options: ["Regular", "Irregular"] },
+    ];
+    if (label === "Murmur") return [
+      { label: "Timing", key: "timing", value: murmurDetails.timing, options: ["Systolic", "Diastolic", "Continuous"] },
+      { label: "Grade", key: "grade", value: murmurDetails.grade, options: ["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6"] },
+      { label: "Site", key: "site", value: murmurDetails.site, options: ["Apex", "Aortic", "Pulmonary", "Tricuspid"] },
+      { label: "Radiation", key: "radiation", value: murmurDetails.radiation, options: ["None", "Axilla", "Carotid", "Back"] },
+    ];
+    const detail = cvsDetails[label] ?? {};
+    const configs: Record<string, Array<{ label: string; key: string; options: string[] }>> = {
+      Pulse: [
+        { label: "Rate", key: "rate", options: ["60 bpm", "72 bpm", "86 bpm", "100 bpm", "120 bpm"] },
+        { label: "Rhythm", key: "rhythm", options: ["Regular", "Irregular"] },
+        { label: "Volume", key: "volume", options: ["Normal", "Low", "Bounding"] },
+        { label: "Equality", key: "equality", options: ["Equal", "Unequal"] },
+      ],
+      BP: [
+        { label: "Reading", key: "reading", options: ["120/80 mmHg", "140/90 mmHg", "148/92 mmHg", "160/100 mmHg"] },
+        { label: "Arm", key: "arm", options: ["Right arm", "Left arm", "Both arms"] },
+        { label: "Position", key: "position", options: ["Sitting", "Lying", "Standing"] },
+        { label: "Method", key: "method", options: ["Manual", "Automatic"] },
+      ],
+      "Peripheral edema": [
+        { label: "Grade", key: "grade", options: ["Grade 1", "Grade 2", "Grade 3", "Grade 4"] },
+        { label: "Site", key: "site", options: ["Ankle", "Pedal", "Pretibial", "Generalized"] },
+        { label: "Type", key: "type", options: ["Pitting", "Non-pitting"] },
+        { label: "Side", key: "side", options: ["Right", "Left", "Bilateral"] },
+      ],
+      JVP: [
+        { label: "Level", key: "level", options: ["Normal", "Raised"] },
+        { label: "Height", key: "height", options: ["Not raised", "3 cm", "4 cm", "5 cm"] },
+        { label: "Position", key: "position", options: ["45 degrees", "30 degrees", "Supine"] },
+        { label: "Waveform", key: "waveform", options: ["Normal", "Abnormal"] },
+      ],
+    };
+    return (configs[label] ?? []).map((field) => ({ ...field, value: detail[field.key] ?? field.options[0] }));
+  }
+  function getCvsHelper(label: string) {
+    if (label === "Heart sounds") return "S1/S2 and rhythm documented.";
+    if (label === "Murmur") return "Timing, grade, site, and radiation documented.";
+    if (label === "Pulse") return "Rate, rhythm, volume, and equality documented.";
+    if (label === "BP") return "Reading, arm, position, and method documented.";
+    if (label === "Peripheral edema") return "Grade, site, type, and side documented.";
+    return "Level, height, position, and waveform documented.";
+  }
+  function isCvsEditing(label: string) {
+    if (label === "Heart sounds") return heartSoundEditing;
+    if (label === "Murmur") return murmurEditing;
+    return Boolean(cvsEditing[label]);
+  }
+  function toggleCvsEditing(label: string) {
+    if (label === "Heart sounds") return setHeartSoundEditing((value) => !value);
+    if (label === "Murmur") return setMurmurEditing((value) => !value);
+    return setCvsEditing((current) => ({ ...current, [label]: !current[label] }));
+  }
+  function updateCvsField(label: string, key: string, value: string) {
+    if (label === "Heart sounds") return updateHeartSoundDetail(key as keyof typeof heartSoundDetails, value);
+    if (label === "Murmur") return updateMurmurDetail(key as keyof typeof murmurDetails, value);
+    return updateCvsDetail(label, key, value);
+  }
+  function updateGenericDetail(label: string, patch: Partial<{ severity: ClinicalSeverity; note: string }>) {
+    setGenericDetails((current) => ({ ...current, [label]: { ...current[label], ...patch } }));
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -283,18 +405,138 @@ function ToggleMatrix({ findings, specialtyLabel }: { findings: typeof examinati
       </CardHeader>
       <CardContent className="space-y-3">
         {findings.slice(0, 6).map((finding) => (
-          <div className="grid gap-2 rounded-lg border border-border bg-surface-muted p-2 lg:grid-cols-[150px_1fr]" key={finding.label}>
-            <div className="flex items-center justify-between gap-2 text-sm font-semibold text-foreground">
-              {finding.label}
-              <Badge tone={severityTone[finding.severity]}>{finding.score ?? 0}</Badge>
-            </div>
-            <div className="grid grid-cols-2 gap-1 sm:grid-cols-4 xl:grid-cols-8">
-              {toggleOptions.map((option) => (
-                <button className={cn("h-9 rounded-lg border px-2 text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-ring/20", selected[finding.label] === option ? "border-primary bg-primary text-white shadow-sm" : "border-border bg-white text-muted-foreground hover:text-foreground")} key={option} onClick={() => setSelected({ ...selected, [finding.label]: option })}>
-                  {option}
-                </button>
-              ))}
-            </div>
+          <div className="rounded-lg border border-border bg-surface-muted p-2" key={finding.label}>
+            {isCvs && cvsStructuredLabels.includes(finding.label) ? (
+              <>
+                <div className="overflow-hidden rounded-lg border border-border bg-white shadow-sm">
+                  <div className="flex flex-col gap-3 border-b border-border bg-surface-muted/70 p-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="text-sm font-bold text-foreground">{finding.label}</div>
+                        <Badge tone={selected[finding.label] === "Present" ? "success" : "danger"}>{selected[finding.label]}</Badge>
+                      </div>
+                      {selected[finding.label] === "Present" ? <div className="mt-1 text-xs font-medium text-muted-foreground">{getCvsHelper(finding.label)}</div> : null}
+                    </div>
+                    <div className="grid grid-cols-2 rounded-md border border-border bg-white p-1 sm:w-[240px]">
+                      {["Present", "Absent"].map((option) => (
+                        <button
+                          className={cn(
+                            "h-8 rounded px-3 text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-ring/20",
+                            selected[finding.label] === option && option === "Present" && "bg-success text-white shadow-sm",
+                            selected[finding.label] === option && option === "Absent" && "bg-danger text-white shadow-sm",
+                            selected[finding.label] !== option && "text-muted-foreground hover:bg-surface-muted hover:text-foreground",
+                          )}
+                          key={option}
+                          onClick={() => selectOption(finding.label, option)}
+                          type="button"
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {selected[finding.label] === "Present" ? (
+                    <div className="p-3">
+                      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                        {getCvsFields(finding.label).map((field) => (
+                          <div className="rounded-lg border border-border bg-surface-muted p-2" key={field.key}>
+                            <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{field.label}</div>
+                            {isCvsEditing(finding.label) ? (
+                              <select
+                                className="mt-2 h-9 w-full rounded-md border border-input bg-white px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                                value={field.value}
+                                onChange={(event) => updateCvsField(finding.label, field.key, event.target.value)}
+                              >
+                                {field.options.map((item) => <option key={item}>{item}</option>)}
+                              </select>
+                            ) : (
+                              <div className="mt-1 truncate text-sm font-bold text-foreground">{field.value}</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3 flex justify-end">
+                        <Button size="sm" type="button" variant="outline" onClick={() => toggleCvsEditing(finding.label)}>
+                          {isCvsEditing(finding.label) ? "Done" : "Edit"}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-3">
+                      <div className="rounded-lg border border-danger/20 bg-danger/5 px-3 py-2 text-xs font-semibold text-danger">
+                        {finding.label} absent.
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="overflow-hidden rounded-lg border border-border bg-white shadow-sm">
+                  <div className="flex flex-col gap-3 border-b border-border bg-surface-muted/70 p-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="text-sm font-bold text-foreground">{finding.label}</div>
+                        <Badge tone={selected[finding.label] === "Absent" ? "danger" : "success"}>{selected[finding.label] === "Absent" ? "Absent" : "Present"}</Badge>
+                      </div>
+                      {selected[finding.label] !== "Absent" ? <div className="mt-1 text-xs font-medium text-muted-foreground">Severity and note documented.</div> : null}
+                    </div>
+                    <div className="grid grid-cols-2 rounded-md border border-border bg-white p-1 sm:w-[240px]">
+                      {["Present", "Absent"].map((option) => (
+                        <button
+                          className={cn(
+                            "h-8 rounded px-3 text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-ring/20",
+                            (selected[finding.label] ?? "Present") !== "Absent" && option === "Present" && "bg-success text-white shadow-sm",
+                            selected[finding.label] === "Absent" && option === "Absent" && "bg-danger text-white shadow-sm",
+                            !(((selected[finding.label] ?? "Present") !== "Absent" && option === "Present") || (selected[finding.label] === "Absent" && option === "Absent")) && "text-muted-foreground hover:bg-surface-muted hover:text-foreground",
+                          )}
+                          key={option}
+                          onClick={() => selectOption(finding.label, option)}
+                          type="button"
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {selected[finding.label] === "Absent" ? (
+                    <div className="p-3">
+                      <div className="rounded-lg border border-danger/20 bg-danger/5 px-3 py-2 text-xs font-semibold text-danger">{finding.label} absent.</div>
+                    </div>
+                  ) : (
+                    <div className="p-3">
+                      <div className="grid gap-2 md:grid-cols-[180px_minmax(0,1fr)]">
+                        <div className="rounded-lg border border-border bg-surface-muted p-2">
+                          <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Severity</div>
+                          {genericEditing[finding.label] ? (
+                            <select className="mt-2 h-9 w-full rounded-md border border-input bg-white px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15" value={genericDetails[finding.label]?.severity ?? finding.severity} onChange={(event) => updateGenericDetail(finding.label, { severity: event.target.value as ClinicalSeverity })}>
+                              {(["Normal", "Mild", "Moderate", "Severe", "Critical"] as ClinicalSeverity[]).map((item) => <option key={item}>{item}</option>)}
+                            </select>
+                          ) : (
+                            <div className="mt-1 text-sm font-bold text-foreground">{genericDetails[finding.label]?.severity ?? finding.severity}</div>
+                          )}
+                        </div>
+                        <div className="rounded-lg border border-border bg-surface-muted p-2">
+                          <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Finding note</div>
+                          {genericEditing[finding.label] ? (
+                            <Input className="mt-2 h-9 bg-white font-semibold" value={genericDetails[finding.label]?.note ?? finding.value} onChange={(event) => updateGenericDetail(finding.label, { note: event.target.value })} />
+                          ) : (
+                            <div className="mt-1 truncate text-sm font-bold text-foreground">{genericDetails[finding.label]?.note ?? finding.value}</div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="mt-3 flex justify-end">
+                        <Button size="sm" type="button" variant="outline" onClick={() => setGenericEditing((current) => ({ ...current, [finding.label]: !current[finding.label] }))}>
+                          {genericEditing[finding.label] ? "Done" : "Edit"}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         ))}
       </CardContent>
@@ -306,6 +548,7 @@ function ExaminationWorkspace({ specialty }: { specialty: SpecialtyId }) {
   const activeSpecialty = clinicalSpecialties.find((item) => item.id === specialty) ?? clinicalSpecialties[0];
   const findings = examinationFindings[specialty] ?? examinationFindings.cvs;
   const defaultNote = examinationDefaultNotes[specialty] ?? examinationDefaultNotes.cvs;
+  const visibleFindings = specialty === "cvs" ? findings.filter((item) => item.label !== "Heart sounds") : findings;
   return (
     <div className="space-y-4">
     <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
@@ -320,7 +563,7 @@ function ExaminationWorkspace({ specialty }: { specialty: SpecialtyId }) {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid gap-3 md:grid-cols-2">
-              {findings.map((item) => (
+              {visibleFindings.map((item) => (
                 <div className="rounded-lg border border-border bg-white p-3" key={item.label}>
                   <div className="flex items-start justify-between gap-2"><div className="text-sm font-semibold">{item.label}</div><Badge tone={severityTone[item.severity]}>{item.severity}</Badge></div>
                   <div className="mt-1 text-sm text-muted-foreground">{item.value}</div>

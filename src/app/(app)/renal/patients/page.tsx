@@ -1,5 +1,5 @@
-import { RenalPatientsPage } from "@/features/renal/renal-pages";
+import { RenalDashboardPage } from "@/features/renal/renal-pages";
 
 export default function Page() {
-  return <RenalPatientsPage />;
+  return <RenalDashboardPage initialTab="patient-chart" />;
 }

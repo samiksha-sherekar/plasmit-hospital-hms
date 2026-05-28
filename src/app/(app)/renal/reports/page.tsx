@@ -1,5 +1,5 @@
-import { RenalReportsPage } from "@/features/renal/renal-pages";
+import { RenalDashboardPage } from "@/features/renal/renal-pages";
 
 export default function Page() {
-  return <RenalReportsPage />;
+  return <RenalDashboardPage initialTab="reports" />;
 }

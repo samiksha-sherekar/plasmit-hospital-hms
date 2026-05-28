@@ -1,15 +1,12 @@
 "use client";
 
-import { Building2, ShieldCheck } from "lucide-react";
+import { Building2 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 
 import { CommandSearch } from "@/components/shell/command-search";
 import { MobileNavigation } from "@/components/shell/mobile-navigation";
-import { NotificationPopover } from "@/components/shell/notification-popover";
 import { ProfileMenu } from "@/components/shell/profile-menu";
 import { RoleSwitcher } from "@/components/shell/role-switcher";
-import { Button } from "@/components/ui/button";
 import { hospitalContext } from "@/data/mock";
 
 export function TopHeader() {
@@ -34,12 +31,6 @@ export function TopHeader() {
       </div>
       <CommandSearch />
       <RoleSwitcher className="hidden sm:flex" />
-      <NotificationPopover />
-      <Button asChild size="icon" variant="outline" aria-label="Open UI settings">
-        <Link href="/settings/ui">
-          <ShieldCheck className="h-4 w-4" />
-        </Link>
-      </Button>
       <ProfileMenu />
     </header>
   );

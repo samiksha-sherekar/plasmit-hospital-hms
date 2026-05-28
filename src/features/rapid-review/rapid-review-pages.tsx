@@ -30,7 +30,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { PageHeader } from "@/components/shell/page-header";
 import { useRole } from "@/components/providers/role-provider";
 import { AlertBanner } from "@/components/ui/alert-banner";
 import { Badge } from "@/components/ui/badge";
@@ -310,31 +309,24 @@ export function RapidReviewPage() {
 
   return (
     <>
-      <PageHeader
-        eyebrow="Adult Observation Chart"
-        title="Doctor Rapid Review"
-        description="Quick review workspace for abnormal observations, escalation criteria, and audit-ready clinical response."
-        actions={
-          <>
-            <Button variant="outline" onClick={() => toast.success("Rapid review queue refreshed")}>
-              <RefreshCcw className="h-4 w-4" />
-              Refresh
-            </Button>
-            <Button variant="outline" onClick={() => window.print()}>
-              <Printer className="h-4 w-4" />
-              Print
-            </Button>
-            <Button variant="outline" onClick={() => setActiveTab("entry")} disabled={readOnly}>
-              <Plus className="h-4 w-4" />
-              Add observation
-            </Button>
-            <Button onClick={() => rows[0] && handleOpenDoctorReview(rows[0])} disabled={!rows.length}>
-              <Stethoscope className="h-4 w-4" />
-              Start review
-            </Button>
-          </>
-        }
-      />
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button variant="outline" onClick={() => toast.success("Rapid review queue refreshed")}>
+          <RefreshCcw className="h-4 w-4" />
+          Refresh
+        </Button>
+        <Button variant="outline" onClick={() => window.print()}>
+          <Printer className="h-4 w-4" />
+          Print
+        </Button>
+        <Button variant="outline" onClick={() => setActiveTab("entry")} disabled={readOnly}>
+          <Plus className="h-4 w-4" />
+          Add observation
+        </Button>
+        <Button onClick={() => rows[0] && handleOpenDoctorReview(rows[0])} disabled={!rows.length}>
+          <Stethoscope className="h-4 w-4" />
+          Start review
+        </Button>
+      </div>
 
       <SummaryGrid>
         <StatCard label="MER calls" value={merCount} change="Immediate" context="Purple zone" tone="critical" icon={ShieldAlert} />

@@ -1,7 +1,8 @@
 "use client";
 
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { LogOut, UserCircle } from "lucide-react";
+import { LogOut, ShieldCheck, UserCircle } from "lucide-react";
+import Link from "next/link";
 
 import { useRole } from "@/components/providers/role-provider";
 import { Button } from "@/components/ui/button";
@@ -60,8 +61,17 @@ export function ProfileMenu() {
             </div>
           </div>
           <DropdownMenu.Separator className="h-px bg-border" />
+          <DropdownMenu.Item asChild>
+            <Link
+              className="mt-2 flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-foreground outline-none hover:bg-surface-muted focus:bg-surface-muted"
+              href="/settings/ui"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              UI Settings
+            </Link>
+          </DropdownMenu.Item>
           <DropdownMenu.Item
-            className="mt-2 flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-danger outline-none hover:bg-danger/10 focus:bg-danger/10"
+            className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-danger outline-none hover:bg-danger/10 focus:bg-danger/10"
             onSelect={handleLogout}
           >
             <LogOut className="h-4 w-4" />
