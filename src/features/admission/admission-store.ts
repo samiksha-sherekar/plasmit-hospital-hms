@@ -118,6 +118,24 @@ function writeState(state: AdmissionStoreState) {
   window.dispatchEvent(new CustomEvent(STORE_EVENT, { detail: state }));
 }
 
+function subscribeToAdmissionStore(onStoreChange: () => void) {
+  const handleStoreEvent = () => {
+    onStoreChange();
+  };
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === STORAGE_KEY) {
+      onStoreChange();
+    }
+  };
+
+  window.addEventListener(STORE_EVENT, handleStoreEvent);
+  window.addEventListener("storage", handleStorage);
+  return () => {
+    window.removeEventListener(STORE_EVENT, handleStoreEvent);
+    window.removeEventListener("storage", handleStorage);
+  };
+}
+
 function generatedUhid(prefix = "UHID") {
   return `${prefix}-${Math.floor(20000 + Math.random() * 70000)}`;
 }
@@ -129,41 +147,16 @@ function estimateRisk(priority: AdmissionPriority): BillingClearance["risk"] {
 }
 
 export function useAdmissionStore() {
-  const [state, setState] = React.useState<AdmissionStoreState>(() => initialState());
-
-  React.useEffect(() => {
-    setState(readState());
-
-    const handleStoreEvent = (event: Event) => {
-      setState((event as CustomEvent<AdmissionStoreState>).detail ?? readState());
-    };
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key === STORAGE_KEY) {
-        setState(readState());
-      }
-    };
-
-    window.addEventListener(STORE_EVENT, handleStoreEvent);
-    window.addEventListener("storage", handleStorage);
-    return () => {
-      window.removeEventListener(STORE_EVENT, handleStoreEvent);
-      window.removeEventListener("storage", handleStorage);
-    };
-  }, []);
+  const state = React.useSyncExternalStore(subscribeToAdmissionStore, readState, initialState);
 
   const update = React.useCallback((recipe: (current: AdmissionStoreState) => AdmissionStoreState) => {
-    setState((current) => {
-      const next = recipe(current);
-      writeState(next);
-      return next;
-    });
+    writeState(recipe(readState()));
   }, []);
 
   const actions = React.useMemo(() => ({
     resetDemo() {
       const next = initialState();
       writeState(next);
-      setState(next);
     },
     selectPatient(patientId: string) {
       update((current) => ({ ...current, selectedPatientId: patientId }));

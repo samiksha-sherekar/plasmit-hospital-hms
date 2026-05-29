@@ -15,18 +15,32 @@ export function NurseCareWorkspace() {
   const careRequests = state.requests.filter((request) => ["Received", "Care Started"].includes(request.status));
   const currentRequest = careRequests.find((request) => request.id === activeRequest?.id) ?? careRequests[0] ?? null;
   const existing = state.careRecords.find((record) => record.requestId === currentRequest?.id);
+  return (
+    <NurseCareForm
+      actions={actions}
+      careRequests={careRequests}
+      currentRequest={currentRequest}
+      existing={existing}
+      key={currentRequest?.id ?? "no-care-request"}
+    />
+  );
+}
+
+function NurseCareForm({
+  actions,
+  careRequests,
+  currentRequest,
+  existing,
+}: {
+  actions: ReturnType<typeof useAdmissionStore>["actions"];
+  careRequests: ReturnType<typeof useAdmissionStore>["state"]["requests"];
+  currentRequest: ReturnType<typeof useAdmissionStore>["activeRequest"];
+  existing: ReturnType<typeof useAdmissionStore>["state"]["careRecords"][number] | undefined;
+}) {
   const [bloodPressure, setBloodPressure] = React.useState(existing?.bloodPressure ?? "");
   const [pulse, setPulse] = React.useState(existing?.pulse ?? "");
   const [temperature, setTemperature] = React.useState(existing?.temperature ?? "");
   const [notes, setNotes] = React.useState(existing?.notes ?? "");
-
-  React.useEffect(() => {
-    const nextExisting = state.careRecords.find((record) => record.requestId === currentRequest?.id);
-    setBloodPressure(nextExisting?.bloodPressure ?? "");
-    setPulse(nextExisting?.pulse ?? "");
-    setTemperature(nextExisting?.temperature ?? "");
-    setNotes(nextExisting?.notes ?? "");
-  }, [currentRequest?.id, state.careRecords]);
 
   function startCare() {
     if (!currentRequest) {

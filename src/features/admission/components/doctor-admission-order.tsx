@@ -24,13 +24,36 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 export function DoctorAdmissionOrder() {
   const { selectedPatient, activeRequest, state, actions } = useAdmissionStore();
-  const [patientName, setPatientName] = React.useState(selectedPatient?.name ?? "");
-  const [uhid, setUhid] = React.useState(selectedPatient?.uhid ?? "Auto generated");
+  const initialPatientName = selectedPatient?.name ?? "";
+  const initialUhid = selectedPatient?.uhid ?? "Auto generated";
 
-  React.useEffect(() => {
-    setPatientName(selectedPatient?.name ?? "");
-    setUhid(selectedPatient?.uhid ?? "Auto generated");
-  }, [selectedPatient?.id, selectedPatient?.name, selectedPatient?.uhid]);
+  return (
+    <DoctorAdmissionOrderForm
+      actions={actions}
+      activeRequest={activeRequest}
+      initialPatientName={initialPatientName}
+      initialUhid={initialUhid}
+      key={selectedPatient?.id ?? "new-patient"}
+      selectedScenario={state.selectedScenario}
+    />
+  );
+}
+
+function DoctorAdmissionOrderForm({
+  actions,
+  activeRequest,
+  initialPatientName,
+  initialUhid,
+  selectedScenario,
+}: {
+  actions: ReturnType<typeof useAdmissionStore>["actions"];
+  activeRequest: ReturnType<typeof useAdmissionStore>["activeRequest"];
+  initialPatientName: string;
+  initialUhid: string;
+  selectedScenario: ReturnType<typeof useAdmissionStore>["state"]["selectedScenario"];
+}) {
+  const [patientName, setPatientName] = React.useState(initialPatientName);
+  const [uhid, setUhid] = React.useState(initialUhid);
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -65,7 +88,7 @@ export function DoctorAdmissionOrder() {
               <Input name="uhid" value={uhid} onChange={(event) => setUhid(event.target.value)} />
             </Field>
             <Field label="Source">
-              <select className={controlClass} name="source" defaultValue={state.selectedScenario === "Emergency Unknown Patient" ? "Emergency" : "OPD"}>
+              <select className={controlClass} name="source" defaultValue={selectedScenario === "Emergency Unknown Patient" ? "Emergency" : "OPD"}>
                 {["OPD", "Emergency", "Referral", "Daycare", "Transfer"].map((option) => <option key={option}>{option}</option>)}
               </select>
             </Field>
@@ -75,7 +98,7 @@ export function DoctorAdmissionOrder() {
               </select>
             </Field>
             <Field label="Admission Type">
-              <select className={controlClass} name="type" defaultValue={state.selectedScenario === "Emergency Unknown Patient" ? "Emergency" : "Regular"}>
+              <select className={controlClass} name="type" defaultValue={selectedScenario === "Emergency Unknown Patient" ? "Emergency" : "Regular"}>
                 {["Regular", "Observation", "Emergency", "Day Care", "Planned Surgery"].map((option) => <option key={option}>{option}</option>)}
               </select>
             </Field>
@@ -85,7 +108,7 @@ export function DoctorAdmissionOrder() {
               </select>
             </Field>
             <Field label="Priority">
-              <select className={controlClass} name="priority" defaultValue={state.selectedScenario === "Emergency Unknown Patient" ? "Emergency" : "Routine"}>
+              <select className={controlClass} name="priority" defaultValue={selectedScenario === "Emergency Unknown Patient" ? "Emergency" : "Routine"}>
                 {["Routine", "Urgent", "Critical", "Emergency"].map((option) => <option key={option}>{option}</option>)}
               </select>
             </Field>
@@ -101,8 +124,8 @@ export function DoctorAdmissionOrder() {
             </span>
             <div className="flex flex-wrap justify-end gap-2">
               <Button type="button" variant="secondary" onClick={() => {
-                setPatientName(selectedPatient?.name ?? "");
-                setUhid(selectedPatient?.uhid ?? "Auto generated");
+                setPatientName(initialPatientName);
+                setUhid(initialUhid);
               }}>
                 Clear
               </Button>

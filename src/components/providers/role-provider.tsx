@@ -14,22 +14,43 @@ type RoleContextValue = {
 const RoleContext = React.createContext<RoleContextValue | null>(null);
 
 const DEFAULT_ROLE: Role = "Hospital Admin";
+const ROLE_STORAGE_KEY = "plasmit-role";
+const ROLE_CHANGE_EVENT = "plasmit-role-change";
+
+function readRole(): Role {
+  if (typeof window === "undefined") {
+    return DEFAULT_ROLE;
+  }
+
+  const saved = window.localStorage.getItem(ROLE_STORAGE_KEY);
+  return saved && roles.includes(saved as Role) ? (saved as Role) : DEFAULT_ROLE;
+}
+
+function subscribeRole(onStoreChange: () => void) {
+  if (typeof window === "undefined") {
+    return () => undefined;
+  }
+
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === ROLE_STORAGE_KEY) {
+      onStoreChange();
+    }
+  };
+
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener(ROLE_CHANGE_EVENT, onStoreChange);
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(ROLE_CHANGE_EVENT, onStoreChange);
+  };
+}
 
 export function RoleProvider({ children }: { children: React.ReactNode }) {
-  const [role, setRoleState] = React.useState<Role>(DEFAULT_ROLE);
-  const [isHydrated, setIsHydrated] = React.useState(false);
-
-  React.useEffect(() => {
-    const saved = window.localStorage.getItem("plasmit-role");
-    const initialRole =
-      saved && roles.includes(saved as Role) ? (saved as Role) : DEFAULT_ROLE;
-    setRoleState(initialRole);
-    setIsHydrated(true);
-  }, []);
+  const role = React.useSyncExternalStore(subscribeRole, readRole, () => DEFAULT_ROLE);
 
   const setRole = React.useCallback((nextRole: Role) => {
-    setRoleState(nextRole);
-    window.localStorage.setItem("plasmit-role", nextRole);
+    window.localStorage.setItem(ROLE_STORAGE_KEY, nextRole);
+    window.dispatchEvent(new Event(ROLE_CHANGE_EVENT));
   }, []);
 
   const value = React.useMemo(

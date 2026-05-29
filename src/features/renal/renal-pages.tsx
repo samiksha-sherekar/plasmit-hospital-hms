@@ -2027,7 +2027,7 @@ function BalanceTrendSection({ rows }: { rows: ReturnType<typeof getRenalBalance
           </TabsList>
           <TabsContent value="graph">
             <div className="h-[280px] min-w-0 rounded-lg border border-border p-3">
-              <ResponsiveContainer height="100%" width="100%">
+              <ResponsiveContainer height="100%" initialDimension={{ width: 800, height: 280 }} width="100%">
                 <LineChart data={trend} margin={{ left: -20, right: 8, top: 8, bottom: 0 }}>
                   <CartesianGrid stroke="hsl(var(--border))" vertical={false} />
                   <XAxis dataKey="time" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} tickLine={false} axisLine={false} />

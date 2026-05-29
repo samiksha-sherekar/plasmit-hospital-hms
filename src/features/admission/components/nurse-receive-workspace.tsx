@@ -17,16 +17,31 @@ export function NurseReceiveWorkspace() {
   const readyRequests = state.requests.filter((request) => ["Ready for Nursing", "Received", "Care Started"].includes(request.status));
   const currentRequest = readyRequests.find((request) => request.id === activeRequest?.id) ?? readyRequests[0] ?? null;
   const existing = state.receiveRecords.find((record) => record.requestId === currentRequest?.id);
+  return (
+    <NurseReceiveForm
+      actions={actions}
+      currentRequest={currentRequest}
+      existing={existing}
+      key={currentRequest?.id ?? "no-receive-request"}
+      readyRequests={readyRequests}
+    />
+  );
+}
+
+function NurseReceiveForm({
+  actions,
+  currentRequest,
+  existing,
+  readyRequests,
+}: {
+  actions: ReturnType<typeof useAdmissionStore>["actions"];
+  currentRequest: ReturnType<typeof useAdmissionStore>["activeRequest"];
+  existing: ReturnType<typeof useAdmissionStore>["state"]["receiveRecords"][number] | undefined;
+  readyRequests: ReturnType<typeof useAdmissionStore>["state"]["requests"];
+}) {
   const [receivedBy, setReceivedBy] = React.useState(existing?.receivedBy ?? "");
   const [receivedTime, setReceivedTime] = React.useState(existing?.receivedTime ?? "");
   const [checked, setChecked] = React.useState<string[]>(existing?.checklist ?? []);
-
-  React.useEffect(() => {
-    const nextExisting = state.receiveRecords.find((record) => record.requestId === currentRequest?.id);
-    setReceivedBy(nextExisting?.receivedBy ?? "");
-    setReceivedTime(nextExisting?.receivedTime ?? "");
-    setChecked(nextExisting?.checklist ?? []);
-  }, [currentRequest?.id, state.receiveRecords]);
 
   function toggle(item: string) {
     setChecked((current) => (current.includes(item) ? current.filter((entry) => entry !== item) : [...current, item]));

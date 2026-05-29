@@ -415,7 +415,7 @@ function ReviewGraphPanel({
       </CardHeader>
       <CardContent>
         <div className="h-[360px]">
-          <ResponsiveContainer height="100%" width="100%">
+          <ResponsiveContainer height="100%" initialDimension={{ width: 800, height: 280 }} width="100%">
             <LineChart data={data} margin={{ left: -16, right: 16, top: 8, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="hour" tick={{ fontSize: 11 }} interval={1} />

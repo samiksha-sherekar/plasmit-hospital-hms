@@ -348,7 +348,7 @@ function KpiCard({ kpi, trend }: { kpi: { label: string; value: string; previous
             </div>
           </div>
           <div className="mt-3 h-12">
-            <ResponsiveContainer height="100%" width="100%">
+            <ResponsiveContainer height="100%" initialDimension={{ width: 800, height: 280 }} width="100%">
               <AreaChart data={trend}>
                 <Area dataKey={kpi.dataKey} fill={color} fillOpacity={0.12} stroke={color} strokeWidth={2} type="monotone" />
               </AreaChart>
@@ -408,7 +408,7 @@ function OverviewSection({
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
-              <ResponsiveContainer height="100%" width="100%">
+              <ResponsiveContainer height="100%" initialDimension={{ width: 800, height: 280 }} width="100%">
                 <LineChart data={trend}>
                   <CartesianGrid stroke="#e5e7eb" vertical={false} />
                   <XAxis dataKey="time" tick={{ fontSize: 11 }} />
@@ -675,7 +675,7 @@ function AnalyticsSection({ trend, search, onSearch }: { trend: TrendPoint[]; se
           <Button size="sm" variant="outline">Fullscreen</Button>
         </CardHeader>
         <CardContent className="h-[360px]">
-          <ResponsiveContainer height="100%" width="100%">
+          <ResponsiveContainer height="100%" initialDimension={{ width: 800, height: 280 }} width="100%">
             <LineChart data={trend}>
               <CartesianGrid stroke="#e5e7eb" vertical={false} />
               <XAxis dataKey="time" tick={{ fontSize: 11 }} />

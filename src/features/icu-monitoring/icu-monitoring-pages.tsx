@@ -371,7 +371,7 @@ export function CvsDashboardPage() {
           <CardHeader><div><CardTitle>Bedside trend preview</CardTitle><CardDescription>Last seven cardiovascular readings</CardDescription></div><Button asChild size="sm" variant="outline"><Link href={withPatient("/icu-monitoring/cvs/trends")}><TrendingUp className="h-4 w-4" />Open trends</Link></Button></CardHeader>
           <CardContent className="h-64">
             <ClientChart>
-              <ResponsiveContainer height="100%" width="100%">
+              <ResponsiveContainer height="100%" initialDimension={{ width: 800, height: 280 }} width="100%">
                 <LineChart data={cvsTrendData}><CartesianGrid stroke="#eceaf2" /><XAxis dataKey="time" tick={{ fontSize: 12 }} /><YAxis tick={{ fontSize: 12 }} /><Tooltip /><Line dataKey="hr" dot={false} stroke="#7367f0" strokeWidth={3} /><Line dataKey="nibpMap" dot={false} stroke="#22a06b" strokeWidth={3} /><Line dataKey="arterialMap" dot={false} stroke="#5b8def" strokeWidth={3} /></LineChart>
               </ResponsiveContainer>
             </ClientChart>
@@ -497,7 +497,7 @@ export function CvsTrendsPage() {
           <Card>
             <CardContent className="h-72 p-4">
               <ClientChart>
-                <ResponsiveContainer height="100%" width="100%">
+                <ResponsiveContainer height="100%" initialDimension={{ width: 800, height: 280 }} width="100%">
                   <LineChart data={cvsTrendData}><CartesianGrid stroke="#eceaf2" /><XAxis dataKey="time" tick={{ fontSize: 12 }} /><YAxis tick={{ fontSize: 12 }} /><Tooltip /><Line dataKey={selected.key} dot={{ r: 3 }} stroke={selected.color} strokeWidth={3} /></LineChart>
                 </ResponsiveContainer>
               </ClientChart>
@@ -601,7 +601,7 @@ function AbdominalTrendCard({ config }: { config: (typeof abdominalChartConfigs)
       </CardHeader>
       <CardContent className="h-64 p-4">
         <ClientChart>
-          <ResponsiveContainer height="100%" width="100%">
+          <ResponsiveContainer height="100%" initialDimension={{ width: 800, height: 280 }} width="100%">
             <LineChart data={abdominalTrendData}>
               <CartesianGrid stroke="#eceaf2" />
               <XAxis dataKey="time" tick={{ fontSize: 12 }} />
@@ -988,7 +988,7 @@ export function DrainDetailPage({ id }: { id: string }) {
         <Card>
           <CardHeader><div><CardTitle>Hourly Output Trend</CardTitle><CardDescription>Output progression with ICU analytics visualization</CardDescription></div></CardHeader>
           <CardContent className="h-72 p-4">
-            <ClientChart><ResponsiveContainer height="100%" width="100%"><LineChart data={drainEntries.slice().reverse()}><CartesianGrid stroke="#eceaf2" /><XAxis dataKey="time" tick={{ fontSize: 12 }} /><YAxis tick={{ fontSize: 12 }} /><Tooltip /><Line dataKey="volume" dot={{ r: 3 }} stroke={drain.color} strokeWidth={3} /></LineChart></ResponsiveContainer></ClientChart>
+            <ClientChart><ResponsiveContainer height="100%" initialDimension={{ width: 800, height: 280 }} width="100%"><LineChart data={drainEntries.slice().reverse()}><CartesianGrid stroke="#eceaf2" /><XAxis dataKey="time" tick={{ fontSize: 12 }} /><YAxis tick={{ fontSize: 12 }} /><Tooltip /><Line dataKey="volume" dot={{ r: 3 }} stroke={drain.color} strokeWidth={3} /></LineChart></ResponsiveContainer></ClientChart>
           </CardContent>
         </Card>
         <div className="space-y-4"><QuickActionsPanel drainId={drain.id} /><DrainInsightCard /></div>
@@ -1229,7 +1229,7 @@ export function LineDeviceDetailPage({ id }: { id: string }) {
         <TabsList><TabsTrigger value="overview">Overview</TabsTrigger><TabsTrigger value="lumen">Lumen Status</TabsTrigger><TabsTrigger value="history">History</TabsTrigger></TabsList>
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">{[["Inserted on", device.insertionDetails], ["Site", device.site], ["Lumen type", device.type === "CVC" ? "Triple lumen" : "Standard"], ["Dressing type", device.metadata]].map(([label, value]) => <Card key={label}><CardContent className="p-4"><div className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{label}</div><div className="mt-2 text-sm font-semibold text-foreground">{value}</div></CardContent></Card>)}</div>
-          <Card><CardHeader><div><CardTitle>Output / Usage Trend</CardTitle><CardDescription>Total intake, output, and hourly fluctuations</CardDescription></div></CardHeader><CardContent className="h-72 p-4"><ClientChart><ResponsiveContainer height="100%" width="100%"><LineChart data={lineDeviceTrendData}><CartesianGrid stroke="#eceaf2" /><XAxis dataKey="time" tick={{ fontSize: 12 }} /><YAxis tick={{ fontSize: 12 }} /><Tooltip /><Line dataKey="usage" dot={false} stroke="#7367f0" strokeWidth={3} /><Line dataKey="intake" dot={false} stroke="#22a06b" strokeWidth={3} /><Line dataKey="output" dot={false} stroke="#5b8def" strokeWidth={3} /></LineChart></ResponsiveContainer></ClientChart></CardContent></Card>
+          <Card><CardHeader><div><CardTitle>Output / Usage Trend</CardTitle><CardDescription>Total intake, output, and hourly fluctuations</CardDescription></div></CardHeader><CardContent className="h-72 p-4"><ClientChart><ResponsiveContainer height="100%" initialDimension={{ width: 800, height: 280 }} width="100%"><LineChart data={lineDeviceTrendData}><CartesianGrid stroke="#eceaf2" /><XAxis dataKey="time" tick={{ fontSize: 12 }} /><YAxis tick={{ fontSize: 12 }} /><Tooltip /><Line dataKey="usage" dot={false} stroke="#7367f0" strokeWidth={3} /><Line dataKey="intake" dot={false} stroke="#22a06b" strokeWidth={3} /><Line dataKey="output" dot={false} stroke="#5b8def" strokeWidth={3} /></LineChart></ResponsiveContainer></ClientChart></CardContent></Card>
         </TabsContent>
         <TabsContent value="lumen"><DataTable data={lumenStatusRecords} columns={lumenColumns} /></TabsContent>
         <TabsContent value="history"><LineDeviceHistorySummary id={device.id} /></TabsContent>

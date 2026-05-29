@@ -609,7 +609,7 @@ function TrendCard({ compact }: { compact?: boolean }) {
         {!compact ? <Button size="sm" variant="outline" onClick={() => toast.info("PDF export queued")}><Printer className="h-4 w-4" />PDF</Button> : null}
       </CardHeader>
       <CardContent className={compact ? "h-52 p-3" : "h-80 p-4"}>
-        <ResponsiveContainer height="100%" width="100%">
+        <ResponsiveContainer height="100%" initialDimension={{ width: 800, height: 280 }} width="100%">
           <LineChart data={clinicalTrendData}>
             <CartesianGrid stroke="#e8e5ef" strokeDasharray="3 3" />
             <XAxis dataKey="day" tick={{ fill: "#6f6b80", fontSize: 12 }} />
