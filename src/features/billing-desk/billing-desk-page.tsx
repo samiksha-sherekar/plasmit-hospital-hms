@@ -69,7 +69,8 @@ type BillingAction =
   | { type: "pay"; mode: PaymentLine["mode"]; amount: number }
   | { type: "removePayment"; id: string }
   | { type: "discount"; value: number }
-  | { type: "saveInvoice"; invoice: BillingInvoice };
+  | { type: "saveInvoice"; invoice: BillingInvoice }
+  | { type: "loadInvoices"; invoices: BillingInvoice[] };
 
 const invoiceStorageKey = "plasmit-billing-desk-static-invoices";
 const manualServiceStorageKey = "plasmit-billing-desk-manual-services";
@@ -177,6 +178,7 @@ function billingReducer(state: BillingState, action: BillingAction): BillingStat
   }
   if (action.type === "discount") return { ...state, discountPercent: Math.min(Math.max(action.value, 0), 100), billStatus: "Ready", lastSavedAt: saved };
   if (action.type === "saveInvoice") return { ...state, invoices: [action.invoice, ...state.invoices].slice(0, 12), billStatus: action.invoice.status === "Paid" ? "Paid" : "Partial", lastSavedAt: saved };
+  if (action.type === "loadInvoices") return { ...state, invoices: action.invoices };
   if (action.type === "reset") return { ...initialBillingState, activePatient: state.activePatient, patients: state.patients, activeReferral: state.activeReferral, invoices: state.invoices };
   return state;
 }
@@ -195,7 +197,8 @@ function useBillingDesk() {
 }
 
 function BillingDeskProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = React.useReducer(billingReducer, initialBillingState, (base) => ({ ...base, invoices: readStoredInvoices() }));
+  const [state, dispatch] = React.useReducer(billingReducer, initialBillingState);
+  const invoicesLoadedRef = React.useRef(false);
   const totals = React.useMemo(() => calculateTotals(state.lines, state.payments, state.activePatient, state.discountPercent), [state.lines, state.payments, state.activePatient, state.discountPercent]);
   const addService = React.useCallback((service: BillingDeskService) => {
     const duplicate = state.lines.some((line) => line.id === service.id);
@@ -207,9 +210,17 @@ function BillingDeskProvider({ children }: { children: React.ReactNode }) {
     toast.success(`${service.name} added to bill`);
   }, [state.lines]);
   React.useEffect(() => {
+    const timer = window.setTimeout(() => {
+      dispatch({ type: "loadInvoices", invoices: readStoredInvoices() });
+      invoicesLoadedRef.current = true;
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+  React.useEffect(() => {
     window.localStorage.setItem("plasmit-billing-desk-draft", JSON.stringify({ patient: state.activePatient.uhid, lines: state.lines.length, discountPercent: state.discountPercent, at: state.lastSavedAt }));
   }, [state.activePatient.uhid, state.lines.length, state.discountPercent, state.lastSavedAt]);
   React.useEffect(() => {
+    if (!invoicesLoadedRef.current) return;
     window.localStorage.setItem(invoiceStorageKey, JSON.stringify(state.invoices));
   }, [state.invoices]);
   return <BillingDeskContext.Provider value={{ state, totals, dispatch, addService }}>{children}</BillingDeskContext.Provider>;
@@ -829,7 +840,8 @@ function ServiceGrid({ category, onAdd, lines }: { category: BillingDeskService[
   const [search, setSearch] = React.useState("");
   const [group, setGroup] = React.useState("All groups");
   const [urgency, setUrgency] = React.useState("All urgency");
-  const [manualServices, setManualServices] = React.useState<BillingDeskService[]>(() => readManualServices(category));
+  const [manualServices, setManualServices] = React.useState<BillingDeskService[]>([]);
+  const manualServicesLoadedRef = React.useRef(false);
   const [manualOpen, setManualOpen] = React.useState(false);
   const defaultManualGroup = category === "Radiology" ? "X-ray" : category === "Package" ? "Preventive" : category === "Quick Test" ? "Favorites" : "Biochemistry";
   const [draft, setDraft] = React.useState({ name: "", group: defaultManualGroup, price: "", tax: "5", urgency: "Routine", meta: "", tat: "", sample: "", modality: category === "Radiology" ? "X-ray" : "" });
@@ -843,7 +855,15 @@ function ServiceGrid({ category, onAdd, lines }: { category: BillingDeskService[
   });
   const canCreateManual = category === "Pathology" || category === "Radiology" || category === "Package" || category === "Quick Test";
   React.useEffect(() => {
-    if (!canCreateManual) return;
+    if (!canCreateManual) return undefined;
+    const timer = window.setTimeout(() => {
+      setManualServices(readManualServices(category));
+      manualServicesLoadedRef.current = true;
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [canCreateManual, category]);
+  React.useEffect(() => {
+    if (!canCreateManual || !manualServicesLoadedRef.current) return;
     try {
       const saved = window.localStorage.getItem(manualServiceStorageKey);
       const parsed = saved ? JSON.parse(saved) as BillingDeskService[] : [];
