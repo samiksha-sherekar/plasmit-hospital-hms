@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useRole } from "@/components/providers/role-provider";
 import { navigationItems } from "@/data/navigation";
 import { cn } from "@/lib/utils";
+import type { NavigationChildItem } from "@/types";
 
 export function MobileNavigation() {
   const [open, setOpen] = useState(false);
@@ -21,6 +22,10 @@ export function MobileNavigation() {
   const { role, roles, setRole } = useRole();
   const visibleItems = navigationItems.filter((item) => item.allowedRoles.includes(role));
   const groups = Array.from(new Set(visibleItems.map((item) => item.group)));
+
+  function childIsActive(children: NavigationChildItem[] = []): boolean {
+    return children.some((child) => pathname === child.route || childIsActive(child.children ?? []));
+  }
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
@@ -91,7 +96,7 @@ export function MobileNavigation() {
                     .map((item) => {
                       const Icon = item.icon;
                       const hasChildren = Boolean(item.children?.length);
-                      const childActive = item.children?.some((child) => pathname === child.route) ?? false;
+                      const childActive = childIsActive(item.children ?? []);
                       const active = pathname === item.route || childActive || (item.route !== "/dashboard" && pathname.startsWith(`${item.route}/`));
                       const expanded = openItems[item.id] ?? active;
 
@@ -113,12 +118,39 @@ export function MobileNavigation() {
                             {expanded ? (
                               <div className="ml-4 mt-1 space-y-1 border-l border-sidebar-foreground/15 pl-2">
                                 {item.children?.map((child) => {
-                                  const childIsActive = pathname === child.route;
+                                  const nestedActive = childIsActive(child.children ?? []);
+                                  const childActiveState = pathname === child.route || nestedActive;
+                                  if (child.children?.length) {
+                                    return (
+                                      <div key={child.id}>
+                                        <div className="px-2 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-sidebar-foreground/55">{child.label}</div>
+                                        <div className="space-y-1">
+                                          {child.children.map((nested) => {
+                                            const nestedIsActive = pathname === nested.route;
+                                            return (
+                                              <Link
+                                                className={cn(
+                                                  "flex min-h-9 items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium outline-none transition hover:bg-sidebar-active/10 focus-visible:ring-2 focus-visible:ring-ring/25",
+                                                  nestedIsActive && "bg-sidebar-active/80 text-sidebar-active-foreground",
+                                                )}
+                                                href={nested.route}
+                                                key={nested.id}
+                                                onClick={() => setOpen(false)}
+                                              >
+                                                <span className="min-w-0 flex-1 truncate">{nested.label}</span>
+                                                {nested.status === "planned" ? <Badge tone="muted">Plan</Badge> : null}
+                                              </Link>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                    );
+                                  }
                                   return (
                                     <Link
                                       className={cn(
                                         "flex min-h-9 items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium outline-none transition hover:bg-sidebar-active/10 focus-visible:ring-2 focus-visible:ring-ring/25",
-                                        childIsActive && "bg-sidebar-active/80 text-sidebar-active-foreground",
+                                        childActiveState && "bg-sidebar-active/80 text-sidebar-active-foreground",
                                       )}
                                       href={child.route}
                                       key={child.id}

@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { useRole } from "@/components/providers/role-provider";
 import { navigationItems } from "@/data/navigation";
 import { cn } from "@/lib/utils";
+import type { NavigationChildItem } from "@/types";
 
 export function AppSidebar({
   collapsed,
@@ -24,6 +25,10 @@ export function AppSidebar({
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
   const visibleItems = navigationItems.filter((item) => item.allowedRoles.includes(role));
   const groups = Array.from(new Set(visibleItems.map((item) => item.group)));
+
+  function childIsActive(children: NavigationChildItem[] = []): boolean {
+    return children.some((child) => pathname === child.route || childIsActive(child.children ?? []));
+  }
 
   return (
     <aside
@@ -66,7 +71,7 @@ export function AppSidebar({
                 .map((item) => {
                   const Icon = item.icon;
                   const hasChildren = Boolean(item.children?.length);
-                  const childActive = item.children?.some((child) => pathname === child.route) ?? false;
+                  const childActive = childIsActive(item.children ?? []);
                   const active = pathname === item.route || childActive || (item.route !== "/dashboard" && pathname.startsWith(`${item.route}/`));
                   const expanded = openItems[item.id] ?? active;
                   const neuroIcu = item.id === "neuro-icu";
@@ -91,14 +96,40 @@ export function AppSidebar({
                         {expanded ? (
                           <div className="ml-4 mt-1 space-y-1 border-l border-border pl-2">
                             {item.children?.map((child) => {
-                              const childIsActive = pathname === child.route;
+                              const nestedActive = childIsActive(child.children ?? []);
+                              const childActiveState = pathname === child.route || nestedActive;
+                              if (child.children?.length) {
+                                return (
+                                  <div key={child.id}>
+                                    <div className="px-2 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70">{child.label}</div>
+                                    <div className="space-y-1">
+                                      {child.children.map((nested) => {
+                                        const nestedIsActive = pathname === nested.route;
+                                        return (
+                                          <Link
+                                            className={cn(
+                                              "flex min-h-8 items-center rounded-md px-2 py-1.5 text-xs font-semibold outline-none transition hover:bg-primary-soft hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/25",
+                                              nestedIsActive && "bg-primary-soft text-primary",
+                                            )}
+                                            href={nested.route}
+                                            key={nested.id}
+                                          >
+                                            <span className="min-w-0 flex-1 truncate">{nested.label}</span>
+                                            {nested.status === "planned" ? <Badge tone="muted">Plan</Badge> : null}
+                                          </Link>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                );
+                              }
                               return (
                                 <Link
                                   className={cn(
                                     "flex min-h-8 items-center rounded-md px-2 py-1.5 text-xs font-semibold outline-none transition hover:bg-primary-soft hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/25",
-                                    childIsActive && "bg-primary-soft text-primary",
+                                    childActiveState && "bg-primary-soft text-primary",
                                     neuroIcu && "hover:bg-[rgba(79,110,247,0.10)] hover:text-[#4F6EF7]",
-                                    neuroIcu && childIsActive && "bg-[rgba(79,110,247,0.12)] text-[#4F6EF7] shadow-[inset_2px_0_0_#7C6BFF]",
+                                    neuroIcu && childActiveState && "bg-[rgba(79,110,247,0.12)] text-[#4F6EF7] shadow-[inset_2px_0_0_#7C6BFF]",
                                   )}
                                   href={child.route}
                                   key={child.id}
