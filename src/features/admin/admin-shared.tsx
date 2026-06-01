@@ -244,11 +244,11 @@ export function RiskBadge({ risk }: { risk: "Low" | "Medium" | "High" | "Critica
 
 export function StatusBadge({ status }: { status: string }) {
   const tone: StatusTone =
-    status === "Active" || status === "Trusted"
+    status === "Active" || status === "Trusted" || status === "Available" || status === "Approved" || status === "Received" || status === "Completed" || status === "Closed" || status === "Returned"
       ? "success"
-      : status === "Locked" || status === "Blocked" || status === "Critical"
+      : status === "Locked" || status === "Blocked" || status === "Critical" || status === "Rejected" || status === "Cancelled"
         ? "danger"
-        : status === "Future Ready" || status === "Invited" || status === "Review"
+        : status === "Future Ready" || status === "Invited" || status === "Review" || status === "Submitted" || status === "Ordered" || status === "Partially Received" || status === "In Transit"
           ? "info"
           : status === "Inactive" || status === "Expired"
             ? "muted"

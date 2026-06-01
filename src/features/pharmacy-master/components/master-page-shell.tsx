@@ -28,7 +28,11 @@ export function MasterPageShell({
       {() => (
         <>
           <PageHeader
-            eyebrow={`Home / Masters / ${breadcrumbTitle}`}
+            breadcrumbs={[
+              { label: "Home", href: "/dashboard" },
+              { label: "Masters", href: "/pharmacy/masters/drug-master" },
+              { label: breadcrumbTitle },
+            ]}
             title={title}
             actions={
               <Button onClick={onCreate}><Icon className="h-4 w-4" />{actionLabel}</Button>

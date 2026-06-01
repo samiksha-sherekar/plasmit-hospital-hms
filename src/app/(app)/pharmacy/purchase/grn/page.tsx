@@ -1,6 +1,5 @@
-import { GrnWorkflowPage } from "@/features/pharmacy-workflows/workflow-pages";
+import { GoodsReceiptNotePage } from "@/features/pharmacy-purchase/goods-receipt-note/goods-receipt-note-page";
 
 export default function Page() {
-  return <GrnWorkflowPage />;
+  return <GoodsReceiptNotePage />;
 }
-

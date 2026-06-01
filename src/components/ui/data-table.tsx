@@ -10,7 +10,7 @@ import {
   type ColumnDef,
   type SortingState,
 } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ChevronsUpDown, SearchX } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronsLeft, ChevronsRight, ChevronsUpDown, SearchX } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -60,6 +60,10 @@ export function DataTable<TData>({
     return <EmptyState icon={SearchX} title="No records found" description="Adjust filters or search another term to continue." />;
   }
 
+  const pageIndex = table.getState().pagination.pageIndex;
+  const pageCount = table.getPageCount() || 1;
+  const pageNumbers = paginationPages(pageIndex + 1, pageCount);
+
   return (
     <div className={cn("overflow-hidden rounded-xl border border-border bg-white shadow-soft", className)}>
       <div className="max-w-full overflow-x-auto">
@@ -106,19 +110,46 @@ export function DataTable<TData>({
           </tbody>
         </table>
       </div>
-      <div className="flex items-center justify-between border-t border-border/80 bg-white px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)] text-xs text-muted-foreground">
+      <div className="flex flex-col gap-2 border-t border-border/80 bg-white px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)] text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
         <span>
-          {data.length} static records • Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount() || 1}
+          {data.length} static records - Page {pageIndex + 1} of {pageCount}
         </span>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-1">
+          <Button size="sm" variant="outline" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()} aria-label="First page">
+            <ChevronsLeft className="h-3.5 w-3.5" />
+          </Button>
           <Button size="sm" variant="outline" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
             Previous
           </Button>
+          {pageNumbers.map((page) => (
+            <Button
+              className="min-w-8 px-2"
+              key={page}
+              size="sm"
+              variant={page === pageIndex + 1 ? "default" : "outline"}
+              onClick={() => table.setPageIndex(page - 1)}
+              aria-current={page === pageIndex + 1 ? "page" : undefined}
+            >
+              {page}
+            </Button>
+          ))}
           <Button size="sm" variant="outline" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
             Next
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => table.setPageIndex(pageCount - 1)} disabled={!table.getCanNextPage()} aria-label="Last page">
+            <ChevronsRight className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
     </div>
   );
+}
+
+function paginationPages(currentPage: number, totalPages: number) {
+  if (totalPages <= 5) return Array.from({ length: totalPages }, (_, index) => index + 1);
+
+  if (currentPage <= 3) return [1, 2, 3, 4, 5];
+  if (currentPage >= totalPages - 2) return [totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+
+  return [currentPage - 2, currentPage - 1, currentPage, currentPage + 1, currentPage + 2];
 }

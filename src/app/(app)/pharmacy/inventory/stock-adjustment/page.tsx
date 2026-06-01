@@ -1,6 +1,5 @@
-import { StockAdjustmentPage } from "@/features/pharmacy-workflows/workflow-pages";
+import { StockAdjustmentPage } from "@/features/pharmacy-inventory/stock-adjustment/stock-adjustment-page";
 
 export default function Page() {
   return <StockAdjustmentPage />;
 }
-
