@@ -165,7 +165,7 @@ export const navigationItems: NavigationItem[] = [
     icon: Pill,
     route: "/pharmacy/masters/drug-master",
     group: "Pharmacy",
-    allowedRoles: ["Super Admin", "Hospital Admin", "Pharmacist", "Management"],
+    allowedRoles: ["Pharmacist", "Management"],
     status: "ready",
     children: [
       { id: "pharmacy-drug-category", label: "Drug Category", route: "/pharmacy/masters/drug-category", status: "ready" },
