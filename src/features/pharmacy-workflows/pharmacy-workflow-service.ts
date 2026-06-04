@@ -139,6 +139,34 @@ const workflowColumns: Record<string, PharmacyWorkflowColumn[]> = {
     { key: "amount", header: "Amount" },
     { key: "status", header: "Status" },
   ],
+  "low-stock-report": [
+    { key: "drugName", header: "Drug name" },
+    { key: "category", header: "Category" },
+    { key: "currentQty", header: "Current qty" },
+    { key: "reorderLevel", header: "Reorder level" },
+    { key: "shortfall", header: "Shortfall" },
+    { key: "location", header: "Location" },
+    { key: "status", header: "Status" },
+  ],
+  "expiring-stock-report": [
+    { key: "drugName", header: "Drug name" },
+    { key: "batchNo", header: "Batch no." },
+    { key: "expiryDate", header: "Expiry date" },
+    { key: "daysLeft", header: "Days left" },
+    { key: "qty", header: "Qty" },
+    { key: "mrp", header: "MRP (₹)" },
+    { key: "alert", header: "Alert" },
+  ],
+  "purchase-report": [
+    { key: "poNumber", header: "PO no." },
+    { key: "poDate", header: "PO date" },
+    { key: "supplier", header: "Supplier" },
+    { key: "drug", header: "Drug" },
+    { key: "qty", header: "Qty" },
+    { key: "amount", header: "Amount (₹)" },
+    { key: "grnDone", header: "GRN done" },
+    { key: "status", header: "Status" },
+  ],
 };
 
 const seedRows: Record<string, Omit<PharmacyWorkflowRecord, "id">[]> = {
@@ -185,6 +213,26 @@ const seedRows: Record<string, Omit<PharmacyWorkflowRecord, "id">[]> = {
     { status: "Returned", values: { returnNumber: "RET-0002", supplier: "Medline Distributors", returnDate: "30 May 2026", reason: "Wrong Item", drug: "Vitamin D3 Sachet", batch: "D3-2211", returnQty: "25", purchasePrice: "8.00", amount: "200.00", status: "Returned" } },
     { status: "Approved", values: { returnNumber: "RET-0003", supplier: "Care Pharma", returnDate: "29 May 2026", reason: "Expired", drug: "Ondansetron Inj", batch: "OND-2309", returnQty: "12", purchasePrice: "18.00", amount: "216.00", status: "Approved" } },
     { status: "Draft", values: { returnNumber: "RET-0004", supplier: "Prime Medical", returnDate: "28 May 2026", reason: "Excess Supply", drug: "NS 500 ml", batch: "NS-2502", returnQty: "30", purchasePrice: "22.00", amount: "660.00", status: "Draft" } },
+  ],
+  "low-stock-report": [
+    { status: "Low Stock", values: { drugName: "Cefixime 200 mg", category: "Antibiotic", currentQty: "92", reorderLevel: "150", shortfall: "58", location: "Pharmacy / A2", status: "Low Stock" } },
+    { status: "Low Stock", values: { drugName: "NS 500 ml", category: "IV Fluid", currentQty: "110", reorderLevel: "200", shortfall: "90", location: "Main Store / F1", status: "Low Stock" } },
+    { status: "Approved", values: { drugName: "Adrenaline Inj", category: "Emergency", currentQty: "24", reorderLevel: "50", shortfall: "26", location: "Crash Cart Store", status: "Approved" } },
+    { status: "Ordered", values: { drugName: "Pantoprazole 40 mg", category: "Gastro", currentQty: "132", reorderLevel: "180", shortfall: "48", location: "OPD Pharmacy / P2", status: "Ordered" } },
+  ],
+  "expiring-stock-report": [
+    { status: "Expiring Soon", values: { drugName: "Ondansetron Inj", batchNo: "OND-2309", expiryDate: "15 Jun 2026", daysLeft: "10", qty: "86", mrp: "34.00", alert: "Within 30 days" } },
+    { status: "Expiring Soon", values: { drugName: "Vitamin D3 Sachet", batchNo: "D3-2407", expiryDate: "28 Jun 2026", daysLeft: "23", qty: "42", mrp: "18.00", alert: "Within 30 days" } },
+    { status: "Expiring Soon", values: { drugName: "Pantoprazole 40 mg", batchNo: "PAN-2412", expiryDate: "25 Jul 2026", daysLeft: "50", qty: "640", mrp: "5.00", alert: "Within 60 days" } },
+    { status: "Expiring Soon", values: { drugName: "Paracetamol 500 mg", batchNo: "PCM-2401", expiryDate: "30 Aug 2026", daysLeft: "86", qty: "1,240", mrp: "2.00", alert: "Within 90 days" } },
+  ],
+  "purchase-report": [
+    { status: "Draft", values: { poNumber: "PO-0001", poDate: "01 Jun 2026", supplier: "Medline Distributors", drug: "Cefixime 200 mg", qty: "500", amount: "3,675.00", grnDone: "No", status: "Draft" } },
+    { status: "Ordered", values: { poNumber: "PO-0002", poDate: "31 May 2026", supplier: "Care Pharma", drug: "NS 500 ml", qty: "300", amount: "6,930.00", grnDone: "No", status: "Ordered" } },
+    { status: "Partially Received", values: { poNumber: "PO-0003", poDate: "28 May 2026", supplier: "Prime Medical", drug: "Pantoprazole 40 mg", qty: "800", amount: "2,039.52", grnDone: "Partial", status: "Partially Received" } },
+    { status: "Received", values: { poNumber: "PO-0004", poDate: "25 May 2026", supplier: "Medline Distributors", drug: "Paracetamol 500 mg", qty: "1,000", amount: "1,232.00", grnDone: "Yes", status: "Received" } },
+    { status: "Closed", values: { poNumber: "PO-0005", poDate: "20 May 2026", supplier: "Care Pharma", drug: "Syringe 5 ml", qty: "500", amount: "1,629.60", grnDone: "Yes", status: "Closed" } },
+    { status: "Cancelled", values: { poNumber: "PO-0006", poDate: "18 May 2026", supplier: "Prime Medical", drug: "Vitamin C", qty: "200", amount: "403.20", grnDone: "No", status: "Cancelled" } },
   ],
 };
 

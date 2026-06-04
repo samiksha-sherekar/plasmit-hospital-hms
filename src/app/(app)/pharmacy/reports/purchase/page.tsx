@@ -1,6 +1,5 @@
-import { PurchaseReportPage } from "@/features/pharmacy-workflows/workflow-pages";
+import { PurchaseReportPage } from "@/features/pharmacy-reports/purchase/purchase-report-page";
 
 export default function Page() {
   return <PurchaseReportPage />;
 }
-
