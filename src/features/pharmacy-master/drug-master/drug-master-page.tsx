@@ -93,7 +93,7 @@ export function DrugMasterPage() {
   }
 
   return (
-    <MasterPageShell title="Drug Master" breadcrumbTitle="Drug Master" description="CRUD, clone, Active/Inactive, and dependent Category/Sub Category mapping for pharmacy drugs." icon={Pill} actionLabel="New drug" onCreate={openCreate}>
+    <MasterPageShell title="Drug Master" description="CRUD, clone, Active/Inactive, and dependent Category/Sub Category mapping for pharmacy drugs." icon={Pill} actionLabel="New drug" onCreate={openCreate}>
       <FilterBar search={search} onSearch={setSearch} placeholder="Search drug, generic, category, form, route, status...">
         <NativeSelect label="Category" value={category} onChange={setCategory} options={["All categories", ...initialDrugCategories.map((item) => item.categoryName)]} />
         <NativeSelect label="Status" value={status} onChange={setStatus} options={["All status", "Active", "Inactive"]} />

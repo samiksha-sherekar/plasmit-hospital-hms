@@ -12,14 +12,9 @@ export function ApprovalShell({ title, icon: Icon, children }: { title: string; 
       {() => (
         <>
           <PageHeader
-            breadcrumbs={[
-              { label: "Home", href: "/dashboard" },
-              { label: "Approvals", href: "/pharmacy/approvals/purchase-requisition" },
-              { label: title },
-            ]}
             title={title}
             actions={<Icon className="h-5 w-5 text-muted-foreground" />}
-            className="static mx-0 border-b bg-transparent px-0 py-3"
+            className="static mx-0 border-b bg-transparent px-0 py-2"
           />
           <div className="space-y-4">{children}</div>
         </>

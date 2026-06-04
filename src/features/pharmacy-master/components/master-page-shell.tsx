@@ -9,14 +9,12 @@ import { ProtectedOperations } from "@/features/operations/operations-shared";
 
 export function MasterPageShell({
   title,
-  breadcrumbTitle = title,
   icon: Icon,
   actionLabel,
   onCreate,
   children,
 }: {
   title: string;
-  breadcrumbTitle?: string;
   description?: string;
   icon: LucideIcon;
   actionLabel: string;
@@ -28,16 +26,11 @@ export function MasterPageShell({
       {() => (
         <>
           <PageHeader
-            breadcrumbs={[
-              { label: "Home", href: "/dashboard" },
-              { label: "Masters", href: "/pharmacy/masters/drug-master" },
-              { label: breadcrumbTitle },
-            ]}
             title={title}
             actions={
               <Button onClick={onCreate}><Icon className="h-4 w-4" />{actionLabel}</Button>
             }
-            className="static mx-0 border-b bg-transparent px-0 py-3"
+            className="static mx-0 border-b bg-transparent px-0 py-2"
           />
           <div className="space-y-4">{children}</div>
         </>

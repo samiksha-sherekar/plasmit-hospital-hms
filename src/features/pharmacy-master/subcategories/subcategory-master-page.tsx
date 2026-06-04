@@ -61,7 +61,7 @@ export function SubCategoryMasterPage() {
   }
 
   return (
-    <MasterPageShell title="Sub Category Master" breadcrumbTitle="Drug Sub Category" description="CRUD for pharmacy subcategories with Active/Inactive control and parent category mapping." icon={Layers3} actionLabel="New subcategory" onCreate={openCreate}>
+    <MasterPageShell title="Sub Category Master" description="CRUD for pharmacy subcategories with Active/Inactive control and parent category mapping." icon={Layers3} actionLabel="New subcategory" onCreate={openCreate}>
       <FilterBar search={search} onSearch={setSearch} placeholder="Search category, subcategory, code, status, description...">
         <NativeSelect label="Category" value={category} onChange={setCategory} options={["All categories", ...initialDrugCategories.map((item) => item.categoryName)]} />
         <NativeSelect label="Status" value={status} onChange={setStatus} options={["All status", "Active", "Inactive"]} />

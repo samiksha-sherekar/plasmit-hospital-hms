@@ -25,14 +25,9 @@ export function PurchaseShell({
       {({ readOnly }) => (
         <>
           <PageHeader
-            breadcrumbs={[
-              { label: "Home", href: "/dashboard" },
-              { label: "Purchase", href: "/pharmacy/purchase/requisition" },
-              { label: title },
-            ]}
             title={title}
             actions={onCreate ? <Button disabled={readOnly} onClick={onCreate}><Icon className="h-4 w-4" />{actionLabel}</Button> : null}
-            className="static mx-0 border-b bg-transparent px-0 py-3"
+            className="static mx-0 border-b bg-transparent px-0 py-2"
           />
           <div className="space-y-4">{children}</div>
         </>

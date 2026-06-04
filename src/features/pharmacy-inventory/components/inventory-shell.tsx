@@ -25,14 +25,9 @@ export function InventoryShell({
       {({ readOnly }) => (
         <>
           <PageHeader
-            breadcrumbs={[
-              { label: "Home", href: "/dashboard" },
-              { label: "Inventory", href: "/pharmacy/inventory/current-stock" },
-              { label: title },
-            ]}
             title={title}
             actions={onCreate && actionLabel ? <Button disabled={readOnly} onClick={onCreate}><Icon className="h-4 w-4" />{actionLabel}</Button> : null}
-            className="static mx-0 border-b bg-transparent px-0 py-3"
+            className="static mx-0 border-b bg-transparent px-0 py-2"
           />
           <div className="space-y-4">{children}</div>
         </>

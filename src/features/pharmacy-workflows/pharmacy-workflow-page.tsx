@@ -17,12 +17,10 @@ import { getPharmacyWorkflowColumns, listPharmacyWorkflowRecords, type PharmacyW
 
 export function PharmacyWorkflowPage({
   title,
-  breadcrumb,
   workflow,
   icon: Icon,
 }: {
   title: string;
-  breadcrumb: string;
   workflow: string;
   icon: LucideIcon;
 }) {
@@ -61,10 +59,9 @@ export function PharmacyWorkflowPage({
       {() => (
         <>
           <PageHeader
-            breadcrumbs={workflowBreadcrumbs(breadcrumb, title)}
             title={title}
             actions={<Button><Icon className="h-4 w-4" />New</Button>}
-            className="static mx-0 border-b bg-transparent px-0 py-3"
+            className="static mx-0 border-b bg-transparent px-0 py-2"
           />
           <Card>
             <CardContent className="space-y-3 p-3">
@@ -88,24 +85,6 @@ export function PharmacyWorkflowPage({
       )}
     </ProtectedOperations>
   );
-}
-
-function workflowBreadcrumbs(breadcrumb: string, title: string) {
-  const section = breadcrumb.includes("Purchase") ? "Purchase" : breadcrumb.includes("Inventory") ? "Inventory" : breadcrumb.includes("Masters") ? "Masters" : "Pharmacy";
-  const sectionHref =
-    section === "Purchase"
-      ? "/pharmacy/purchase/requisition"
-      : section === "Inventory"
-        ? "/pharmacy/inventory/current-stock"
-        : section === "Masters"
-          ? "/pharmacy/masters/drug-master"
-          : "/pharmacy";
-
-  return [
-    { label: "Home", href: "/dashboard" },
-    { label: section, href: sectionHref },
-    { label: title },
-  ];
 }
 
 function deleteLabel(record: PharmacyWorkflowRecord | null) {

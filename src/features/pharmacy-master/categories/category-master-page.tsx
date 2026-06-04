@@ -59,7 +59,7 @@ export function CategoryMasterPage() {
   }
 
   return (
-    <MasterPageShell title="Category Master" breadcrumbTitle="Drug Category" description="CRUD for pharmacy medicine categories with Active/Inactive control." icon={Tags} actionLabel="New category" onCreate={openCreate}>
+    <MasterPageShell title="Category Master" description="CRUD for pharmacy medicine categories with Active/Inactive control." icon={Tags} actionLabel="New category" onCreate={openCreate}>
       <FilterBar search={search} onSearch={setSearch} placeholder="Search category name, code, status, description...">
         <NativeSelect label="Status" value={status} onChange={setStatus} options={["All status", "Active", "Inactive"]} />
       </FilterBar>

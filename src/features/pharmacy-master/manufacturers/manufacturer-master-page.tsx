@@ -38,7 +38,7 @@ export function ManufacturerMasterPage() {
   function remove(record: ManufacturerRecord) { setRecords((current) => current.filter((item) => item.id !== record.id)); toast.success("Manufacturer deleted"); setOpen(false); }
 
   return (
-    <MasterPageShell title="Manufacturer Master" breadcrumbTitle="Manufacturer Master" icon={Factory} actionLabel="New manufacturer" onCreate={openCreate}>
+    <MasterPageShell title="Manufacturer Master" icon={Factory} actionLabel="New manufacturer" onCreate={openCreate}>
       <FilterBar search={search} onSearch={setSearch} placeholder="Search manufacturer, code, contact, phone, email, GST..."><NativeSelect label="Status" value={status} onChange={setStatus} options={["All status", "Active", "Inactive"]} /></FilterBar>
       <ManufacturerTable records={filtered} onEdit={openEdit} onToggle={(record) => setRecords((current) => current.map((item) => item.id === record.id ? { ...item, status: toggleStatus(item.status) } : item))} onDelete={remove} />
       <MasterDialog open={open} onOpenChange={setOpen} title={mode === "edit" ? "Edit manufacturer" : "New manufacturer"} submitLabel={mode === "edit" ? "Update manufacturer" : "Create manufacturer"} onSubmit={save} onDelete={mode === "edit" ? () => remove(draft) : undefined}>
@@ -47,4 +47,3 @@ export function ManufacturerMasterPage() {
     </MasterPageShell>
   );
 }
-

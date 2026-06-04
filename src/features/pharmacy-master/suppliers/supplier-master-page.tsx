@@ -69,7 +69,7 @@ export function SupplierMasterPage() {
   }
 
   return (
-    <MasterPageShell title="Supplier Master" breadcrumbTitle="Supplier Master" description="CRUD for supplier records with contact, GST, payment terms, and Active/Inactive control." icon={Truck} actionLabel="New supplier" onCreate={openCreate}>
+    <MasterPageShell title="Supplier Master" description="CRUD for supplier records with contact, GST, payment terms, and Active/Inactive control." icon={Truck} actionLabel="New supplier" onCreate={openCreate}>
       <FilterBar search={search} onSearch={setSearch} placeholder="Search supplier, contact, phone, email, GST, terms...">
         <NativeSelect label="Status" value={status} onChange={setStatus} options={["All status", "Active", "Inactive"]} />
       </FilterBar>
