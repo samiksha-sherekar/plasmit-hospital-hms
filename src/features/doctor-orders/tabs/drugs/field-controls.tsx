@@ -13,10 +13,11 @@ import {
   frequencies,
   infusionTimeUnits,
   instructions,
+  pharmacies,
   sites,
   timeUnits,
 } from "./data";
-import type { DoseUnit, DraftCategory, DrugOrder, OrderDraft, TaperDose } from "./types";
+import type { DoseUnit, DraftCategory, OrderDraft, TaperDose } from "./types";
 import { isContinuousFluid, isFormADrug, isInjectionForm, isIvRoute, routeOptionsForForm } from "./utils";
 
 export function FieldLabel({ children }: { children: React.ReactNode }) {
@@ -63,10 +64,12 @@ function ToggleButton({ active, label, onClick }: { active: boolean; label: stri
 function CategoryRadio({
   checked,
   label,
+  name,
   onChange,
 }: {
   checked: boolean;
   label: string;
+  name: string;
   onChange: () => void;
 }) {
   return (
@@ -79,7 +82,7 @@ function CategoryRadio({
     >
       <input
         type="radio"
-        name="drug-order-category"
+        name={name}
         className="h-4 w-4 rounded border-input accent-primary"
         checked={checked}
         onChange={onChange}
@@ -111,12 +114,10 @@ function useDraftWarnings(draft: OrderDraft) {
 }
 
 export function DrugDraftFields({
-  order,
   draft,
   flash,
   onChange,
 }: {
-  order: DrugOrder;
   draft: OrderDraft;
   flash: boolean;
   onChange: (values: Partial<OrderDraft>) => void;
@@ -125,6 +126,8 @@ export function DrugDraftFields({
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   }, []);
+  const instructionListId = React.useId();
+  const categoryRadioName = React.useId();
   const endDateMin = draft.startDate || today;
   const routeOptions = routeOptionsForForm(draft.form, draft.continuous, draft.intermittent);
   const ivRoute = isIvRoute(draft.route);
@@ -244,6 +247,10 @@ export function DrugDraftFields({
               {warnings.needsDiluent ? <span className="text-xs font-medium text-danger">Diluent is required for IV route.</span> : null}
             </label>
           ) : null}
+          <label className="space-y-2">
+            <FieldLabel>Pharmacy</FieldLabel>
+            <SelectField value={draft.pharmacy} options={pharmacies} onChange={(pharmacy) => onChange({ pharmacy })} />
+          </label>
           {draft.sos ? (
             <label className="space-y-2">
               <FieldLabel>Max Dose/Day</FieldLabel>
@@ -321,8 +328,8 @@ export function DrugDraftFields({
           </label>
           <label className="space-y-2 sm:col-span-2">
             <FieldLabel>Instructions</FieldLabel>
-            <Input list="drug-instruction-options" value={draft.instructions} onChange={(event) => onChange({ instructions: event.target.value })} />
-            <datalist id="drug-instruction-options">
+            <Input list={instructionListId} value={draft.instructions} onChange={(event) => onChange({ instructions: event.target.value })} />
+            <datalist id={instructionListId}>
               {instructions.map((instruction) => (
                 <option key={instruction} value={instruction} />
               ))}
@@ -338,6 +345,7 @@ export function DrugDraftFields({
                 key={category}
                 checked={draft.category === category}
                 label={category}
+                name={categoryRadioName}
                 onChange={() => selectCategory(category)}
               />
             ))}

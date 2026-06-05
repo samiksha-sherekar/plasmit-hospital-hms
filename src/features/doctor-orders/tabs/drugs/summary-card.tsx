@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import type { DrugOrder, OrderDraft } from "./types";
 import { categoryTone } from "./utils";
 
-type SummarySortKey = "name" | "category" | "form" | "route" | "dosage" | "frequency" | "days" | "orderedQty" | "instructions" | "taper";
+type SummarySortKey = "name" | "category" | "form" | "route" | "dosage" | "frequency" | "days" | "orderedQty" | "pharmacy" | "instructions" | "taper";
 type SummarySort = { key: SummarySortKey; direction: "asc" | "desc" };
 
 const columns: { key: SummarySortKey | "actions"; label: string; className?: string }[] = [
@@ -22,6 +22,7 @@ const columns: { key: SummarySortKey | "actions"; label: string; className?: str
   { key: "frequency", label: "Frequency" },
   { key: "days", label: "Days" },
   { key: "orderedQty", label: "Total Qty" },
+  { key: "pharmacy", label: "Pharmacy" },
   { key: "instructions", label: "Instruction" },
   { key: "taper", label: "Taper dose" },
   { key: "actions", label: "Actions", className: "text-right" },
@@ -40,8 +41,13 @@ function SortButton({ label, column, sort, onSort }: { label: string; column: Su
 }
 
 function draftValue(draft: OrderDraft, key: SummarySortKey) {
-  if (key === "dosage") return draft.dosage ? `${draft.dosage} ${draft.doseUnit}` : draft.maxDosage;
-  if (key === "frequency") return !draft.category || draft.category === "Unscheduled" || draft.category === "SOS" || draft.category === "STAT" || draft.category === "Bolus" ? "" : draft.frequency;
+  if (key === "dosage") {
+    if (draft.category === "Continuous") return draft.totalDose ? `${draft.totalDose} ${draft.totalDoseUnit}` : `${draft.rateDose} ${draft.rateUnit}/${draft.rateTimeUnit}`;
+    if (draft.category === "Intermittent") return draft.totalDose ? `${draft.totalDose} ${draft.totalDoseUnit}` : `${draft.rateDose} ${draft.rateUnit}/${draft.rateTimeUnit}`;
+    if (draft.category === "Bolus") return draft.bolusDose ? `${draft.bolusDose} ${draft.bolusUnit}` : `${draft.dosage} ${draft.doseUnit}`;
+    return draft.dosage ? `${draft.dosage} ${draft.doseUnit}` : draft.maxDosage;
+  }
+  if (key === "frequency") return !draft.category || draft.category === "Unscheduled" || draft.category === "STAT" || draft.category === "Bolus" || draft.category === "Continuous" ? "" : draft.frequency;
   if (key === "days") return draft.category === "Unscheduled" || draft.category === "STAT" || draft.category === "Bolus" ? "" : draft.days;
   if (key === "taper") return draft.taperDoses.map((row) => `${row.dose} ${row.unit} ${row.frequency} ${row.fromDate} ${row.toDate}`).join(" ");
   return draft[key] ?? "";
@@ -93,7 +99,7 @@ export function SummaryCard({
         ) : (
           <div className="overflow-hidden rounded-lg border border-border">
             <div className="max-w-full overflow-x-auto">
-              <table className="w-full min-w-[1040px] border-collapse text-left text-sm">
+              <table className="w-full min-w-[1160px] border-collapse text-left text-sm">
                 <thead className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   <tr>
                     {columns.map((column) => (
@@ -116,13 +122,14 @@ export function SummaryCard({
                         <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">{draft.form || "-"}</td>
                         <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">{draft.route || "-"}</td>
                         <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">
-                          {draft.dosage ? `${draft.dosage} ${draft.doseUnit}` : draft.maxDosage || "-"}
+                          {draftValue(draft, "dosage") || "-"}
                         </td>
                         <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">
-                          {!draft.category || draft.category === "Unscheduled" || draft.category === "SOS" || draft.category === "STAT" || draft.category === "Bolus" ? "-" : draft.frequency || "-"}
+                          {!draft.category || draft.category === "Unscheduled" || draft.category === "STAT" || draft.category === "Bolus" || draft.category === "Continuous" ? "-" : draft.frequency || "-"}
                         </td>
                         <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">{draft.category === "Unscheduled" || draft.category === "STAT" || draft.category === "Bolus" ? "-" : draft.days || "-"}</td>
                         <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)] font-semibold">{draft.orderedQty || "-"}</td>
+                        <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">{draft.pharmacy || "-"}</td>
                         <td className="max-w-64 truncate px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">{draft.instructions || "-"}</td>
                         <td className="max-w-72 px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">
                           {draft.taperDoses.filter((row) => row.dose || row.frequency || row.fromDate || row.toDate).length ? (

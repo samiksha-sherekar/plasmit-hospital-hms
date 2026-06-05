@@ -45,16 +45,68 @@ export function deriveCategory(draft: Pick<OrderDraft, "sos" | "stat" | "bolus" 
   return draft.category || "";
 }
 
-export function calculateAutoQty(category: DraftCategory, frequency: string, days: string, dose = "1", totalDose = "") {
+function toNumber(value: string) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
+function toHours(value: number, unit: string) {
+  if (unit === "sec") return value / 3600;
+  if (unit === "min") return value / 60;
+  if (unit === "day") return value * 24;
+  return value;
+}
+
+function durationInRateUnits(duration: number, durationUnit: string, rateTimeUnit: string) {
+  const hours = toHours(duration, durationUnit);
+  if (rateTimeUnit === "sec") return hours * 3600;
+  if (rateTimeUnit === "min") return hours * 60;
+  if (rateTimeUnit === "day") return hours / 24;
+  return hours;
+}
+
+export function calculateAutoQty({
+  category,
+  frequency,
+  days,
+  dose = "1",
+  totalDose = "",
+  bolusDose = "",
+  rateDose = "",
+  totalDuration = "",
+  rateTimeUnit = "hour",
+  totalDurationUnit = "hour",
+}: {
+  category: DraftCategory;
+  frequency: string;
+  days: string;
+  dose?: string;
+  totalDose?: string;
+  bolusDose?: string;
+  rateDose?: string;
+  totalDuration?: string;
+  rateTimeUnit?: string;
+  totalDurationUnit?: string;
+}) {
   const effectiveCategory = category || "Scheduled";
   if (effectiveCategory === "Unscheduled") return 1;
   if (effectiveCategory === "Discontinued") return 0;
-  if (effectiveCategory === "STAT" || effectiveCategory === "Bolus") return 1;
-  const parsedDays = Number(days);
-  const parsedDose = Number(totalDose || dose || 1);
+  if (effectiveCategory === "STAT") return Math.ceil(toNumber(dose) || 1);
+  if (effectiveCategory === "Bolus") return Math.ceil(toNumber(bolusDose) || toNumber(dose) || 1);
+  if (effectiveCategory === "Continuous") {
+    const parsedTotalDose = toNumber(totalDose);
+    if (parsedTotalDose) return Math.ceil(parsedTotalDose);
+
+    const parsedRate = toNumber(rateDose);
+    const parsedDuration = toNumber(totalDuration);
+    if (!parsedRate || !parsedDuration) return 0;
+    return Math.ceil(parsedRate * durationInRateUnits(parsedDuration, totalDurationUnit, rateTimeUnit));
+  }
+
+  const parsedDays = toNumber(days);
+  const parsedDose = toNumber(totalDose || dose || "1");
   const multiplier = frequencyMultiplier[frequency] ?? 1;
-  if (!Number.isFinite(parsedDays) || parsedDays <= 0) return 0;
-  if (!Number.isFinite(parsedDose) || parsedDose <= 0) return 0;
+  if (!parsedDays || !parsedDose) return 0;
   return Math.max(Math.ceil(parsedDose * multiplier * parsedDays), 1);
 }
 
@@ -62,6 +114,7 @@ export function makeDraft(order: DrugOrder): OrderDraft {
   const intermittent = isInjectionForm(order.form) && isIvRoute(order.route);
   const continuous = isContinuousFluid(order.form);
   const category = continuous ? "Continuous" : intermittent ? "Intermittent" : order.category === "SOS" || order.category === "STAT" || order.category === "Bolus" || order.category === "Diluent" ? order.category : "";
+  const defaultContinuousDuration = continuous && Number(order.days) > 0 ? String(Number(order.days) * 24) : "";
 
   return {
     name: order.name,
@@ -100,7 +153,7 @@ export function makeDraft(order: DrugOrder): OrderDraft {
     rateKg: false,
     totalDose: "",
     totalDoseUnit: order.doseUnit,
-    totalDuration: "",
+    totalDuration: defaultContinuousDuration,
     totalDurationUnit: "hour",
     dosageCalcDose: order.dosage,
     dosageCalcUnit: order.doseUnit,

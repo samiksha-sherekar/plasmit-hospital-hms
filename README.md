@@ -37,6 +37,148 @@ Enterprise-grade Hospital Management System frontend for a single-hospital, mult
 - Static loading, empty, error, blocked, read-only, warning, and operational states.
 - Print-safe UI patterns for clinical, audit, billing, QA, and report surfaces.
 
+## Doctor Orders - Drug Order Workflow
+
+The doctor order tab follows the medication order specification and screen deck in `D:\Samiksha\Plasmit\Drug Doc`. The current implementation is UI-only and uses static mock drug data, but the workflow shape matches the documented screen behavior:
+
+- Doctor opens `Orders > Drugs`.
+- Drug picker supports `All Drugs` and `Available Drugs`.
+- Doctor searches by drug, generic name, form, available quantity, or pharmacy.
+- Selected drugs create editable order drafts.
+- Order details render form-based fields for tablet/capsule/syrup/drops/spray/inhaler/ointment/patch/lozenge, injection, IV intermittent infusion, and IV fluid/continuous infusion.
+- Category controls support `SOS`, `STAT`, `Bolus`, `Diluent`, `Intermittent`, and `Continuous`.
+- Route rules are driven by drug form: non-injection forms use oral/topical/eye/ear/nasal/etc., injection uses IM/SC/spinal/IV, and intermittent/continuous orders force IV.
+- The form captures frequency, dosage, units, days, site, diluent, max dose/day, rate, total dose, total duration, start/end date-time, dosage calculation flags, instructions, and taper dose rows.
+- Total quantity auto-calculates from dosage or total dose, frequency, and duration where applicable.
+- Summary updates in real time and allows edit/delete before submit.
+- Submit validates start/end time and required IV diluent, then confirms the selected drug orders.
+
+```mermaid
+flowchart TD
+  A[Doctor Orders screen] --> B[Open Drugs tab]
+  B --> C{Drug scope}
+  C -->|All Drugs| D[Search full drug list]
+  C -->|Available Drugs| E[Search drugs with stock]
+  D --> F[Select one or more drugs]
+  E --> F
+  F --> G[Create editable order draft]
+  G --> H{Drug form and route}
+  H -->|Tablet/capsule/syrup/drops/spray/etc.| I[Form A fields]
+  H -->|Injection non-IV| J[Injection fields with site]
+  H -->|Injection IV intermittent| K[Infusion fields with diluent, rate, dose, duration, date-time]
+  H -->|IV Fluid/continuous| L[Continuous infusion fields with IV route, rate, duration, date-time]
+  I --> M{Category}
+  J --> M
+  K --> M
+  L --> M
+  M -->|SOS| N[Frequency SOS and max dose/day]
+  M -->|STAT or Bolus| O[One-time quantity rules]
+  M -->|Diluent| P[Diluent selection]
+  M -->|Intermittent or Continuous| Q[IV route and infusion details]
+  M -->|Scheduled/default| R[Frequency, dosage, days]
+  N --> S[Auto-calculate total quantity]
+  O --> S
+  P --> S
+  Q --> S
+  R --> S
+  S --> T[Live summary]
+  T --> U{Edit, delete, or submit}
+  U -->|Edit| G
+  U -->|Delete| V[Remove from selected drugs]
+  U -->|Submit| W{Validation}
+  W -->|Invalid start/end time| X[Show error]
+  W -->|Missing IV diluent| Y[Show error]
+  W -->|Valid| Z[Submit drug orders]
+```
+
+```mermaid
+erDiagram
+  DOCTOR ||--o{ DRUG_ORDER_DRAFT : creates
+  PATIENT ||--o{ DRUG_ORDER_DRAFT : receives
+  DRUG ||--o{ DRUG_ORDER_DRAFT : selected_as
+  PHARMACY ||--o{ DRUG_ORDER_DRAFT : supplies
+  DRUG_ORDER_DRAFT ||--o{ TAPER_DOSE : has
+  DRUG_ORDER_DRAFT ||--o| DILUENT : uses
+  DRUG_ORDER_DRAFT ||--o| ADMINISTRATION_SITE : targets
+
+  DOCTOR {
+    string doctorId
+    string name
+    string department
+  }
+
+  PATIENT {
+    string patientId
+    string name
+    number weight
+  }
+
+  DRUG {
+    string drugId
+    string genericName
+    string drugName
+    string form
+    string defaultRoute
+    number defaultDosage
+    string defaultDoseUnit
+    string defaultFrequency
+    number defaultDays
+    number availableQty
+  }
+
+  PHARMACY {
+    string pharmacyId
+    string name
+    string departmentScope
+  }
+
+  DRUG_ORDER_DRAFT {
+    string draftId
+    string category
+    string route
+    number dosage
+    string doseUnit
+    string frequency
+    number days
+    string durationUnit
+    number maxDosePerDay
+    number bolusDose
+    number rateDose
+    string rateUnit
+    string rateTimeUnit
+    number totalDose
+    number totalDuration
+    datetime startDateTime
+    datetime endDateTime
+    number totalQuantity
+    string instructions
+    boolean sos
+    boolean stat
+    boolean bolus
+    boolean intermittent
+    boolean continuous
+  }
+
+  TAPER_DOSE {
+    string taperDoseId
+    number dose
+    string unit
+    string frequency
+    date fromDate
+    date toDate
+  }
+
+  DILUENT {
+    string diluentId
+    string name
+  }
+
+  ADMINISTRATION_SITE {
+    string siteId
+    string name
+  }
+```
+
 ## Documentation
 
 Phase planning lives in `docs`:

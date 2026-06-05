@@ -126,9 +126,20 @@ export function DrugsTab() {
       }
       nextDraft.category = deriveCategory(nextDraft);
 
-      const shouldAutoFill = "frequency" in values || "days" in values || "category" in values || "dosage" in values || "totalDose" in values || "continuous" in values || "intermittent" in values || "sos" in values || "stat" in values || "bolus" in values;
+      const shouldAutoFill = "frequency" in values || "days" in values || "category" in values || "dosage" in values || "totalDose" in values || "bolusDose" in values || "rateDose" in values || "rateTimeUnit" in values || "totalDuration" in values || "totalDurationUnit" in values || "continuous" in values || "intermittent" in values || "sos" in values || "stat" in values || "bolus" in values;
       if (shouldAutoFill) {
-        const nextQty = calculateAutoQty(nextDraft.category, nextDraft.frequency, nextDraft.days, nextDraft.dosage, nextDraft.totalDose);
+        const nextQty = calculateAutoQty({
+          category: nextDraft.category,
+          frequency: nextDraft.frequency,
+          days: nextDraft.days,
+          dose: nextDraft.dosage,
+          totalDose: nextDraft.totalDose,
+          bolusDose: nextDraft.bolusDose,
+          rateDose: nextDraft.rateDose,
+          rateTimeUnit: nextDraft.rateTimeUnit,
+          totalDuration: nextDraft.totalDuration,
+          totalDurationUnit: nextDraft.totalDurationUnit,
+        });
         const nextQtyValue = nextQty > 0 ? String(nextQty) : "";
         if (nextQtyValue !== nextDraft.orderedQty) {
           nextDraft.orderedQty = nextQtyValue;

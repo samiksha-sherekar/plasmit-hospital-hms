@@ -2,12 +2,10 @@
 
 import { ChevronDown } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { DrugDraftFields } from "./field-controls";
 import type { DrugOrder, OrderDraft } from "./types";
-import { categoryTone } from "./utils";
 
 export function OrderDetailsCard({
   orders,
@@ -70,7 +68,7 @@ export function OrderDetailsCard({
                 </button>
                 {open ? (
                   <div className="border-t border-border p-3">
-                    <DrugDraftFields order={order} draft={draft} flash={Boolean(flashIds[order.id])} onChange={(values) => onDraftChange(order.id, values)} />
+                    <DrugDraftFields draft={draft} flash={Boolean(flashIds[order.id])} onChange={(values) => onDraftChange(order.id, values)} />
                   </div>
                 ) : null}
               </div>
