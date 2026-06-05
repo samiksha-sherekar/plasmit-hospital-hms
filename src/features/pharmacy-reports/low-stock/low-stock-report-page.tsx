@@ -28,13 +28,13 @@ export function LowStockReportPage() {
     { header: "Category", accessorKey: "category" },
     { header: "Current qty", accessorKey: "currentQty" },
     { header: "Reorder level", accessorKey: "reorderLevel" },
-    { header: "Shortfall", accessorKey: "shortfall" },
+    // { header: "Shortfall", accessorKey: "shortfall" },
     { header: "Location", accessorKey: "location" },
     { header: "Status", cell: ({ row }) => <StatusBadge status={row.original.status} /> },
   ], []);
 
   return (
-    <ReportPageShell title="Low Stock" icon={Tags}>
+    <ReportPageShell title="Low Stock">
       <FilterBar search={search} onSearch={setSearch} placeholder="Search drug, category, location, status...">
         <NativeSelect label="Category" value={category} onChange={setCategory} options={categories} />
         <NativeSelect label="Status" value={status} onChange={setStatus} options={statuses} />
