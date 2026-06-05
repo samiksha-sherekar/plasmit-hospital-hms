@@ -57,15 +57,20 @@ export function OrderDetailsCard({
                   <div className="min-w-0">
                     <div className="truncate text-sm font-semibold text-foreground">{draft.name}</div>
                     <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                      <span>{draft.form || order.form}</span>
-                      {draft.category ? <Badge tone={categoryTone(draft.category)}>{draft.category}</Badge> : <Badge tone="muted">Category not selected</Badge>}
+                      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        <span>{draft.genericName}</span>
+                        <span>{order.name}</span>
+                        <span>{draft.form || order.form}</span>
+                        <span>Available: {order.availableQty}</span>
+                        <span>{order.pharmacy}</span>
+                      </div>
                     </div>
                   </div>
                   <ChevronDown className={["h-4 w-4 shrink-0 text-muted-foreground transition", open ? "rotate-180" : ""].join(" ")} />
                 </button>
                 {open ? (
                   <div className="border-t border-border p-3">
-                    <DrugDraftFields draft={draft} flash={Boolean(flashIds[order.id])} onChange={(values) => onDraftChange(order.id, values)} />
+                    <DrugDraftFields order={order} draft={draft} flash={Boolean(flashIds[order.id])} onChange={(values) => onDraftChange(order.id, values)} />
                   </div>
                 ) : null}
               </div>

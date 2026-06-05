@@ -41,8 +41,8 @@ function SortButton({ label, column, sort, onSort }: { label: string; column: Su
 
 function draftValue(draft: OrderDraft, key: SummarySortKey) {
   if (key === "dosage") return draft.dosage ? `${draft.dosage} ${draft.doseUnit}` : draft.maxDosage;
-  if (key === "frequency") return !draft.category || draft.category === "Unscheduled" || draft.category === "SOS" ? "" : draft.frequency;
-  if (key === "days") return draft.category === "Unscheduled" ? "" : draft.days;
+  if (key === "frequency") return !draft.category || draft.category === "Unscheduled" || draft.category === "SOS" || draft.category === "STAT" || draft.category === "Bolus" ? "" : draft.frequency;
+  if (key === "days") return draft.category === "Unscheduled" || draft.category === "STAT" || draft.category === "Bolus" ? "" : draft.days;
   if (key === "taper") return draft.taperDoses.map((row) => `${row.dose} ${row.unit} ${row.frequency} ${row.fromDate} ${row.toDate}`).join(" ");
   return draft[key] ?? "";
 }
@@ -119,9 +119,9 @@ export function SummaryCard({
                           {draft.dosage ? `${draft.dosage} ${draft.doseUnit}` : draft.maxDosage || "-"}
                         </td>
                         <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">
-                          {!draft.category || draft.category === "Unscheduled" || draft.category === "SOS" ? "-" : draft.frequency || "-"}
+                          {!draft.category || draft.category === "Unscheduled" || draft.category === "SOS" || draft.category === "STAT" || draft.category === "Bolus" ? "-" : draft.frequency || "-"}
                         </td>
-                        <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">{draft.category === "Unscheduled" ? "-" : draft.days || "-"}</td>
+                        <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">{draft.category === "Unscheduled" || draft.category === "STAT" || draft.category === "Bolus" ? "-" : draft.days || "-"}</td>
                         <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)] font-semibold">{draft.orderedQty || "-"}</td>
                         <td className="max-w-64 truncate px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">{draft.instructions || "-"}</td>
                         <td className="max-w-72 px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">

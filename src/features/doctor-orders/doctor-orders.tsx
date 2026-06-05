@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useSearchParams } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import { ClipboardCheck, Droplet, FileSearch, FlaskConical, Layers, Pill, Stethoscope, UserPlus } from "lucide-react";
 
@@ -92,7 +91,7 @@ export function DoctorOrdersPage() {
 //   requestedTab && tabs.some((tab) => tab.id === requestedTab)
 //     ? requestedTab
 //     : "blood";
-const defaultTab = "blood"
+const defaultTab = "drugs"
   return (
     <div className="space-y-6">
       <PageHeader
