@@ -36,6 +36,11 @@ export function routeOptionsForForm(form: string, continuous: boolean, intermitt
   return formARoutes;
 }
 
+const autoQtyForms = ["Tablet", "Capsule", "Lozenge"] as const;
+export function isAutoQtyForm(form: string) {
+  return autoQtyForms.includes(form as typeof autoQtyForms[number]);
+}
+
 export function deriveCategory(draft: Pick<OrderDraft, "sos" | "stat" | "bolus" | "intermittent" | "continuous" | "category">): DraftCategory {
   if (draft.continuous) return "Continuous";
   if (draft.intermittent) return "Intermittent";
@@ -66,6 +71,7 @@ function durationInRateUnits(duration: number, durationUnit: string, rateTimeUni
 }
 
 export function calculateAutoQty({
+  form,
   category,
   frequency,
   days,
@@ -77,6 +83,7 @@ export function calculateAutoQty({
   rateTimeUnit = "hour",
   totalDurationUnit = "hour",
 }: {
+  form: string;
   category: DraftCategory;
   frequency: string;
   days: string;
@@ -91,6 +98,7 @@ export function calculateAutoQty({
   const effectiveCategory = category || "Scheduled";
   if (effectiveCategory === "Unscheduled") return 1;
   if (effectiveCategory === "Discontinued") return 0;
+  if (!isAutoQtyForm(form)) return 1;
   if (effectiveCategory === "STAT") return Math.ceil(toNumber(dose) || 1);
   if (effectiveCategory === "Bolus") return Math.ceil(toNumber(bolusDose) || toNumber(dose) || 1);
   if (effectiveCategory === "Continuous") {
@@ -115,6 +123,7 @@ export function makeDraft(order: DrugOrder): OrderDraft {
   const continuous = isContinuousFluid(order.form);
   const category = continuous ? "Continuous" : intermittent ? "Intermittent" : order.category === "SOS" || order.category === "STAT" || order.category === "Bolus" || order.category === "Diluent" ? order.category : "";
   const defaultContinuousDuration = continuous && Number(order.days) > 0 ? String(Number(order.days) * 24) : "";
+  const orderedQty = isAutoQtyForm(order.form) ? String(order.orderedQty || 1) : "1";
 
   return {
     name: order.name,
@@ -131,7 +140,7 @@ export function makeDraft(order: DrugOrder): OrderDraft {
     endTime: "",
     instructions: order.instructions,
     category,
-    orderedQty: order.orderedQty ? String(order.orderedQty) : "",
+    orderedQty,
     route: order.route,
     doseUnit: order.doseUnit,
     maxDoseUnit: order.doseUnit,
@@ -158,9 +167,19 @@ export function makeDraft(order: DrugOrder): OrderDraft {
     dosageCalcDose: order.dosage,
     dosageCalcUnit: order.doseUnit,
     dosageCalcTimeUnit: "day",
+    dosageCalcFrequency: order.frequency,
     dosageCalcKg: false,
     dosageCalcFreq: false,
+    weightKg: "70",
     hasContraindication: Boolean(order.hasContraindication),
+    taperEntry: {
+      id: "",
+      dose: "",
+      unit: "",
+      frequency: "",
+      fromDate: "",
+      toDate: "",
+    },
     taperDoses: [],
   };
 }

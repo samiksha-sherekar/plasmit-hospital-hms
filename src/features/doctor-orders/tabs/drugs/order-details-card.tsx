@@ -60,7 +60,6 @@ export function OrderDetailsCard({
                         <span>{order.name}</span>
                         <span>{draft.form || order.form}</span>
                         <span>Available: {order.availableQty}</span>
-                        <span>{order.pharmacy}</span>
                       </div>
                     </div>
                   </div>

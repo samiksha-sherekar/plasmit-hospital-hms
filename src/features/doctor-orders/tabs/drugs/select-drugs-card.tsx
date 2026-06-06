@@ -94,7 +94,7 @@ export function SelectDrugsCard({
                   inputRef.current?.blur();
                 }
               }}
-              placeholder={open ? "Search drug, generic, form, quantity, pharmacy..." : "Select drugs..."}
+              placeholder={open ? "Search drug, generic, form, quantity..." : "Select drugs..."}
             />
             <button
               type="button"
@@ -145,9 +145,7 @@ export function SelectDrugsCard({
                         <div className="mt-1 text-xs text-muted-foreground">
                           {order.genericName} / {order.form}
                         </div>
-                        <div className="mt-1 text-xs text-muted-foreground">
-                          Available: {order.availableQty} / {order.pharmacy}
-                        </div>
+                        <div className="mt-1 text-xs text-muted-foreground">Available: {order.availableQty}</div>
                       </div>
                     </label>
                   );

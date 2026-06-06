@@ -11,7 +11,6 @@ export const timeUnits: TimeUnit[] = ["sec", "min", "hour", "day"];
 export const infusionTimeUnits: TimeUnit[] = ["sec", "min", "hour"];
 export const durationUnits: DurationUnit[] = ["Days", "Weeks", "Months"];
 export const instructions = ["After food", "Before food", "Evening", "Bed time", "Early morning before food", "Mix with water", "Mix with milk", "Apply on skin", "Inhale through nose", "Drops in eye", "Drops in mouth", "Drops in ear", "Drops in nose", "After lunch", "After dinner", "After breakfast"];
-export const pharmacies = ["Outpatient pharmacy 1", "Outpatient pharmacy 2", "Emergency pharmacy", "Inpatient pharmacy"];
 export const sites = ["Deltoid", "Vastus lateralis", "Gluteus maximus", "Gluteus medius", "Gluteus dorsalis", "Spinal"];
 export const diluents = ["Normal Saline", "Dextrose"];
 

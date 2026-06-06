@@ -11,7 +11,7 @@ import { OrderDetailsCard } from "./drugs/order-details-card";
 import { SelectDrugsCard } from "./drugs/select-drugs-card";
 import { SummaryCard } from "./drugs/summary-card";
 import type { DrugOrder, DrugScope, OrderDraft } from "./drugs/types";
-import { calculateAutoQty, deriveCategory, isContinuousFluid, isFormADrug, isInjectionForm, isIvRoute, makeDraft, routeOptionsForForm } from "./drugs/utils";
+import { calculateAutoQty, deriveCategory, isAutoQtyForm, isContinuousFluid, isFormADrug, isInjectionForm, isIvRoute, makeDraft, routeOptionsForForm } from "./drugs/utils";
 
 function SubmitOrderCard({ count, onSubmit }: { count: number; onSubmit: () => void }) {
   return (
@@ -41,7 +41,7 @@ export function DrugsTab() {
 
   const filteredOrders = orders.filter((order) => {
     const matchesScope = drugScope === "All Drugs" || order.availableQty > 0;
-    const matchesSearch = `${order.genericName} ${order.name} ${order.form} ${order.availableQty} ${order.pharmacy}`.toLowerCase().includes(search.trim().toLowerCase());
+    const matchesSearch = `${order.genericName} ${order.name} ${order.form} ${order.availableQty}`.toLowerCase().includes(search.trim().toLowerCase());
     return matchesScope && matchesSearch;
   });
   const selectableOrders = filteredOrders;
@@ -126,9 +126,13 @@ export function DrugsTab() {
       }
       nextDraft.category = deriveCategory(nextDraft);
 
-      const shouldAutoFill = "frequency" in values || "days" in values || "category" in values || "dosage" in values || "totalDose" in values || "bolusDose" in values || "rateDose" in values || "rateTimeUnit" in values || "totalDuration" in values || "totalDurationUnit" in values || "continuous" in values || "intermittent" in values || "sos" in values || "stat" in values || "bolus" in values;
+      if (formChanged && !isAutoQtyForm(nextDraft.form)) {
+        nextDraft.orderedQty = "1";
+      }
+      const shouldAutoFill = isAutoQtyForm(nextDraft.form) && !("orderedQty" in values) && ("frequency" in values || "days" in values || "category" in values || "dosage" in values || "totalDose" in values || "bolusDose" in values || "rateDose" in values || "rateTimeUnit" in values || "totalDuration" in values || "totalDurationUnit" in values || "continuous" in values || "intermittent" in values || "sos" in values || "stat" in values || "bolus" in values);
       if (shouldAutoFill) {
         const nextQty = calculateAutoQty({
+          form: nextDraft.form,
           category: nextDraft.category,
           frequency: nextDraft.frequency,
           days: nextDraft.days,
@@ -145,6 +149,9 @@ export function DrugsTab() {
           nextDraft.orderedQty = nextQtyValue;
           flashTotalQty(id);
         }
+      }
+      if (!isAutoQtyForm(nextDraft.form) && !nextDraft.orderedQty) {
+        nextDraft.orderedQty = "1";
       }
 
       return { ...current, [id]: nextDraft };

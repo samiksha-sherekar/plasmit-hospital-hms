@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import type { DrugOrder, OrderDraft } from "./types";
 import { categoryTone } from "./utils";
 
-type SummarySortKey = "name" | "category" | "form" | "route" | "dosage" | "frequency" | "days" | "orderedQty" | "pharmacy" | "instructions" | "taper";
+type SummarySortKey = "name" | "category" | "form" | "route" | "dosage" | "frequency" | "days" | "orderedQty" | "instructions" | "taper";
 type SummarySort = { key: SummarySortKey; direction: "asc" | "desc" };
 
 const columns: { key: SummarySortKey | "actions"; label: string; className?: string }[] = [
@@ -22,7 +22,6 @@ const columns: { key: SummarySortKey | "actions"; label: string; className?: str
   { key: "frequency", label: "Frequency" },
   { key: "days", label: "Days" },
   { key: "orderedQty", label: "Total Qty" },
-  { key: "pharmacy", label: "Pharmacy" },
   { key: "instructions", label: "Instruction" },
   { key: "taper", label: "Taper dose" },
   { key: "actions", label: "Actions", className: "text-right" },
@@ -99,7 +98,7 @@ export function SummaryCard({
         ) : (
           <div className="overflow-hidden rounded-lg border border-border">
             <div className="max-w-full overflow-x-auto">
-              <table className="w-full min-w-[1160px] border-collapse text-left text-sm">
+              <table className="w-full min-w-[980px] border-collapse text-left text-sm">
                 <thead className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   <tr>
                     {columns.map((column) => (
@@ -129,7 +128,6 @@ export function SummaryCard({
                         </td>
                         <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">{draft.category === "Unscheduled" || draft.category === "STAT" || draft.category === "Bolus" ? "-" : draft.days || "-"}</td>
                         <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)] font-semibold">{draft.orderedQty || "-"}</td>
-                        <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">{draft.pharmacy || "-"}</td>
                         <td className="max-w-64 truncate px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">{draft.instructions || "-"}</td>
                         <td className="max-w-72 px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">
                           {draft.taperDoses.filter((row) => row.dose || row.frequency || row.fromDate || row.toDate).length ? (

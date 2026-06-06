@@ -84,8 +84,11 @@ export type OrderDraft = {
   dosageCalcDose: string;
   dosageCalcUnit: DoseUnit;
   dosageCalcTimeUnit: TimeUnit;
+  dosageCalcFrequency: string;
   dosageCalcKg: boolean;
   dosageCalcFreq: boolean;
+  weightKg: string;
   hasContraindication: boolean;
+  taperEntry: TaperDose;
   taperDoses: TaperDose[];
 };

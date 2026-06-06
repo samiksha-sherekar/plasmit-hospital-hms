@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { AlertTriangle, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,15 +10,15 @@ import {
   diluents,
   doseUnits,
   durationUnits,
+  frequencyMultiplier,
   frequencies,
   infusionTimeUnits,
   instructions,
-  pharmacies,
   sites,
   timeUnits,
 } from "./data";
 import type { DoseUnit, DraftCategory, OrderDraft, TaperDose } from "./types";
-import { isContinuousFluid, isFormADrug, isInjectionForm, isIvRoute, routeOptionsForForm } from "./utils";
+import { isAutoQtyForm, isContinuousFluid, isFormADrug, isInjectionForm, isIvRoute, routeOptionsForForm } from "./utils";
 
 export function FieldLabel({ children }: { children: React.ReactNode }) {
   return <span className="text-xs font-medium text-muted-foreground">{children}</span>;
@@ -108,9 +108,8 @@ function useDraftWarnings(draft: OrderDraft) {
   const exceedsMaxDose = draft.sos && Number.isFinite(dose) && Number.isFinite(maxDose) && maxDose > 0 && dose * frequencyMultiplier > maxDose;
   const needsDiluent = isIvRoute(draft.route) && !draft.diluent;
   const invalidTime = Boolean(draft.startDate && draft.endDate && draft.startTime && draft.endTime && `${draft.endDate}T${draft.endTime}` <= `${draft.startDate}T${draft.startTime}`);
-  const needsWeight = draft.continuous && (draft.rateKg || draft.bolusKg);
 
-  return { exceedsMaxDose, needsDiluent, invalidTime, needsWeight };
+  return { exceedsMaxDose, needsDiluent, invalidTime };
 }
 
 export function DrugDraftFields({
@@ -141,8 +140,18 @@ export function DrugDraftFields({
   const showSite = injection && !infusion;
   const showRate = infusion || continuous;
   const showDiluent = ivRoute || draft.category === "Diluent";
-  const taperDoses = draft.taperDoses.length ? draft.taperDoses : [createTaperDose(draft.frequency, draft.doseUnit)];
+  const taperDoses = draft.taperDoses;
   const warnings = useDraftWarnings(draft);
+  const autoQtyForm = isAutoQtyForm(draft.form);
+  const displayedOrderedQty = autoQtyForm ? draft.orderedQty : draft.orderedQty || "1";
+  const dosageCalcWeight = Number(draft.weightKg || "0");
+  const totalDosageValue = (() => {
+    const dose = Number(draft.dosageCalcDose);
+    if (!dose) return "0";
+    const weightFactor = dosageCalcWeight || 70;
+    const freqMultiplier = frequencyMultiplier[draft.dosageCalcFrequency] ?? 1;
+    return `${Math.ceil(dose * weightFactor * freqMultiplier)} ${draft.dosageCalcUnit || ""}`.trim();
+  })();
   const categoryOptions: DraftCategory[] = formA ? ["SOS", "STAT"] : ["SOS", "STAT", "Bolus", "Diluent", "Intermittent", "Continuous"];
 
   const selectCategory = (category: DraftCategory) => {
@@ -171,17 +180,30 @@ export function DrugDraftFields({
   };
 
   const updateTaperDose = (id: string, values: Partial<TaperDose>) => {
-    const currentRows = draft.taperDoses.length ? draft.taperDoses : taperDoses;
-    onChange({ taperDoses: currentRows.map((row) => (row.id === id ? { ...row, ...values } : row)) });
+    onChange({ taperDoses: taperDoses.map((row) => (row.id === id ? { ...row, ...values } : row)) });
   };
 
-  const addTaperDose = () => {
-    onChange({ taperDoses: [...taperDoses, createTaperDose(draft.frequency, draft.doseUnit)] });
+  const saveTaperEntry = () => {
+    const nextEntry = draft.taperEntry;
+    if (!(nextEntry.dose || nextEntry.unit || nextEntry.frequency || nextEntry.fromDate || nextEntry.toDate)) {
+      return;
+    }
+
+    onChange({
+      taperDoses: [...taperDoses, { ...nextEntry, id: `taper-${Date.now()}-${Math.random().toString(36).slice(2, 8)}` }],
+      taperEntry: createTaperDose(),
+    });
   };
 
   const removeTaperDose = (id: string) => {
-    const nextRows = taperDoses.filter((row) => row.id !== id);
-    onChange({ taperDoses: nextRows.length ? nextRows : [createTaperDose(draft.frequency, draft.doseUnit)] });
+    onChange({ taperDoses: taperDoses.filter((row) => row.id !== id) });
+  };
+
+  const editTaperDose = (row: TaperDose) => {
+    onChange({
+      taperEntry: { ...row },
+      taperDoses: taperDoses.filter((dose) => dose.id !== row.id),
+    });
   };
 
   return (
@@ -192,17 +214,6 @@ export function DrugDraftFields({
           Contraindication alert acknowledged for this order.
         </div>
       ) : null}
-
-      {/* <div className="rounded-md border border-border bg-surface-muted p-3">
-        <div className="text-sm font-semibold text-foreground">{draft.name}</div>
-        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-          <span>{draft.genericName}</span>
-          <span>{order.name}</span>
-          <span>{draft.form || order.form}</span>
-          <span>Available: {order.availableQty}</span>
-          <span>{order.pharmacy}</span>
-        </div>
-      </div> */}
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_180px]">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -247,36 +258,6 @@ export function DrugDraftFields({
               {warnings.needsDiluent ? <span className="text-xs font-medium text-danger">Diluent is required for IV route.</span> : null}
             </label>
           ) : null}
-          <label className="space-y-2">
-            <FieldLabel>Pharmacy</FieldLabel>
-            <SelectField value={draft.pharmacy} options={pharmacies} onChange={(pharmacy) => onChange({ pharmacy })} />
-          </label>
-          {draft.sos ? (
-            <label className="space-y-2">
-              <FieldLabel>Max Dose/Day</FieldLabel>
-              <div className="grid grid-cols-[minmax(0,1fr)_105px] gap-2">
-                <NumberInput value={draft.maxDosage} onChange={(event) => onChange({ maxDosage: event.target.value })} />
-                <SelectField value={draft.maxDoseUnit} options={doseUnits} onChange={(maxDoseUnit) => onChange({ maxDoseUnit })} />
-              </div>
-              {warnings.exceedsMaxDose ? <span className="text-xs font-medium text-danger">Dose exceeds max dose/day.</span> : null}
-            </label>
-          ) : null}
-          {showRate ? (
-            <label className="space-y-2">
-              <FieldLabel>Rate</FieldLabel>
-              <div className="grid grid-cols-[minmax(0,1fr)_95px_95px] gap-2">
-                <NumberInput value={draft.rateDose} onChange={(event) => onChange({ rateDose: event.target.value })} />
-                <SelectField value={draft.rateUnit} options={doseUnits} onChange={(rateUnit) => onChange({ rateUnit })} />
-                <SelectField value={draft.rateTimeUnit} options={infusionTimeUnits} onChange={(rateTimeUnit) => onChange({ rateTimeUnit })} />
-              </div>
-            </label>
-          ) : null}
-          {continuous ? (
-            <div className="space-y-2">
-              <FieldLabel>Rate /kg</FieldLabel>
-              <ToggleButton active={draft.rateKg} label="/kg" onClick={() => onChange({ rateKg: !draft.rateKg })} />
-            </div>
-          ) : null}
           {showRate ? (
             <>
               <label className="space-y-2">
@@ -295,36 +276,86 @@ export function DrugDraftFields({
               </label>
             </>
           ) : null}
-          <label className="space-y-2">
-            <FieldLabel>Start Date</FieldLabel>
-            <Input type="date" min={today} value={draft.startDate} onChange={(event) => onChange({ startDate: event.target.value })} />
-          </label>
-          {showRate ? (
+          {draft.sos ? (
             <label className="space-y-2">
-              <FieldLabel>Start Time</FieldLabel>
-              <Input type="time" value={draft.startTime} onChange={(event) => onChange({ startTime: event.target.value })} />
+              <FieldLabel>Max Dose/Day</FieldLabel>
+              <div className="grid grid-cols-[minmax(0,1fr)_105px] gap-2">
+                <NumberInput value={draft.maxDosage} onChange={(event) => onChange({ maxDosage: event.target.value })} />
+                <SelectField value={draft.maxDoseUnit} options={doseUnits} onChange={(maxDoseUnit) => onChange({ maxDoseUnit })} />
+              </div>
+              {warnings.exceedsMaxDose ? <span className="text-xs font-medium text-danger">Dose exceeds max dose/day.</span> : null}
             </label>
           ) : null}
+          {showRate ? (
+            <label className="space-y-2 xl:col-span-2">
+              <FieldLabel>Rate</FieldLabel>
+
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <NumberInput
+                    value={draft.rateDose}
+                    onChange={(event) => onChange({ rateDose: event.target.value })}
+                  />
+                </div>
+
+                <div className="w-[100px]">
+                  <SelectField
+                    value={draft.rateUnit}
+                    options={doseUnits}
+                    onChange={(rateUnit) => onChange({ rateUnit })}
+                  />
+                </div>
+
+                <div className="w-[100px]">
+                  <SelectField
+                    value={draft.rateTimeUnit}
+                    options={infusionTimeUnits}
+                    onChange={(rateTimeUnit) => onChange({ rateTimeUnit })}
+                  />
+                </div>
+              </div>
+            </label>
+          ) : null}
+          
+          <label className="space-y-2">
+            <FieldLabel>Start Date</FieldLabel>
+            <Input
+              type="date"
+              min={today}
+              value={draft.startDate}
+              onChange={(event) =>
+                onChange({
+                  startDate: event.target.value,
+                  endDate: draft.endDate && event.target.value > draft.endDate ? "" : draft.endDate,
+                })
+              }
+            />
+          </label>
+          <label className="space-y-2">
+            <FieldLabel>Start Time</FieldLabel>
+            <Input type="time" value={draft.startTime} onChange={(event) => onChange({ startTime: event.target.value })} />
+          </label>
           <label className="space-y-2">
             <FieldLabel>End Date</FieldLabel>
             <Input type="date" min={endDateMin} value={draft.endDate} onChange={(event) => onChange({ endDate: event.target.value })} />
           </label>
-          {showRate ? (
-            <label className="space-y-2">
-              <FieldLabel>End Time</FieldLabel>
-              <Input type="time" value={draft.endTime} onChange={(event) => onChange({ endTime: event.target.value })} />
-              {warnings.invalidTime ? <span className="text-xs font-medium text-danger">Start time must be before end time.</span> : null}
-            </label>
-          ) : null}
           <label className="space-y-2">
-            <FieldLabel>Tot quantity</FieldLabel>
+            <FieldLabel>End Time</FieldLabel>
+            <Input type="time" value={draft.endTime} onChange={(event) => onChange({ endTime: event.target.value })} />
+            {warnings.invalidTime ? <span className="text-xs font-medium text-danger">Start time must be before end time.</span> : null}
+          </label>
+          <label className="space-y-2">
+            <FieldLabel>Total Quantity</FieldLabel>
             <Input
               type="number"
-              min={0}
-              readOnly
-              className={flash ? "border-success bg-success/10 font-semibold ring-2 ring-success/20 transition" : "bg-surface-muted font-semibold transition"}
-              value={draft.orderedQty}
+              min={1}
+              value={displayedOrderedQty}
+              onChange={(event) => onChange({ orderedQty: event.target.value || "1" })}
+              className={flash ? "border-success bg-success/10 font-semibold ring-2 ring-success/20 transition" : "font-semibold transition"}
             />
+            <span className="text-xs text-muted-foreground">
+              {/* {autoQtyForm ? "Auto-calculated for tablet, capsule, and lozenge; edit as needed." : "Defaults to 1 for other forms; edit to adjust."} */}
+            </span>
           </label>
           <label className="space-y-2 sm:col-span-2">
             <FieldLabel>Instructions</FieldLabel>
@@ -371,49 +402,84 @@ export function DrugDraftFields({
         </div>
       ) : null}
 
-      <div className="grid gap-4 rounded-md border border-border bg-surface-muted p-3 md:grid-cols-4">
-        <label className="space-y-2">
+      <div className="flex items-end gap-4 rounded-md border border-border bg-surface-muted p-3">
+        <div>
           <FieldLabel>Dosage Cal Dose</FieldLabel>
-          <NumberInput value={draft.dosageCalcDose} onChange={(event) => onChange({ dosageCalcDose: event.target.value })} />
-        </label>
-        <label className="space-y-2">
+          <NumberInput
+            value={draft.dosageCalcDose}
+            onChange={(event) => onChange({ dosageCalcDose: event.target.value })}
+          />
+        </div>
+
+        <div>
           <FieldLabel>Unit</FieldLabel>
-          <SelectField value={draft.dosageCalcUnit} options={doseUnits} onChange={(dosageCalcUnit) => onChange({ dosageCalcUnit })} />
-        </label>
-        <label className="space-y-2">
-          <FieldLabel>Per Time Unit</FieldLabel>
-          <SelectField value={draft.dosageCalcTimeUnit} options={timeUnits} onChange={(dosageCalcTimeUnit) => onChange({ dosageCalcTimeUnit })} />
-        </label>
-        <div className="space-y-2">
-          <FieldLabel>Calculation</FieldLabel>
-          <div className="flex gap-2">
-            <ToggleButton active={draft.dosageCalcKg} label="/kg" onClick={() => onChange({ dosageCalcKg: !draft.dosageCalcKg })} />
-            <ToggleButton active={draft.dosageCalcFreq} label="Freq" onClick={() => onChange({ dosageCalcFreq: !draft.dosageCalcFreq })} />
-          </div>
-          {warnings.needsWeight ? <span className="text-xs font-medium text-danger">Patient weight not recorded - please update vitals.</span> : null}
+          <SelectField
+            value={draft.dosageCalcUnit}
+            options={doseUnits}
+            onChange={(dosageCalcUnit) => onChange({ dosageCalcUnit })}
+          />
+        </div>
+
+        <div>
+          <FieldLabel>Frequency</FieldLabel>
+          <SelectField
+            value={draft.dosageCalcFrequency}
+            options={frequencies}
+            onChange={(dosageCalcFrequency) => onChange({ dosageCalcFrequency })}
+          />
+        </div>
+
+        <div>
+          <FieldLabel>Weight(Kg)</FieldLabel>
+          <Input readOnly value={draft.weightKg} />
+        </div>
+
+        <div>
+          <FieldLabel>Total Dosage</FieldLabel>
+          <Input readOnly value={totalDosageValue} />
         </div>
       </div>
 
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
           <FieldLabel>Taper Dose</FieldLabel>
-          <Button type="button" size="icon" variant="outline" onClick={addTaperDose} aria-label="Add taper dose">
+          <Button type="button" size="icon" variant="outline" onClick={saveTaperEntry} aria-label="Add taper dose">
             <Plus className="h-4 w-4" />
           </Button>
         </div>
+        <div className="rounded-md border border-border bg-surface-muted p-3">
+          <div className="grid gap-2 md:grid-cols-[1fr_110px_150px_1fr_1fr]">
+            <NumberInput value={draft.taperEntry.dose} onChange={(event) => onChange({ taperEntry: { ...draft.taperEntry, dose: event.target.value } })} placeholder="Dose" />
+            <SelectField value={draft.taperEntry.unit} options={doseUnits} onChange={(unit) => onChange({ taperEntry: { ...draft.taperEntry, unit } })} />
+            <SelectField value={draft.taperEntry.frequency} options={frequencies} onChange={(frequency) => onChange({ taperEntry: { ...draft.taperEntry, frequency } })} />
+            <Input type="date" value={draft.taperEntry.fromDate} min={today} onChange={(event) => onChange({ taperEntry: { ...draft.taperEntry, fromDate: event.target.value } })} aria-label="From date" />
+            <Input type="date" value={draft.taperEntry.toDate} min={draft.taperEntry.fromDate || today} onChange={(event) => onChange({ taperEntry: { ...draft.taperEntry, toDate: event.target.value } })} aria-label="To date" />
+          </div>
+        </div>
         <div className="space-y-2">
-          {taperDoses.map((row) => (
-            <div key={row.id} className="grid gap-2 rounded-md border border-border bg-surface-muted p-2 sm:grid-cols-[1fr_110px_150px_1fr_1fr_40px]">
-              <NumberInput value={row.dose} onChange={(event) => updateTaperDose(row.id, { dose: event.target.value })} placeholder="Dose" />
-              <SelectField value={row.unit} options={doseUnits} onChange={(unit) => updateTaperDose(row.id, { unit })} />
-              <SelectField value={row.frequency} options={frequencies} onChange={(frequency) => updateTaperDose(row.id, { frequency })} />
-              <Input type="date" value={row.fromDate} min={today} onChange={(event) => updateTaperDose(row.id, { fromDate: event.target.value })} aria-label="From date" />
-              <Input type="date" value={row.toDate} min={row.fromDate || today} onChange={(event) => updateTaperDose(row.id, { toDate: event.target.value })} aria-label="To date" />
-              <Button type="button" size="icon" variant="ghost" onClick={() => removeTaperDose(row.id)} aria-label="Remove taper dose">
-                <Trash2 className="h-4 w-4" />
-              </Button>
+          {taperDoses.length ? (
+            taperDoses.map((row) => (
+              <div key={row.id} className="grid gap-2 rounded-md border border-border bg-surface p-3 md:grid-cols-[1fr_110px_150px_1fr_1fr_88px] md:items-center">
+                <div className="text-sm font-medium text-foreground">{row.dose || "-"}</div>
+                <div className="text-sm text-muted-foreground">{row.unit || "-"}</div>
+                <div className="text-sm text-muted-foreground">{row.frequency || "-"}</div>
+                <div className="text-sm text-muted-foreground">{row.fromDate || "-"}</div>
+                <div className="text-sm text-muted-foreground">{row.toDate || "-"}</div>
+                <div className="flex justify-end gap-2">
+                  <Button type="button" size="icon" variant="outline" onClick={() => editTaperDose(row)} aria-label="Edit taper dose">
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button type="button" size="icon" variant="ghost" onClick={() => removeTaperDose(row.id)} aria-label="Remove taper dose">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">
+              Add taper entries using the form above. Saved rows will appear here.
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>
