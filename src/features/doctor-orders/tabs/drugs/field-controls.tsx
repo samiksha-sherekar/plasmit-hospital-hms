@@ -27,7 +27,7 @@ export function FieldLabel({ children }: { children: React.ReactNode }) {
 export function SelectField<T extends string>({ value, options, onChange, disabled }: { value: T; options: T[]; onChange: (value: T) => void; disabled?: boolean }) {
   return (
     <select
-      className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring/20 disabled:bg-surface-muted disabled:text-muted-foreground"
+      className="h-9 w-full appearance-none rounded-md border border-input bg-background px-3 text-sm text-foreground outline-none transition focus:border-border focus:ring-0 disabled:bg-surface-muted disabled:text-muted-foreground"
       value={value}
       disabled={disabled}
       onChange={(event) => onChange(event.target.value as T)}
@@ -205,6 +205,8 @@ export function DrugDraftFields({
       taperDoses: taperDoses.filter((dose) => dose.id !== row.id),
     });
   };
+
+  const hasDraftTaperValue = Boolean(draft.taperEntry.dose || draft.taperEntry.unit || draft.taperEntry.frequency || draft.taperEntry.fromDate || draft.taperEntry.toDate);
 
   return (
     <div className="space-y-4">
@@ -448,6 +450,15 @@ export function DrugDraftFields({
           </Button>
         </div>
         <div className="rounded-md border border-border bg-surface-muted p-3">
+          {hasDraftTaperValue ? (
+            <div className="mb-2 grid gap-2 rounded-md border border-dashed border-primary/30 bg-primary/5 p-2 text-xs text-muted-foreground md:grid-cols-[1fr_110px_150px_1fr_1fr]">
+              <div className="font-medium text-foreground">{draft.taperEntry.dose || "-"}</div>
+              <div>{draft.taperEntry.unit || "-"}</div>
+              <div>{draft.taperEntry.frequency || "-"}</div>
+              <div>{draft.taperEntry.fromDate || "-"}</div>
+              <div>{draft.taperEntry.toDate || "-"}</div>
+            </div>
+          ) : null}
           <div className="grid gap-2 md:grid-cols-[1fr_110px_150px_1fr_1fr]">
             <NumberInput value={draft.taperEntry.dose} onChange={(event) => onChange({ taperEntry: { ...draft.taperEntry, dose: event.target.value } })} placeholder="Dose" />
             <SelectField value={draft.taperEntry.unit} options={doseUnits} onChange={(unit) => onChange({ taperEntry: { ...draft.taperEntry, unit } })} />

@@ -25,7 +25,7 @@ function FieldSelect({
     <select
       id={id}
       defaultValue={defaultValue}
-      className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+      className="h-9 w-full appearance-none rounded-md border border-input bg-background px-3 text-sm text-foreground shadow-sm outline-none transition focus:border-border focus:ring-0"
     >
       {children}
     </select>

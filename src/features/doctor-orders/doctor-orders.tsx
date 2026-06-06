@@ -91,7 +91,7 @@ export function DoctorOrdersPage() {
 //   requestedTab && tabs.some((tab) => tab.id === requestedTab)
 //     ? requestedTab
 //     : "blood";
-const defaultTab = "drugs"
+const defaultTab = "blood";
   return (
     <div className="space-y-6">
       <PageHeader
@@ -121,7 +121,7 @@ const defaultTab = "drugs"
                 <TabsTrigger
                   key={tab.id}
                   value={tab.id}
-                  className="flex h-10 min-w-[132px] flex-row items-center justify-center gap-2 px-3"
+                  className="flex h-10 min-w-[132px] flex-row items-center justify-center gap-2 border border-transparent px-3 data-[state=active]:border-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                 >
                   <tab.icon className="h-4 w-4 shrink-0" />
                   <span className="min-w-0 truncate leading-none">{tab.label}</span>

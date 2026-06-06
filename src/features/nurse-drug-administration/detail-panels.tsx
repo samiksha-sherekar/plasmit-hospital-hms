@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import type { AdministrationAction, AdministrationDetail, FluidAdministrationDetail } from "./types";
 
 const administrationActions: AdministrationAction[] = ["Administered", "Not administered", "Late administered"];
+const priorityOptions = ["Routine", "Urgent", "Immediate"] as const;
 
 function formatCurrentDate() {
   const now = new Date();
@@ -50,7 +51,7 @@ function SelectField<T extends string>({
   onChange,
 }: {
   value: T;
-  options: T[];
+  options: readonly T[];
   onChange: (value: T) => void;
 }) {
   return (
@@ -212,7 +213,7 @@ export function AdministrationDetailsPanel({
     >
       <div className="grid gap-4">
         {/* Row 1 */}
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <FormField label="Date">
             <Input
               type="date"
@@ -240,6 +241,14 @@ export function AdministrationDetailsPanel({
               onChange={(event) =>
                 onChange({ ...detail, time: event.target.value })
               }
+            />
+          </FormField>
+
+          <FormField label="Priority">
+            <SelectField
+              value={detail.priority || "Routine"}
+              options={priorityOptions}
+              onChange={(priority) => onChange({ ...detail, priority })}
             />
           </FormField>
         </div>
@@ -278,6 +287,18 @@ export function AdministrationDetailsPanel({
               />
             </FormField>
           )}
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <FormField label="Administration note">
+            <Input
+              value={detail.administrationNote}
+              onChange={(event) => onChange({ ...detail, administrationNote: event.target.value })}
+              placeholder="Optional nurse note"
+            />
+          </FormField>
+
+          <ReadOnlyField label="Category" value={detail.category} />
         </div>
 
         <CounterCheckFields
@@ -374,7 +395,7 @@ export function FluidAdministrationDetailsPanel({
     >
       <div className="grid gap-4">
         {/* Row 1 */}
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <FormField label="Date">
             <Input
               type="date"
@@ -405,6 +426,10 @@ export function FluidAdministrationDetailsPanel({
                 onChange({ ...detail, time: event.target.value })
               }
             />
+          </FormField>
+
+          <FormField label="Diluent">
+            <Input value={detail.diluent} onChange={(event) => onChange({ ...detail, diluent: event.target.value })} placeholder="Diluent name" />
           </FormField>
         </div>
 
@@ -496,6 +521,11 @@ export function FluidAdministrationDetailsPanel({
               placeholder="Optional note"
             />
           </FormField>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <ReadOnlyField label="Bolus route" value={detail.bolusRoute} />
+          <ReadOnlyField label="Category" value={detail.category} />
         </div>
 
         {/* Counter Check Section */}
