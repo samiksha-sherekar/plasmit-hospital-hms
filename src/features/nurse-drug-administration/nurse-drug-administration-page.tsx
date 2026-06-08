@@ -44,10 +44,15 @@ function buildAdministrationDetail(order: NurseDrugOrder, selectedDate: string, 
     lastAdministeredBy: order.lastAdministeredBy ?? "",
     action: isOverdue ? "Late administered" : "Administered",
     reason: isOverdue ? "Scheduled dose overdue by more than 1 hour" : "",
+    patientStatus: isOverdue ? "Late" : cell?.status === "bolus" ? "IV Bolus" : cell?.status === "infusion" ? "Infusion" : "Administered",
+    holdReason: "",
+    reaction: "",
+    vitals: order.category === "STAT" ? "BP 126/78, PR 92, Temp 99.1 F" : "BP 128/78, PR 84, Temp 98.6 F",
     administrationNote: order.administrationNote ?? "",
     counterChecked: false,
     counterCheckedBy: "",
     counterCheckedAt: "",
+    signature: order.lastAdministeredBy ?? "Nurse",
   };
 }
 
@@ -77,6 +82,12 @@ function buildFluidDetail(order: NurseDrugOrder, selectedDate: string): FluidAdm
     counterChecked: false,
     counterCheckedBy: "",
     counterCheckedAt: "",
+    patientStatus: order.category === "Continuous" ? "Infusion" : order.category === "Bolus" ? "IV Bolus" : "Pending",
+    holdReason: "",
+    reaction: "",
+    vitals: "BP 120/76, PR 80, SpO2 98%",
+    administrationNote: order.administrationNote ?? "",
+    signature: order.lastAdministeredBy ?? "Nurse",
   };
 }
 

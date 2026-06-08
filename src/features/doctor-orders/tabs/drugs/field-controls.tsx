@@ -75,7 +75,7 @@ function CategoryRadio({
   return (
     <label
       className={[
-        "flex min-h-9 items-center gap-2 rounded-md border px-3 text-sm font-medium transition",
+        "flex min-h-9 min-w-[120px] shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium transition md:min-w-0",
         checked ? "border-primary bg-primary/10 text-foreground" : "border-border bg-background text-muted-foreground",
         "cursor-pointer hover:bg-surface-muted",
       ].join(" ")}
@@ -372,7 +372,7 @@ export function DrugDraftFields({
 
         <div className="space-y-2">
           <FieldLabel>Category</FieldLabel>
-          <div className="grid gap-2">
+          <div className="flex gap-2 overflow-x-auto pb-1 md:grid md:overflow-visible md:pb-0">
             {categoryOptions.map((category) => (
               <CategoryRadio
                 key={category}

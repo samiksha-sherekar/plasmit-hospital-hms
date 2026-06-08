@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
-import { ClipboardCheck, Droplet, FileSearch, FlaskConical, Layers, Pill, Stethoscope, UserPlus } from "lucide-react";
+import { ClipboardCheck, Droplet, FileSearch, FlaskConical, Layers, Microscope, Pill, Stethoscope, UserPlus } from "lucide-react";
 
 import { PageHeader } from "@/components/shell/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,6 +11,7 @@ import { BloodRequestTab } from "./tabs/blood-request-tab";
 import { DrugsTab } from "./tabs/drugs-tab";
 import { LaboratoryTab } from "./tabs/laboratory-tab";
 import { OrderSetsTab } from "./tabs/order-sets-tab";
+import { PathologyTab } from "./tabs/pathology-tab";
 import { ProceduresTab } from "./tabs/procedures-tab";
 import { RadiologyTab } from "./tabs/radiology-tab";
 import { ReferConsultationTab } from "./tabs/refer-consultation-tab";
@@ -38,6 +39,13 @@ const tabs: OrderTab[] = [
     description: "Medication orders, dosing, route, frequency, and review context.",
     icon: Pill,
     component: <DrugsTab />,
+  },
+  {
+    id: "pathology",
+    label: "Pathology",
+    description: "Pathology test order, summary, and result review workflow.",
+    icon: Microscope,
+    component: <PathologyTab />,
   },
   {
     id: "lab",

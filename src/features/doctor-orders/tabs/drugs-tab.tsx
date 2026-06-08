@@ -12,6 +12,7 @@ import { SelectDrugsCard } from "./drugs/select-drugs-card";
 import { SummaryCard } from "./drugs/summary-card";
 import type { DrugOrder, DrugScope, OrderDraft } from "./drugs/types";
 import { calculateAutoQty, deriveCategory, isAutoQtyForm, isContinuousFluid, isFormADrug, isInjectionForm, isIvRoute, makeDraft, routeOptionsForForm } from "./drugs/utils";
+import { PatientSummaryBanner } from "./shared/patient-summary-banner";
 
 function SubmitOrderCard({ count, onSubmit }: { count: number; onSubmit: () => void }) {
   return (
@@ -207,6 +208,8 @@ export function DrugsTab() {
 
   return (
     <div className="space-y-4">
+      <PatientSummaryBanner />
+
       <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
         <SelectDrugsCard
           orders={selectableOrders}
