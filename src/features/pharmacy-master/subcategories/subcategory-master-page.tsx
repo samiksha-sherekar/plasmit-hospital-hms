@@ -40,7 +40,7 @@ export function SubCategoryMasterPage() {
 
   function openEdit(record: DrugSubCategory) {
     setMode("edit");
-    setDraft(record);
+    setDraft({ ...record });
     setErrors({});
     setOpen(true);
   }

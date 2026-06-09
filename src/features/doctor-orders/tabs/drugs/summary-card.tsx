@@ -126,7 +126,7 @@ export function SummaryCard({
                         <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">
                           {!draft.category || draft.category === "Unscheduled" || draft.category === "STAT" || draft.category === "Bolus" || draft.category === "Continuous" ? "-" : draft.frequency || "-"}
                         </td>
-                        <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">{draft.category === "Unscheduled" || draft.category === "STAT" || draft.category === "Bolus" ? "-" : draft.days || "-"}</td>
+                        <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">{draft.category === "Unscheduled" || draft.category === "STAT" || draft.category === "Bolus" || draft.category === "Continuous" ? "-" : draft.days || "-"}</td>
                         <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)] font-semibold">{draft.orderedQty || "-"}</td>
                         <td className="max-w-64 truncate px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">{draft.instructions || "-"}</td>
                         <td className="max-w-72 px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">

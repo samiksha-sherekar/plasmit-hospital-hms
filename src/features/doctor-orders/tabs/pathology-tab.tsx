@@ -3,9 +3,10 @@
 import * as React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 import { PatientSummaryBanner } from "./shared/patient-summary-banner";
-import { previousTestOrders, pathologySubTabs, resultBlocks as initialResultBlocks, groupedTests, summaryRows as initialSummaryRows, testList } from "./pathology/data";
+import { previousTestOrders, resultBlocks as initialResultBlocks, groupedTests, summaryRows as initialSummaryRows, testList } from "./pathology/data";
 import { PathologyOrderSummaryTab } from "./pathology/order-summary-tab";
 import { PathologyResultReviewTab } from "./pathology/result-review-tab";
 import { PathologyTestOrderTab } from "./pathology/test-order-tab";
@@ -39,6 +40,7 @@ export function PathologyTab() {
   const [diagnosisOpen, setDiagnosisOpen] = React.useState(false);
   const [selectedDiagnosisLabel, setSelectedDiagnosisLabel] = React.useState("");
   const [billingNote, setBillingNote] = React.useState("Orders are ready for billing review.");
+  const [deleteTarget, setDeleteTarget] = React.useState<PathologySummaryRow | null>(null);
 
   const selectedCount = selectedTestIds.length + selectedGroupIds.length;
 
@@ -111,17 +113,33 @@ export function PathologyTab() {
     setSummarySort((current) => ({ key, direction: current.key === key && current.direction === "asc" ? "desc" : "asc" }));
   };
 
-  const removeSummaryRow = (id: string) => {
-    setSummaryRows((current) => current.filter((row) => row.id !== id));
-    toast.success("Summary row removed");
-  };
-
   const editSummaryRow = (id: string) => {
     const row = summaryRows.find((item) => item.id === id);
     if (!row) return;
     setSearch(row.name);
+    const matchedTest = testList.find((test) => test.name.toLowerCase() === row.name.toLowerCase());
+    if (matchedTest) {
+      setSelectedTestIds((current) => Array.from(new Set([...current, matchedTest.id])));
+    }
+    const matchedGroup = groupedTests.find((group) => row.name.toLowerCase().includes(group.name.toLowerCase().split(" ")[0] ?? ""));
+    if (matchedGroup) {
+      setSelectedGroupIds((current) => Array.from(new Set([...current, matchedGroup.id])));
+    }
     setActiveTab("test-order");
     toast.success(`Editing ${row.name}`);
+  };
+
+  const requestDeleteSummaryRow = (id: string) => {
+    const row = summaryRows.find((item) => item.id === id);
+    if (!row) return;
+    setDeleteTarget(row);
+  };
+
+  const confirmDeleteSummaryRow = () => {
+    if (!deleteTarget) return;
+    setSummaryRows((current) => current.filter((row) => row.id !== deleteTarget.id));
+    toast.success(`${deleteTarget.name} deleted`);
+    setDeleteTarget(null);
   };
 
   const addDiagnosis = () => {
@@ -240,7 +258,7 @@ export function PathologyTab() {
             onAddToBill={addToBill}
             onSaveAndBill={saveAndBill}
             onEdit={editSummaryRow}
-            onDelete={removeSummaryRow}
+            onDelete={requestDeleteSummaryRow}
             onViewAll={() => setSummaryRows(initialSummaryRows)}
             onBackToTestOrder={() => setActiveTab("test-order")}
           />
@@ -264,6 +282,13 @@ export function PathologyTab() {
           />
         </TabsContent> */}
       </Tabs>
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        description={`Are you sure you want to delete ${deleteTarget?.name ?? "this pathology row"}? This action cannot be undone in the current screen.`}
+        onConfirm={confirmDeleteSummaryRow}
+      />
     </div>
   );
 }

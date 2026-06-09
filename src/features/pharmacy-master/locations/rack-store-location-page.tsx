@@ -34,10 +34,10 @@ export function RackStoreLocationPage() {
     { header: "Description", accessorKey: "description" },
     { header: "Status", cell: ({ row }) => <StatusBadge status={row.original.status} /> },
     { header: "Actions", cell: ({ row }) => <MasterRowActions onEdit={() => openEdit(row.original)} onToggle={() => setRecords((current) => current.map((item) => item.id === row.original.id ? { ...item, status: toggleStatus(item.status) } : item))} onDelete={() => remove(row.original)} /> },
-  ], []);
+  ], [openEdit, remove]);
 
   function openCreate() { setMode("create"); setDraft(emptyLocation()); setErrors({}); setOpen(true); }
-  function openEdit(record: RackStoreLocationRecord) { setMode("edit"); setDraft(record); setErrors({}); setOpen(true); }
+  function openEdit(record: RackStoreLocationRecord) { setMode("edit"); setDraft({ ...record }); setErrors({}); setOpen(true); }
   function save() { const nextErrors = validateRackStoreLocation(draft, records); setErrors(nextErrors); if (Object.keys(nextErrors).length) return; setRecords((current) => mode === "edit" ? current.map((record) => record.id === draft.id ? draft : record) : [draft, ...current]); toast.success(mode === "edit" ? "Location updated" : "Location created"); setOpen(false); }
   function remove(record: RackStoreLocationRecord) { setRecords((current) => current.filter((item) => item.id !== record.id)); toast.success("Location deleted"); setOpen(false); }
 

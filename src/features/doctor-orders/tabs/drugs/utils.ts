@@ -1,6 +1,17 @@
 import { formARoutes, frequencyMultiplier, injectionRoutes } from "./data";
 import type { DraftCategory, DrugCategory, DrugOrder, OrderDraft } from "./types";
 
+const continuousInfusionDrugNames = [
+  "dopamine infusion",
+  "noradrenaline infusion",
+  "insulin infusion",
+];
+
+function isContinuousInfusionDrug(name: string, genericName?: string) {
+  const haystacks = [name, genericName ?? ""].map((value) => value.trim().toLowerCase());
+  return haystacks.some((value) => continuousInfusionDrugNames.includes(value));
+}
+
 export function categoryTone(category: DrugCategory) {
   if (category === "Scheduled") return "info";
   if (category === "SOS") return "warning";
@@ -41,7 +52,8 @@ export function isAutoQtyForm(form: string) {
   return autoQtyForms.includes(form as typeof autoQtyForms[number]);
 }
 
-export function deriveCategory(draft: Pick<OrderDraft, "sos" | "stat" | "bolus" | "intermittent" | "continuous" | "category">): DraftCategory {
+export function deriveCategory(draft: Pick<OrderDraft, "name" | "genericName" | "sos" | "stat" | "bolus" | "intermittent" | "continuous" | "category">): DraftCategory {
+  if (isContinuousInfusionDrug(draft.name, draft.genericName)) return "Continuous";
   if (draft.continuous) return "Continuous";
   if (draft.intermittent) return "Intermittent";
   if (draft.sos) return "SOS";
@@ -119,8 +131,9 @@ export function calculateAutoQty({
 }
 
 export function makeDraft(order: DrugOrder): OrderDraft {
-  const intermittent = isInjectionForm(order.form) && isIvRoute(order.route);
-  const continuous = isContinuousFluid(order.form);
+  const continuousInfusion = isContinuousInfusionDrug(order.name, order.genericName);
+  const intermittent = !continuousInfusion && isInjectionForm(order.form) && isIvRoute(order.route);
+  const continuous = continuousInfusion || isContinuousFluid(order.form);
   const category = continuous ? "Continuous" : intermittent ? "Intermittent" : order.category === "SOS" || order.category === "STAT" || order.category === "Bolus" || order.category === "Diluent" ? order.category : "";
   const defaultContinuousDuration = continuous && Number(order.days) > 0 ? String(Number(order.days) * 24) : "";
   const orderedQty = isAutoQtyForm(order.form) ? String(order.orderedQty || 1) : "1";

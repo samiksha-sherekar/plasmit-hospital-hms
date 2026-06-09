@@ -1,6 +1,6 @@
 export type DrugCategory = "Scheduled" | "SOS" | "STAT" | "Bolus" | "Diluent" | "Intermittent" | "Continuous" | "Discontinued" | "Unscheduled";
 export type DraftCategory = DrugCategory | "";
-export type DoseUnit = "" | "mg" | "microgram" | "gram" | "ml" | "litre" | "units" | "drops" | "puffs";
+export type DoseUnit = "" | "mg" | "microgram" | "gram" | "ml" | "litre" | "units" | "drops" | "puffs" |"mcg/kg/min" | "mg/kg/min" |"units/hr";
 export type DurationUnit = "Days" | "Weeks" | "Months";
 export type TimeUnit = "" | "sec" | "min" | "hour" | "day";
 export type DrugScope = "Available Drugs" | "All Drugs";

@@ -38,7 +38,7 @@ export function CategoryMasterPage() {
 
   function openEdit(record: DrugCategory) {
     setMode("edit");
-    setDraft(record);
+    setDraft({ ...record });
     setErrors({});
     setOpen(true);
   }

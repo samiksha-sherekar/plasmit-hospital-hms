@@ -65,7 +65,7 @@ export function DrugMasterPage() {
 
   function openEdit(record: DrugMasterRecord) {
     setMode("edit");
-    setDraft(record);
+    setDraft({ ...record });
     setErrors({});
     setOpen(true);
   }
