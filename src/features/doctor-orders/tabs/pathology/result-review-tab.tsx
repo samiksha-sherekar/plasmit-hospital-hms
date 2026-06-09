@@ -11,8 +11,8 @@ import { Input } from "@/components/ui/input";
 import { diagnosisTypes } from "./data";
 import type { PathologyResultBlock } from "./types";
 
-function FlagPill({ flag }: { flag: "N" | "H" | "L" }) {
-  const className = flag === "H" ? "bg-danger/10 text-danger" : flag === "L" ? "bg-warning/10 text-warning" : "bg-success/10 text-success";
+function FlagPill({ flag }: { flag: "Normal" | "High" | "Low" }) {
+  const className = flag === "High" ? "bg-danger/10 text-danger" : flag === "Low" ? "bg-warning/10 text-warning" : "bg-success/10 text-success";
   return <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${className}`}>{flag}</span>;
 }
 

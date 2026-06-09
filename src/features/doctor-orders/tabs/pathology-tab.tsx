@@ -39,7 +39,7 @@ export function PathologyTab() {
   const [diagnosisType, setDiagnosisType] = React.useState("Primary");
   const [diagnosisOpen, setDiagnosisOpen] = React.useState(false);
   const [selectedDiagnosisLabel, setSelectedDiagnosisLabel] = React.useState("");
-  const [billingNote, setBillingNote] = React.useState("Orders are ready for billing review.");
+  const [billingNote, setBillingNote] = React.useState("Orders are ready.");
   const [deleteTarget, setDeleteTarget] = React.useState<PathologySummaryRow | null>(null);
 
   const selectedCount = selectedTestIds.length + selectedGroupIds.length;
@@ -187,12 +187,12 @@ export function PathologyTab() {
             >
               Order summary
             </TabsTrigger>
-            {/* <TabsTrigger
+            <TabsTrigger
               value="result-review"
               className="flex h-10 min-w-[132px] items-center justify-center rounded-md border border-border bg-white px-3 text-sm font-medium text-muted-foreground data-[state=active]:border-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
               Result review
-            </TabsTrigger> */}
+            </TabsTrigger>
           </TabsList>
 
           {/* <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-surface-muted px-4 py-3 text-xs text-muted-foreground">
@@ -263,7 +263,7 @@ export function PathologyTab() {
             onBackToTestOrder={() => setActiveTab("test-order")}
           />
         </TabsContent>
-        {/* <TabsContent value="result-review" className="mt-0">
+        <TabsContent value="result-review" className="mt-0">
           <PathologyResultReviewTab
             resultMode={resultMode}
             onResultModeChange={setResultMode}
@@ -280,7 +280,7 @@ export function PathologyTab() {
             onDeleteResult={removeResultBlock}
             onReorderResult={reorderResult}
           />
-        </TabsContent> */}
+        </TabsContent>
       </Tabs>
 
       <ConfirmDialog

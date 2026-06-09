@@ -105,12 +105,12 @@ export function PathologyOrderSummaryTab({
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={onBackToTestOrder}>
+            {/* <Button type="button" variant="outline" onClick={onBackToTestOrder}>
               Edit order
-            </Button>
-            <Button type="button" variant="outline" onClick={onViewAll}>
+            </Button> */}
+            {/* <Button type="button" variant="outline" onClick={onViewAll}>
               View all summary
-            </Button>
+            </Button> */}
             <div className="ml-auto flex flex-wrap gap-2">
               <Button type="button" onClick={onSave}>
                 <Save className="h-4 w-4" />
