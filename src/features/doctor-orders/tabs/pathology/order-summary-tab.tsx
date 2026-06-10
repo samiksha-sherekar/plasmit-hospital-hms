@@ -61,7 +61,7 @@ export function PathologyOrderSummaryTab({
           <div className="rounded-md border border-border bg-surface-muted p-3 text-sm text-muted-foreground">{billingNote}</div>
 
           <div className="overflow-x-auto rounded-lg border border-border">
-            <table className="min-w-[760px] w-full border-collapse text-left text-sm">
+            <table className="min-w-[1200px] w-full border-collapse text-left text-sm">
               <thead className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 <tr>
                   {headers.map((header) => (
@@ -72,6 +72,9 @@ export function PathologyOrderSummaryTab({
                       </button>
                     </th>
                   ))}
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Ordered By</th>
+                  <th className="px-4 py-3">Order Date Time</th>
                   <th className="px-4 py-3">Actions</th>
                 </tr>
               </thead>
@@ -86,6 +89,13 @@ export function PathologyOrderSummaryTab({
                     <td className="px-4 py-3">
                       <Badge tone={row.priority === "Urgent" || row.priority === "STAT" ? "warning" : "default"}>{row.priority}</Badge>
                     </td>
+                    <td className="px-4 py-3">
+                      <Badge tone={row.status === "Cancelled" ? "danger" : row.status === "Released" || row.status === "Verified" ? "success" : row.status === "Processing" ? "warning" : "info"}>
+                        {row.status}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{row.orderedBy}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{row.orderDateTime}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-2">
                         <Button type="button" size="sm" variant="outline" onClick={() => onEdit(row.id)}>

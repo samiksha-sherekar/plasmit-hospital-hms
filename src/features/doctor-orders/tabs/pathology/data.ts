@@ -4,7 +4,7 @@ export const pathologySubTabs = ["Pathology", "Radiology", "Medications", "Nursi
 
 export const visitProblems = ["Diabetes Type 2", "Hypertension", "Fatigue"];
 
-export const specimenSources = ["Blood", "Urine", "Stool", "CSF"];
+export const specimenSources = ["Blood", "Urine", "Stool", "CSF", "Sputum", "Wound swab", "Pleural Fluid", "Ascitic Fluid", "Biopsy"];
 
 export const priorities: PathologyPriority[] = ["Routine", "Urgent", "STAT", "ASAP"];
 
@@ -43,11 +43,14 @@ export const previousTestOrders: PathologyOrderHistory[] = [
   { id: "hist-kft", label: "KFT (02 Mar)", selectedTestIds: ["kft"], selectedGroupIds: ["renal"] },
 ];
 
+const today = new Date();
+const orderDateTime = `${today.toISOString().slice(0, 10)} ${today.toTimeString().slice(0, 5)}`;
+
 export const summaryRows: PathologySummaryRow[] = [
-  { id: "sum-cbc", name: "CBC", loinc: "58410-2", cpt: "85025", specialty: "Hematology", specimen: "Blood", priority: "Routine" },
-  { id: "sum-kft", name: "KFT", loinc: "24362-6", cpt: "80069", specialty: "Biochemistry", specimen: "Blood", priority: "Routine" },
-  { id: "sum-renal", name: "Renal profile", loinc: "24362-6", cpt: "80069", specialty: "Biochemistry", specimen: "Blood", priority: "Urgent" },
-  { id: "sum-lft", name: "LFT", loinc: "24323-8", cpt: "80076", specialty: "Biochemistry", specimen: "Blood", priority: "STAT" },
+  { id: "sum-cbc", name: "CBC", loinc: "58410-2", cpt: "85025", specialty: "Hematology", specimen: "Blood", priority: "Routine", status: "Ordered", orderedBy: "Dr. Kavita Rao", orderDateTime },
+  { id: "sum-kft", name: "KFT", loinc: "24362-6", cpt: "80069", specialty: "Biochemistry", specimen: "Blood", priority: "Routine", status: "Sample Collected", orderedBy: "Dr. Kavita Rao", orderDateTime },
+  { id: "sum-renal", name: "Renal profile", loinc: "24362-6", cpt: "80069", specialty: "Biochemistry", specimen: "Blood", priority: "Urgent", status: "Received", orderedBy: "Dr. Kavita Rao", orderDateTime },
+  { id: "sum-lft", name: "LFT", loinc: "24323-8", cpt: "80076", specialty: "Biochemistry", specimen: "Blood", priority: "STAT", status: "Processing", orderedBy: "Dr. Kavita Rao", orderDateTime },
 ];
 
 export const resultBlocks: PathologyResultBlock[] = [

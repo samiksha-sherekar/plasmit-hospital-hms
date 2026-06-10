@@ -25,7 +25,8 @@ type ReferralItem = {
   status: ReferralStatus;
 };
 
-const departments = ["Cardiology", "Neurology", "Orthopedics", "Nephrology", "Pulmonology", "Gastroenterology"];
+const departments = ["Cardiology", "Neurology", "Nephrology", "Pulmonology", "Gastroenterology", "Endocrinology"] as const;
+
 const initialItems: ReferralItem[] = [
   { id: "ref-1", referToDepartment: "Cardiology", consultantDoctor: "Dr. Raj Mehta", reason: "Chest discomfort", urgency: "Routine", clinicalSummary: "Troponin pending", preferredDateTime: "2026-06-08T11:30", notes: "Please review ECG", status: "Requested" },
   { id: "ref-2", referToDepartment: "Nephrology", consultantDoctor: "Dr. Nisha Verma", reason: "Creatinine rise", urgency: "Urgent", clinicalSummary: "CKD suspected", preferredDateTime: "2026-06-08T12:00", notes: "Fluid balance concern", status: "Accepted" },

@@ -26,8 +26,9 @@ type LabOrder = {
   instructions: string;
   status: LabStatus;
 };
+export const sampleTypes = ["Blood", "Urine", "Stool", "CSF", "Sputum", "Wound swab", "Pleural Fluid", "Ascitic Fluid", "Biopsy"];
 
-const sampleTypes = ["Blood", "Urine", "Stool", "CSF", "Sputum", "Swab"];
+// const sampleTypes = ["Blood", "Urine", "Stool", "CSF", "Sputum", "Swab"];
 const categories = ["Hematology", "Biochemistry", "Microbiology", "Pathology", "Immunology"];
 const priorities: LabPriority[] = ["Routine", "Urgent", "Stat"];
 

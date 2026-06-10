@@ -6,9 +6,9 @@ import { FormGrid, SelectField, TextField } from "@/features/pharmacy-master/com
 import type { DrugCategory, DrugMasterRecord, DrugSubCategory, ManufacturerRecord } from "@/features/pharmacy-master/types";
 import { subCategoriesForCategory } from "@/features/pharmacy-master/utils/pharmacy-master-utils";
 
-const formOptions = ["Tablet", "Capsule", "Injection", "Syrup", "IV Fluid", "Drops", "Cream"];
+const formOptions = ["Tablet","Capsule","Syrup","Suspension","Drops","Injection","Infusion","IV Fluid","Oral Liquid","Powder","Granules","Inhaler","Nebulizer Solution","Cream","Ointment","Gel","Lotion","Paste","Patch","Suppository","Pessary","Eye Drops","Eye Ointment","Ear Drops","Nasal Drops","Nasal Spray","Mouthwash","Gargle","Lozenge","Spray","Shampoo","Enema","Implant","Vaccine","Blood Product","Dialysis Fluid"];
 const unitOptions = ["mg", "mcg", "g", "ml", "units"];
-const routeOptions = ["Oral", "IV", "IM", "SC", "Topical", "Eye", "Ear"];
+const routeOptions = ["Oral (PO)","Intravenous (IV)","Intramuscular (IM)","Subcutaneous (SC)","Intradermal (ID)","Sublingual (SL)","Buccal","Inhalation","Nebulization","Nasal","Ophthalmic (Eye)","Otic (Ear)","Topical","Transdermal","Rectal","Vaginal","Enteral Tube","PEG Tube","NG Tube"];
 const storageOptions = ["Room Temperature", "Cold Storage", "Refrigerated", "Frozen"];
 
 export function DrugForm({

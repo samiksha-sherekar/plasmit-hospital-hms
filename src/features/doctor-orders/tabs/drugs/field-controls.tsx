@@ -152,7 +152,20 @@ export function DrugDraftFields({
     const freqMultiplier = frequencyMultiplier[draft.dosageCalcFrequency] ?? 1;
     return `${Math.ceil(dose * weightFactor * freqMultiplier)} ${draft.dosageCalcUnit || ""}`.trim();
   })();
-  const categoryOptions: DraftCategory[] = formA ? ["SOS", "STAT"] : ["SOS", "STAT", "Bolus", "Diluent", "Intermittent", "Continuous"];
+  const categoryOptions: DraftCategory[] = formA ? ["Scheduled", "SOS", "STAT"] : ["Scheduled", "SOS", "STAT", "Bolus", "Diluent", "Intermittent", "Continuous"];
+  const isScheduled = draft.category === "Scheduled" || !draft.category;
+  const isTabletLike = ["Tablet", "Capsule", "Syrup"].includes(draft.form);
+  const showScheduledFrequency = isScheduled && isTabletLike;
+  const showScheduledDays = isScheduled && isTabletLike;
+  const showScheduledQuantity = isScheduled && isTabletLike;
+  const showScheduledStartTime = isScheduled && isTabletLike;
+  const showScheduledEndDate = isScheduled && isTabletLike;
+  const showScheduledEndTime = isScheduled && isTabletLike;
+  const showInjectionSite = isInjectionForm(draft.form) && ["Intramuscular (IM)", "Subcutaneous (SC)", "Spinal"].includes(draft.route);
+  const showBolusFields = draft.category === "Bolus";
+  const showIntermittentFields = draft.category === "Intermittent";
+  const showContinuousFields = draft.category === "Continuous" || isContinuousFluid(draft.form);
+  const showSOSFields = draft.category === "SOS";
 
   const selectCategory = (category: DraftCategory) => {
     if (category === "SOS") {
@@ -223,7 +236,7 @@ export function DrugDraftFields({
             <FieldLabel>Route</FieldLabel>
             <SelectField value={draft.route} options={routeOptions} disabled={infusion || continuous} onChange={(route) => onChange({ route })} />
           </label>
-          {showFrequency ? (
+          {showFrequency || showScheduledFrequency ? (
             <label className="space-y-2">
               <FieldLabel>Frequency</FieldLabel>
               <SelectField value={draft.frequency} options={frequencies} onChange={(frequency) => onChange({ frequency })} />
@@ -238,7 +251,7 @@ export function DrugDraftFields({
               </div>
             </label>
           ) : null}
-          {showDays ? (
+          {showDays || showScheduledDays ? (
             <label className="space-y-2">
               <FieldLabel>No. of Days</FieldLabel>
               <div className="grid grid-cols-[minmax(0,1fr)_105px] gap-2">
@@ -247,23 +260,23 @@ export function DrugDraftFields({
               </div>
             </label>
           ) : null}
-          {showSite ? (
+          {showSite || showInjectionSite ? (
             <label className="space-y-2">
               <FieldLabel>Site</FieldLabel>
               <SelectField value={draft.site} options={sites} onChange={(site) => onChange({ site })} />
             </label>
           ) : null}
-          {showDiluent ? (
+          {showDiluent || showIntermittentFields || showContinuousFields ? (
             <label className="space-y-2">
               <FieldLabel>Diluent</FieldLabel>
               <SelectField value={draft.diluent} options={diluents} onChange={(diluent) => onChange({ diluent })} />
               {warnings.needsDiluent ? <span className="text-xs font-medium text-danger">Diluent is required for IV route.</span> : null}
             </label>
           ) : null}
-          {showRate ? (
+          {showRate || showIntermittentFields || showContinuousFields ? (
             <>
               <label className="space-y-2">
-                <FieldLabel>Total Dose</FieldLabel>
+                <FieldLabel>{showContinuousFields ? "Dose" : "Total Dose"}</FieldLabel>
                 <div className="grid grid-cols-[minmax(0,1fr)_105px] gap-2">
                   <NumberInput value={draft.totalDose} onChange={(event) => onChange({ totalDose: event.target.value })} />
                   <SelectField value={draft.totalDoseUnit} options={doseUnits} onChange={(totalDoseUnit) => onChange({ totalDoseUnit })} />
@@ -278,7 +291,7 @@ export function DrugDraftFields({
               </label>
             </>
           ) : null}
-          {draft.sos ? (
+          {draft.sos || showSOSFields ? (
             <label className="space-y-2">
               <FieldLabel>Max Dose/Day</FieldLabel>
               <div className="grid grid-cols-[minmax(0,1fr)_105px] gap-2">
@@ -288,7 +301,7 @@ export function DrugDraftFields({
               {warnings.exceedsMaxDose ? <span className="text-xs font-medium text-danger">Dose exceeds max dose/day.</span> : null}
             </label>
           ) : null}
-          {showRate ? (
+          {showRate || showIntermittentFields || showContinuousFields ? (
             <label className="space-y-2 xl:col-span-2">
               <FieldLabel>Rate</FieldLabel>
 
@@ -319,7 +332,7 @@ export function DrugDraftFields({
             </label>
           ) : null}
           
-          <label className="space-y-2">
+          {!showContinuousFields ? <label className="space-y-2">
             <FieldLabel>Start Date</FieldLabel>
             <Input
               type="date"
@@ -332,21 +345,21 @@ export function DrugDraftFields({
                 })
               }
             />
-          </label>
-          <label className="space-y-2">
+          </label> : null}
+          {showScheduledStartTime || draft.category === "STAT" || showBolusFields || showIntermittentFields || showContinuousFields ? <label className="space-y-2">
             <FieldLabel>Start Time</FieldLabel>
             <Input type="time" value={draft.startTime} onChange={(event) => onChange({ startTime: event.target.value })} />
-          </label>
-          <label className="space-y-2">
+          </label> : null}
+          {showScheduledEndDate || showIntermittentFields || showContinuousFields ? <label className="space-y-2">
             <FieldLabel>End Date</FieldLabel>
             <Input type="date" min={endDateMin} value={draft.endDate} onChange={(event) => onChange({ endDate: event.target.value })} />
-          </label>
-          <label className="space-y-2">
+          </label> : null}
+          {showScheduledEndTime || showIntermittentFields || showContinuousFields ? <label className="space-y-2">
             <FieldLabel>End Time</FieldLabel>
             <Input type="time" value={draft.endTime} onChange={(event) => onChange({ endTime: event.target.value })} />
             {warnings.invalidTime ? <span className="text-xs font-medium text-danger">Start time must be before end time.</span> : null}
-          </label>
-          <label className="space-y-2">
+          </label> : null}
+          {showScheduledQuantity || showBolusFields || showIntermittentFields || showContinuousFields ? <label className="space-y-2">
             <FieldLabel>Total Quantity</FieldLabel>
             <Input
               type="number"
@@ -358,7 +371,7 @@ export function DrugDraftFields({
             <span className="text-xs text-muted-foreground">
               {/* {autoQtyForm ? "Auto-calculated for tablet, capsule, and lozenge; edit as needed." : "Defaults to 1 for other forms; edit to adjust."} */}
             </span>
-          </label>
+          </label> : null}
           <label className="space-y-2 sm:col-span-2">
             <FieldLabel>Instructions</FieldLabel>
             <Input list={instructionListId} value={draft.instructions} onChange={(event) => onChange({ instructions: event.target.value })} />

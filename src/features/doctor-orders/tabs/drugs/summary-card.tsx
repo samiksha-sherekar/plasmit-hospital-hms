@@ -27,6 +27,22 @@ const columns: { key: SummarySortKey | "actions"; label: string; className?: str
   { key: "actions", label: "Actions", className: "text-right" },
 ];
 
+const hiddenFieldsByCategory: Partial<Record<OrderDraft["category"], Partial<Record<SummarySortKey, boolean>>>> = {
+  Scheduled: {},
+  SOS: { frequency: true, days: true },
+  STAT: { frequency: true, days: true },
+  Bolus: { frequency: true, days: true },
+  Diluent: { frequency: true, days: true, dosage: true, instructions: false },
+  Intermittent: {},
+  Continuous: { frequency: true, days: true },
+  Discontinued: { frequency: true, days: true },
+  Unscheduled: { frequency: true, days: true },
+};
+
+function isHidden(draft: OrderDraft, key: SummarySortKey) {
+  return Boolean(hiddenFieldsByCategory[draft.category]?.[key]);
+}
+
 function SortButton({ label, column, sort, onSort }: { label: string; column: SummarySortKey; sort: SummarySort; onSort: (key: SummarySortKey) => void }) {
   const active = sort.key === column;
   const SortIcon = active ? (sort.direction === "asc" ? ArrowUp : ArrowDown) : ChevronsUpDown;
@@ -40,6 +56,7 @@ function SortButton({ label, column, sort, onSort }: { label: string; column: Su
 }
 
 function draftValue(draft: OrderDraft, key: SummarySortKey) {
+  if (isHidden(draft, key)) return "-";
   if (key === "dosage") {
     if (draft.category === "Continuous") return draft.totalDose ? `${draft.totalDose} ${draft.totalDoseUnit}` : `${draft.rateDose} ${draft.rateUnit}/${draft.rateTimeUnit}`;
     if (draft.category === "Intermittent") return draft.totalDose ? `${draft.totalDose} ${draft.totalDoseUnit}` : `${draft.rateDose} ${draft.rateUnit}/${draft.rateTimeUnit}`;
@@ -124,9 +141,9 @@ export function SummaryCard({
                           {draftValue(draft, "dosage") || "-"}
                         </td>
                         <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">
-                          {!draft.category || draft.category === "Unscheduled" || draft.category === "STAT" || draft.category === "Bolus" || draft.category === "Continuous" ? "-" : draft.frequency || "-"}
+                          {isHidden(draft, "frequency") ? "-" : (!draft.category || draft.category === "Unscheduled" || draft.category === "STAT" || draft.category === "Bolus" || draft.category === "Continuous" ? "-" : draft.frequency || "-")}
                         </td>
-                        <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">{draft.category === "Unscheduled" || draft.category === "STAT" || draft.category === "Bolus" || draft.category === "Continuous" ? "-" : draft.days || "-"}</td>
+                        <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">{isHidden(draft, "days") ? "-" : (draft.category === "Unscheduled" || draft.category === "STAT" || draft.category === "Bolus" || draft.category === "Continuous" ? "-" : draft.days || "-")}</td>
                         <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)] font-semibold">{draft.orderedQty || "-"}</td>
                         <td className="max-w-64 truncate px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">{draft.instructions || "-"}</td>
                         <td className="max-w-72 px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">

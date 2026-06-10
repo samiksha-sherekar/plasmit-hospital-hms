@@ -69,6 +69,14 @@ export function PathologyTestOrderTab({
   onFastingChange,
   instructions,
   onInstructionsChange,
+  clinicalNotes,
+  onClinicalNotesChange,
+  instructionsForLab,
+  onInstructionsForLabChange,
+  collectionDate,
+  onCollectionDateChange,
+  collectionTime,
+  onCollectionTimeChange,
   onOpenSummary,
   onSave,
   onSaveAndBill,
@@ -98,6 +106,14 @@ export function PathologyTestOrderTab({
   onFastingChange: (value: boolean) => void;
   instructions: string;
   onInstructionsChange: (value: string) => void;
+  clinicalNotes: string;
+  onClinicalNotesChange: (value: string) => void;
+  instructionsForLab: string;
+  onInstructionsForLabChange: (value: string) => void;
+  collectionDate: string;
+  onCollectionDateChange: (value: string) => void;
+  collectionTime: string;
+  onCollectionTimeChange: (value: string) => void;
   onOpenSummary: () => void;
   onSave: () => void;
   onSaveAndBill: () => void;
@@ -221,7 +237,7 @@ export function PathologyTestOrderTab({
             </div> */}
           </div>
 
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <SectionTitle>ADD INSTRUCTIONS</SectionTitle>
             <textarea
               className="min-h-[92px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-border focus:ring-0"
@@ -229,6 +245,35 @@ export function PathologyTestOrderTab({
               value={instructions}
               onChange={(event) => onInstructionsChange(event.target.value)}
             />
+          </div> */}
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <label className="space-y-2 md:col-span-2">
+              <SectionTitle>Clinical Notes</SectionTitle>
+              <textarea
+                className="min-h-[92px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-border focus:ring-0"
+                placeholder="Free text clinical notes"
+                value={clinicalNotes}
+                onChange={(event) => onClinicalNotesChange(event.target.value)}
+              />
+            </label>
+            <label className="space-y-2 md:col-span-2">
+              <SectionTitle>Instructions For Lab</SectionTitle>
+              <textarea
+                className="min-h-[92px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-border focus:ring-0"
+                placeholder="Free text instructions for the lab"
+                value={instructionsForLab}
+                onChange={(event) => onInstructionsForLabChange(event.target.value)}
+              />
+            </label>
+            <label className="space-y-2">
+              <SectionTitle>Collection Date</SectionTitle>
+              <Input type="date" value={collectionDate} onChange={(event) => onCollectionDateChange(event.target.value)} />
+            </label>
+            <label className="space-y-2">
+              <SectionTitle>Collection Time</SectionTitle>
+              <Input type="time" value={collectionTime} onChange={(event) => onCollectionTimeChange(event.target.value)} />
+            </label>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-white p-4">

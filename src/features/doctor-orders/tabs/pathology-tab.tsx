@@ -31,6 +31,10 @@ export function PathologyTab() {
   const [priority, setPriority] = React.useState<PathologyPriority>("Routine");
   const [fasting, setFasting] = React.useState(false);
   const [instructions, setInstructions] = React.useState("");
+  const [clinicalNotes, setClinicalNotes] = React.useState("");
+  const [instructionsForLab, setInstructionsForLab] = React.useState("");
+  const [collectionDate, setCollectionDate] = React.useState(new Date().toISOString().slice(0, 10));
+  const [collectionTime, setCollectionTime] = React.useState(new Date().toTimeString().slice(0, 5));
   const [summarySort, setSummarySort] = React.useState<{ key: SummarySortKey; direction: "asc" | "desc" }>({ key: "name", direction: "asc" });
   const [summaryRows, setSummaryRows] = React.useState(initialSummaryRows);
   const [resultMode, setResultMode] = React.useState<ReviewMode>("Result history");
@@ -240,6 +244,14 @@ export function PathologyTab() {
             onFastingChange={setFasting}
             instructions={instructions}
             onInstructionsChange={setInstructions}
+            clinicalNotes={clinicalNotes}
+            onClinicalNotesChange={setClinicalNotes}
+            instructionsForLab={instructionsForLab}
+            onInstructionsForLabChange={setInstructionsForLab}
+            collectionDate={collectionDate}
+            onCollectionDateChange={setCollectionDate}
+            collectionTime={collectionTime}
+            onCollectionTimeChange={setCollectionTime}
             onOpenSummary={handleOpenSummary}
             onSave={saveOrder}
             onSaveAndBill={saveAndBill}

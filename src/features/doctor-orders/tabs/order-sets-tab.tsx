@@ -24,7 +24,14 @@ type OrderSet = {
 };
 
 const departments = ["ICU", "Medicine", "Surgery", "Emergency", "Cardiology"];
-const orderLibrary = ["Lab Tests", "Radiology", "Drugs", "Procedures", "Nursing Requests"];
+const orderLibrary = ["Drugs", "Pathology", "Radiology", "Procedures", "Requests"];
+const selectedItemsByModule: Record<string, string[]> = {
+  Drugs: ["Paracetamol 650", "Pantoprazole", "Ceftriaxone", "NS 500 ml", "Insulin"],
+  Pathology: ["CBC", "KFT", "LFT", "HbA1c"],
+  Radiology: ["Chest X-Ray", "CT Brain"],
+  Procedures: ["Dressing Change"],
+  Requests: ["Vital sign check", "Mobility review", "Request 3"],
+};
 const initialSets: OrderSet[] = [
   { id: "set-1", orderSetName: "Chest pain panel", department: "Cardiology", diagnosis: "Chest pain", instructions: "Follow ACS pathway", status: "Submitted", includedOrders: orderLibrary.map((name, index) => ({ id: `${name}-${index}`, name, selected: true, quantity: "1", frequency: "Once", priority: "Routine" })) },
   { id: "set-2", orderSetName: "ICU sepsis set", department: "ICU", diagnosis: "Sepsis", instructions: "Bundle for ICU admission", status: "Draft", includedOrders: orderLibrary.map((name, index) => ({ id: `${name}-2-${index}`, name, selected: index !== 1, quantity: "1", frequency: "Once", priority: "Urgent" })) },
@@ -44,6 +51,7 @@ export function OrderSetsTab() {
   const [sets, setSets] = React.useState(initialSets);
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [search, setSearch] = React.useState("");
+  const [expandedModule, setExpandedModule] = React.useState<string | null>(null);
   const [draft, setDraft] = React.useState<OrderSet>({
     id: "",
     orderSetName: "",
@@ -111,18 +119,24 @@ export function OrderSetsTab() {
                 <label className="space-y-2 md:col-span-2"><div className="text-xs font-medium text-muted-foreground">Instructions</div><textarea className="min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none" value={draft.instructions} onChange={(e) => setDraft((d) => ({ ...d, instructions: e.target.value }))} /></label>
                 <div className="md:col-span-2 space-y-2 rounded-xl border border-border bg-surface-muted p-4">
                   <div className="text-sm font-semibold text-foreground">Included Orders</div>
+                  <div className="text-xs text-muted-foreground">Use View to open module-wise selected items.</div>
                   <div className="grid gap-3">
                     {draft.includedOrders.map((item) => (
                       <div key={item.id} className="rounded-lg border border-border bg-white p-3">
-                        <label className="flex items-center gap-2 text-sm font-medium">
-                          <input type="checkbox" checked={item.selected} onChange={() => toggleIncluded(item.id)} />
-                          {item.name}
-                        </label>
-                        <div className="mt-2 grid gap-2 md:grid-cols-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <label className="flex items-center gap-2 text-sm font-medium">
+                            <input type="checkbox" checked={item.selected} onChange={() => toggleIncluded(item.id)} />
+                            {item.name}
+                          </label>
+                          <Button type="button" size="sm" variant="outline" onClick={() => setExpandedModule((current) => (current === item.name ? null : item.name))}>
+                            View
+                          </Button>
+                        </div>
+                        {/* <div className="mt-2 grid gap-2 md:grid-cols-3">
                           <Input value={item.quantity} onChange={(e) => updateIncluded(item.id, { quantity: e.target.value })} placeholder="Qty" />
                           <Input value={item.frequency} onChange={(e) => updateIncluded(item.id, { frequency: e.target.value })} placeholder="Frequency" />
                           <Input value={item.priority} onChange={(e) => updateIncluded(item.id, { priority: e.target.value })} placeholder="Priority" />
-                        </div>
+                        </div> */}
                       </div>
                     ))}
                   </div>
@@ -162,6 +176,39 @@ export function OrderSetsTab() {
 
         </CardContent>
       </Card>
+
+      {expandedModule ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-2xl rounded-2xl border border-border bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-border px-5 py-4">
+              <div>
+                <div className="text-sm font-semibold text-foreground">{expandedModule}</div>
+                <div className="text-xs text-muted-foreground">Selected items</div>
+              </div>
+              <Button type="button" variant="outline" onClick={() => setExpandedModule(null)}>
+                Close
+              </Button>
+            </div>
+            <div className="space-y-2 p-5">
+              {(selectedItemsByModule[expandedModule] ?? []).map((label) => (
+                <label key={label} className="flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-sm">
+                  <input type="checkbox" defaultChecked className="h-4 w-4 rounded border-input accent-primary" />
+                  {label}
+                </label>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2 border-t border-border px-5 py-4">
+              <Button type="button" variant="outline" onClick={() => setExpandedModule(null)}>
+                Cancel
+              </Button>
+              <Button type="button" onClick={() => { toast.success(`${expandedModule} saved`); setExpandedModule(null); }}>
+                <Save className="h-4 w-4" />
+                Save
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

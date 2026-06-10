@@ -38,7 +38,7 @@ export function PatientSummaryBanner() {
             <div className="text-sm font-semibold text-foreground">Patient Details</div>
             <div className="mt-1 text-xs text-muted-foreground">Selected inpatient context remains aligned across drug and pathology orders.</div>
           </div>
-          <Badge tone="info">IPD</Badge>
+          {/* <Badge tone="info">IPD</Badge> */}
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
