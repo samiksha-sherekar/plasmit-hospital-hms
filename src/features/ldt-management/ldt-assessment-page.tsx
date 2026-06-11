@@ -79,10 +79,11 @@ const ldtConfigurations: Record<string, LdtConfig> = {
     name: "PICC double lumen",
     type: "Line",
     assessments: [
-      { id: "assess-site", name: "Site Assessment", type: "Dropdown", config: { options: ["Clean", "Redness", "Swelling", "Discharge"], selectionMode: "Single" } },
-      { id: "assess-status", name: "LDT Status", type: "Dropdown", config: { options: ["Patent", "Blocked", "Leaking", "Removed"], selectionMode: "Single" } },
-      { id: "assess-dressing-type", name: "Dressing Type", type: "Dropdown", config: { options: ["Transparent", "Gauze", "Pressure", "Occlusive"], selectionMode: "Single" } },
-      { id: "assess-dressing-status", name: "Dressing Status", type: "Dropdown", config: { options: ["Dry", "Soiled", "Loose", "Changed"], selectionMode: "Single" } },
+      { id: "assess-site", name: "Site Assessment", type: "Dropdown", config: { options: ["Clean", "Tender", "Redness", "Leakage", "Dry", "Intact", "Bleeding", "Draining", "Edematous", "Extravasated", "Leaking", "Painful", "Pink", "Red", "Infected"], selectionMode: "Single" } },
+      { id: "assess-status", name: "LDT Status", type: "Dropdown", config: { options: ["Blood", "Return Noted", "No Blood Return", "Capped", "Occluded", "Flushed", "Heparin Locked"], selectionMode: "Single" } },
+
+      { id: "assess-dressing-type", name: "Dressing Type", type: "Dropdown", config: { options: ["Transparent", "Gauze", "Pressure", "Occlusive", "No Dressing","Securing Device", "Negative Pressure Wound Therapy"], selectionMode: "Single" } },
+      { id: "assess-dressing-status", name: "Dressing Status", type: "Dropdown", config: { options: ["Dry", "Soiled", "Loose", "Changed","New Drainage", "Old Drainage"], selectionMode: "Single" } },
       { id: "assess-volume", name: "Volume", type: "Number", config: { decimalPlaces: 0, min: 0, max: 500, unit: "ml", trackInIntake: true } },
     ],
   },
