@@ -64,6 +64,7 @@ export function DrugsTab() {
       const nextDraft = { ...currentDraft, ...values };
       const formChanged = "form" in values;
       const routeChanged = "route" in values;
+      const categoryChanged = "category" in values;
 
       if (formChanged && isContinuousFluid(nextDraft.form)) {
         nextDraft.route = "Intravenous (IV)";
@@ -125,7 +126,9 @@ export function DrugsTab() {
       if (!routeOptionsForForm(nextDraft.form, nextDraft.continuous, nextDraft.intermittent).includes(nextDraft.route)) {
         nextDraft.route = routeOptionsForForm(nextDraft.form, nextDraft.continuous, nextDraft.intermittent)[0] ?? "";
       }
-      nextDraft.category = deriveCategory(nextDraft);
+      if (!categoryChanged) {
+        nextDraft.category = deriveCategory(nextDraft);
+      }
 
       if (formChanged && !isAutoQtyForm(nextDraft.form)) {
         nextDraft.orderedQty = "1";
