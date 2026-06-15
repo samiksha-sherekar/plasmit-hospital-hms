@@ -9,15 +9,15 @@ type PatientSummaryField = {
 };
 
 const patientFields: PatientSummaryField[] = [
-  { label: "Name", value: "Ramesh Kumar" },
-  { label: "UHID", value: "UHID-45821" },
-  { label: "Age", value: "52 years" },
-  { label: "Gender", value: "Male" },
-  { label: "Ward no", value: "G-12" },
-  { label: "Bed no", value: "Bed 4" },
-  { label: "Date", value: "08 Jun 2026" },
-  { label: "Time", value: "10:14 AM" },
-  { label: "Last updated", value: "10:14 AM" },
+  { label: "Name", value: "Meera Joshi" },
+  { label: "I.D. No. (Hospital ID / UHID)", value: "UHID-45821" },
+  { label: "I.P. No. (Admission No.)", value: "ADM-90211" },
+  { label: "Age", value: "42 years" },
+  { label: "Sex", value: "Female" },
+  { label: "Ward / Bed No.", value: "Ward 3 / Bed 12" },
+  // { label: "Date", value: "08 Jun 2026" },
+  // { label: "Time", value: "10:14 AM" },
+  // { label: "Last updated", value: "10:14 AM" },
 ];
 
 function PatientField({ label, value }: PatientSummaryField) {
@@ -35,8 +35,8 @@ export function PatientSummaryBanner() {
       <CardContent className="space-y-4 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="text-sm font-semibold text-foreground">Patient Details</div>
-            <div className="mt-1 text-xs text-muted-foreground">Selected inpatient context remains aligned across drug and pathology orders.</div>
+            <div className="text-sm font-semibold text-foreground">Patient Demographics</div>
+            {/* <div className="mt-1 text-xs text-muted-foreground">Selected inpatient context remains aligned across drug and pathology orders.</div> */}
           </div>
           {/* <Badge tone="info">IPD</Badge> */}
         </div>

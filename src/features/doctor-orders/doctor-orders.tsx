@@ -28,7 +28,7 @@ type OrderTab = {
 const tabs: OrderTab[] = [
   {
     id: "blood",
-    label: "Blood Request",
+    label: "Blood/Blood Product",
     description: "Blood component request details for blood bank approval.",
     icon: Droplet,
     component: <BloodRequestTab />,
@@ -75,16 +75,16 @@ const tabs: OrderTab[] = [
     icon: UserPlus,
     component: <ReferConsultationTab />,
   },
-  {
-    id: "requests",
-    label: "Requests",
-    description: "General clinical requests and pending order follow-up.",
-    icon: ClipboardCheck,
-    component: <RequestsTab />,
-  },
+  // {
+  //   id: "requests",
+  //   label: "Requests",
+  //   description: "General clinical requests and pending order follow-up.",
+  //   icon: ClipboardCheck,
+  //   component: <RequestsTab />,
+  // },
   {
     id: "ordersets",
-    label: "Order Sets",
+    label: "Master Order Sets",
     description: "Reusable clinical order bundles for common workflows.",
     icon: Layers,
     component: <OrderSetsTab />,
