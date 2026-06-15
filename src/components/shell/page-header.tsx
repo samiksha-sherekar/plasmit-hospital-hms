@@ -84,12 +84,12 @@ export function PageHeader({
   );
 
   return (
-    <div className={cn("sticky top-16 z-30 -mx-4 border-b border-border bg-[#f8f9fc]/92 px-4 py-3 backdrop-blur md:-mx-6 md:px-6", className)}>
+    <div className={cn("-mx-4 border-b border-border bg-[#f8f9fc]/92 px-4 py-3 md:-mx-6 md:px-6", className)}>
       <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 max-w-full pt-0.5">
-          {/* {eyebrow ? <div className="mb-1 text-xs font-bold text-primary">{eyebrow}</div> : null} */}
+          {eyebrow ? <div className="mb-1 text-xs font-bold text-primary">{eyebrow}</div> : null}
           <h1 className="truncate text-2xl font-bold tracking-tight text-foreground">{title}</h1>
-          {/* {description ? <p className="mt-1.5 max-w-full break-words text-sm font-medium leading-6 text-muted-foreground lg:max-w-3xl">{description}</p> : null} */}
+          {description ? <p className="mt-1.5 max-w-full break-words text-sm font-medium leading-6 text-muted-foreground lg:max-w-3xl">{description}</p> : null}
         </div>
         <div className="flex min-w-0 shrink-0 flex-col gap-2 lg:max-w-[48%] lg:items-end">
           {breadcrumbNav}
