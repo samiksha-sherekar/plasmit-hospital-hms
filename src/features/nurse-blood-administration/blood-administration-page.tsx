@@ -1,19 +1,17 @@
 "use client";
 
 import * as React from "react";
-import { AlertTriangle, Clock3, Droplets, ShieldAlert } from "lucide-react";
-import { toast } from "sonner";
+import { AlertTriangle, ShieldAlert } from "lucide-react";
 
 import { AlertBanner } from "@/components/ui/alert-banner";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shell/page-header";
 import {
   bloodAdministrationEpisode,
-  otherComponentMonitoringSchedule,
   reactionSymptoms,
+  otherComponentMonitoringSchedule,
   wholeBloodMonitoringSchedule,
   type MonitoringScheduleItem,
   type ReactionSymptom,
@@ -34,218 +32,146 @@ type VitalsRow = {
   clockNo: string;
 };
 
-type BagErrorMap = {
-  date?: string;
-  time?: string;
-  timepointLabel?: string;
-  pulse?: string;
-  systolic?: string;
-  diastolic?: string;
-  temperature?: string;
-  respiratoryRate?: string;
-  nurseName?: string;
-  clockNo?: string;
-};
+type RowErrors = Partial<Record<keyof Omit<VitalsRow, "id">, string>>;
 
-const timepointOptions: MonitoringScheduleItem["label"][] = [
-  "Immediately before starting transfusion",
-  "15 min after commencement",
-  "Hourly during transfusion",
-  "At completion of each pack",
-  "One hour after completion",
-  "Ad-hoc / Reaction",
-];
+const timepointOptions: MonitoringScheduleItem["label"][] = wholeBloodMonitoringSchedule.map((item) => item.label);
+const datePattern = /^\d{2} [A-Z][a-z]{2} \d{2}$/;
+const timePattern = /^\d{2}:\d{2}$/;
 
-function todayIso() {
-  return new Date().toISOString().slice(0, 10);
+function nowDate() {
+  return new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" }).replace(/ /g, " ");
 }
 
-function timeNow() {
-  const now = new Date();
-  return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+function nowTime() {
+  return new Date().toTimeString().slice(0, 5);
 }
 
-function scheduleFor(componentType: string) {
-  return componentType === "Packed Red Cells" || componentType === "Whole Blood / Leucoreduced Red Cells"
-    ? wholeBloodMonitoringSchedule
-    : otherComponentMonitoringSchedule;
-}
-
-function makeVitalsRow(defaultTimepoint: MonitoringScheduleItem["label"]): VitalsRow {
+function makeRow(label: MonitoringScheduleItem["label"], patch: Partial<VitalsRow> = {}): VitalsRow {
   return {
     id: `row-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-    date: todayIso(),
-    time: timeNow(),
-    timepointLabel: defaultTimepoint,
+    date: nowDate(),
+    time: nowTime(),
+    timepointLabel: label,
     pulse: "",
     systolic: "",
     diastolic: "",
     temperature: "",
     respiratoryRate: "",
-    nurseName: "Nurse Asha",
+    nurseName: "S. Reddy",
     clockNo: bloodAdministrationEpisode.clockNo,
+    ...patch,
   };
 }
 
-function rangeError(value: string, min: number, max: number, label: string) {
-  if (!value) return `${label} is required.`;
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) return `${label} must be numeric.`;
-  if (parsed < min || parsed > max) return `${label} must be between ${min} and ${max}.`;
-  return "";
+function getScheduleFor(componentType: string) {
+  return componentType === "Packed Red Cells" || componentType === "Whole Blood / Leucoreduced Red Cells"
+    ? wholeBloodMonitoringSchedule
+    : otherComponentMonitoringSchedule;
 }
 
-function temperatureError(current: string, baseline: number) {
-  if (!current) return "Temperature is required.";
-  const parsed = Number(current);
-  if (!Number.isFinite(parsed)) return "Temperature must be numeric.";
-  if (parsed < 30 || parsed > 43) return "Temperature must be between 30.0 and 43.0 C.";
-  if (parsed - baseline >= 1) return "Temperature rise >= 1 C from baseline may indicate reaction.";
-  return "";
-}
-
-function getRowErrors(row: VitalsRow, index: number, baselineTemperature: number): BagErrorMap {
-  return {
-    date: row.date ? "" : `Entry ${index + 1}: date is required.`,
-    time: row.time ? "" : `Entry ${index + 1}: time is required.`,
-    timepointLabel: row.timepointLabel ? "" : `Entry ${index + 1}: timepoint label is required.`,
-    pulse: rangeError(row.pulse, 0, 250, `Entry ${index + 1} pulse`),
-    systolic: rangeError(row.systolic, 0, 300, `Entry ${index + 1} systolic BP`),
-    diastolic: rangeError(row.diastolic, 0, 200, `Entry ${index + 1} diastolic BP`),
-    temperature: temperatureError(row.temperature, baselineTemperature),
-    respiratoryRate: rangeError(row.respiratoryRate, 0, 60, `Entry ${index + 1} respiratory rate`),
-    nurseName: row.nurseName ? "" : `Entry ${index + 1}: nurse name is required.`,
-    clockNo: row.clockNo ? "" : `Entry ${index + 1}: clock number is required.`,
-  };
+function validateRow(row: VitalsRow, index: number): RowErrors {
+  const errors: RowErrors = {};
+  if (!row.date) errors.date = `Entry ${index + 1}: date is required.`;
+  else if (!datePattern.test(row.date)) errors.date = `Entry ${index + 1}: date must be in DD Mon YY format.`;
+  if (!row.time) errors.time = `Entry ${index + 1}: time is required.`;
+  else if (!timePattern.test(row.time)) errors.time = `Entry ${index + 1}: time must be in HH:MM format.`;
+  if (!row.timepointLabel) errors.timepointLabel = `Entry ${index + 1}: timepoint label is required.`;
+  if (!row.pulse) errors.pulse = `Entry ${index + 1}: pulse is required.`;
+  else if (!/^\d+$/.test(row.pulse) || Number(row.pulse) < 0 || Number(row.pulse) > 250) errors.pulse = `Entry ${index + 1}: pulse must be 0-250.`;
+  if (!row.systolic) errors.systolic = `Entry ${index + 1}: systolic BP is required.`;
+  else if (!/^\d+$/.test(row.systolic) || Number(row.systolic) < 0 || Number(row.systolic) > 300) errors.systolic = `Entry ${index + 1}: systolic BP must be 0-300.`;
+  if (!row.diastolic) errors.diastolic = `Entry ${index + 1}: diastolic BP is required.`;
+  else if (!/^\d+$/.test(row.diastolic) || Number(row.diastolic) < 0 || Number(row.diastolic) > 200) errors.diastolic = `Entry ${index + 1}: diastolic BP must be 0-200.`;
+  if (!row.temperature) errors.temperature = `Entry ${index + 1}: temperature is required.`;
+  else if (!/^\d+(\.\d)?$/.test(row.temperature) || Number(row.temperature) < 30 || Number(row.temperature) > 43) errors.temperature = `Entry ${index + 1}: temperature must be 30.0-43.0 C.`;
+  if (!row.respiratoryRate) errors.respiratoryRate = `Entry ${index + 1}: respiratory rate is required.`;
+  else if (!/^\d+$/.test(row.respiratoryRate) || Number(row.respiratoryRate) < 0 || Number(row.respiratoryRate) > 60) errors.respiratoryRate = `Entry ${index + 1}: respiratory rate must be 0-60.`;
+  if (!row.nurseName) errors.nurseName = `Entry ${index + 1}: nurse name is required.`;
+  if (!row.clockNo) errors.clockNo = `Entry ${index + 1}: clock no. is required.`;
+  return errors;
 }
 
 export function NurseBloodAdministrationPage() {
-  const [rows, setRows] = React.useState<VitalsRow[]>([makeVitalsRow("Immediately before starting transfusion")]);
+  const schedule = getScheduleFor(bloodAdministrationEpisode.componentType);
+  const [rows, setRows] = React.useState<VitalsRow[]>([
+    makeRow(schedule[0]?.label ?? "Immediately before starting transfusion", {
+      pulse: String(bloodAdministrationEpisode.baselinePulse),
+      systolic: String(bloodAdministrationEpisode.baselineSystolic),
+      diastolic: String(bloodAdministrationEpisode.baselineDiastolic),
+      temperature: String(bloodAdministrationEpisode.baselineTemperature.toFixed(1)),
+      respiratoryRate: String(bloodAdministrationEpisode.baselineRespiratoryRate),
+    }),
+  ]);
   const [symptoms, setSymptoms] = React.useState<Record<ReactionSymptom, boolean>>(
     Object.fromEntries(reactionSymptoms.map((symptom) => [symptom, false])) as Record<ReactionSymptom, boolean>,
   );
-  const [reactionSeverity, setReactionSeverity] = React.useState("");
-  const [actionTaken, setActionTaken] = React.useState("");
+  const [reactionDescription, setReactionDescription] = React.useState("");
+  const [actionsTaken, setActionsTaken] = React.useState<Record<string, boolean>>({});
   const [episodeCompleted, setEpisodeCompleted] = React.useState(false);
-  const [complicationAcknowledged, setComplicationAcknowledged] = React.useState(false);
-
-  const schedule = scheduleFor(bloodAdministrationEpisode.componentType);
-  const reactionTriggered = Object.values(symptoms).some(Boolean);
-  const requiresFinalObservation =
-    bloodAdministrationEpisode.componentType === "Whole Blood" || bloodAdministrationEpisode.componentType === "Packed Red Cells";
-  const rowErrors = rows.map((row, index) => getRowErrors(row, index, bloodAdministrationEpisode.baselineTemperature));
-  const hasVitalsErrors = rowErrors.some((rowError) => Object.values(rowError).some(Boolean));
-  const hasRequiredTimepoints = schedule.every((item) => rows.some((row) => row.timepointLabel === item.label));
-  const hasReactionBlockingFields = reactionTriggered && (!reactionSeverity.trim() || !actionTaken.trim());
-  const canComplete =
-    rows.length > 0 &&
-    !hasVitalsErrors &&
-    hasRequiredTimepoints &&
-    (!reactionTriggered || (!hasReactionBlockingFields && complicationAcknowledged)) &&
-    (!requiresFinalObservation || rows.some((row) => row.timepointLabel === "One hour after completion"));
+  const [showReactionReportPrompt, setShowReactionReportPrompt] = React.useState(false);
 
   function updateRow(id: string, patch: Partial<VitalsRow>) {
     setRows((current) => current.map((row) => (row.id === id ? { ...row, ...patch } : row)));
   }
 
   function addRow() {
-    const nextLabel = schedule[Math.min(rows.length, schedule.length - 1)]?.label ?? "Ad-hoc / Reaction";
-    setRows((current) => [...current, makeVitalsRow(nextLabel)]);
-  }
-
-  function addAdhocRow() {
-    setRows((current) => [...current, makeVitalsRow("Ad-hoc / Reaction")]);
-    setSymptoms((current) => ({ ...current, Fever: true }));
+    const nextTimepoint = schedule[Math.min(rows.length, schedule.length - 1)]?.label ?? "Ad-hoc / Reaction";
+    setRows((current) => [...current, makeRow(nextTimepoint)]);
   }
 
   function toggleSymptom(symptom: ReactionSymptom) {
-    setSymptoms((current) => ({ ...current, [symptom]: !current[symptom] }));
+    setSymptoms((current) => {
+      const next = { ...current, [symptom]: !current[symptom] };
+      if (Object.values(next).some(Boolean)) setShowReactionReportPrompt(true);
+      return next;
+    });
   }
+
+  function toggleAction(action: string) {
+    setActionsTaken((current) => ({ ...current, [action]: !current[action] }));
+  }
+
+  const reactionTriggered = Object.values(symptoms).some(Boolean);
+  const rowErrors = rows.map((row, index) => validateRow(row, index));
+  const hasRowErrors = rowErrors.some((rowError) => Object.values(rowError).some(Boolean));
+  const scheduleLabels = schedule.map((item) => item.label);
+  const scheduleSatisfied = scheduleLabels.every((label) => rows.some((row) => row.timepointLabel === label));
+  const requiresFinalPost = bloodAdministrationEpisode.componentType === "Packed Red Cells" || bloodAdministrationEpisode.componentType === "Whole Blood / Leucoreduced Red Cells";
+  const hasFinalCompletion = rows.some((row) => row.timepointLabel === "At completion of each pack");
+  const hasPostCompletion = !requiresFinalPost || rows.some((row) => row.timepointLabel === "One hour after completion");
+  const reactionFieldsComplete = !reactionTriggered || (reactionDescription.trim().length > 0 && Object.values(actionsTaken).some(Boolean));
+  const canComplete = !hasRowErrors && scheduleSatisfied && hasFinalCompletion && hasPostCompletion && reactionFieldsComplete;
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Nurse" title="Blood Administration" description="Screen 3 transfusion monitoring flowsheet and reaction documentation." />
-
-      <AlertBanner icon={Droplets} tone="info" title="Monitoring schedule">
-        {bloodAdministrationEpisode.componentType === "Whole Blood" || bloodAdministrationEpisode.componentType === "Packed Red Cells"
-          ? "Whole Blood / Packed RBC schedule is active."
-          : "Other component schedule is active."}
-      </AlertBanner>
-          <PatientSummaryBanner />
-      {/* <Card>
-        <CardHeader>
-          <CardTitle>Active component being transfused</CardTitle>
-          <CardDescription>Carried from Screen 2.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <Meta label="Patient" value={bloodAdministrationEpisode.patientName} />
-          <Meta label="MRN" value={bloodAdministrationEpisode.mrn} />
-          <Meta label="Bag no." value={bloodAdministrationEpisode.bagNo} />
-          <Meta label="Component" value={bloodAdministrationEpisode.componentType} />
-          <Meta label="Blood group" value={bloodAdministrationEpisode.bloodGroup} />
-          <Meta label="Start time" value={bloodAdministrationEpisode.startTime} />
-          <Meta label="Ward/Bed" value={bloodAdministrationEpisode.wardBed} />
-          <Meta label="Clock no." value={bloodAdministrationEpisode.clockNo} />
-        </CardContent>
-      </Card> */}
+      <PageHeader eyebrow="Nurse" title="Blood Transfusion Monitoring" description="Screen 3 transfusion monitoring flowsheet and reaction documentation." />
+      <PatientSummaryBanner />
 
       <Card>
-        <CardHeader className="flex-row items-center justify-between gap-3 space-y-0">
-          <div>
-            <CardTitle>Required monitoring schedule</CardTitle>
-            {/* <CardDescription>{schedule.map((item) => item.label).join(" • ")}</CardDescription> */}
-          </div>
-          {/* <Badge tone="info">Auto-generated</Badge> */}
+        <CardHeader>
+          <CardTitle>Vitals Flowsheet</CardTitle>
+          <CardDescription>Repeatable rows for transfusion monitoring.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2">
-          {schedule.map((item) => (
-            <div key={item.label} className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
-              <span className="text-sm">{item.label}</span>
-              <span className="text-xs text-muted-foreground">{item.dueMinutes === null ? "Due at milestone" : `${item.dueMinutes} min`}</span>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      {reactionTriggered ? (
-        <AlertBanner icon={AlertTriangle} tone="danger" title="STOP TRANSFUSION - follow compatibility form instructions">
-          Reaction symptoms selected. Retain the bag, notify doctor and Blood Bank, keep IV line patent, and complete the reaction workflow.
-        </AlertBanner>
-      ) : null}
-
-      <div className="grid gap-6">
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Vitals entry</CardTitle>
-              {/* <CardDescription>Repeatable rows for transfusion monitoring.</CardDescription> */}
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {rows.map((row, index) => (
-                <div key={row.id} className="rounded-xl border border-border bg-surface-muted/30 p-4">
-                  <div className="mb-4 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <Badge tone="info">Entry {index + 1}</Badge>
-                      <Badge tone="muted">{row.timepointLabel}</Badge>
-                    </div>
-                    <Button type="button" variant="ghost" onClick={() => setRows((current) => current.filter((item) => item.id !== row.id))} disabled={rows.length === 1}>
-                      Remove
-                    </Button>
-                  </div>
-                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                    <Field label="Date" required>
-                      <Input type="date" value={row.date} onChange={(event) => updateRow(row.id, { date: event.target.value })} />
-                      <InlineError message={rowErrors[index]?.date ?? ""} />
-                    </Field>
-                    <Field label="Time" required>
-                      <Input type="time" value={row.time} onChange={(event) => updateRow(row.id, { time: event.target.value })} />
-                      <InlineError message={rowErrors[index]?.time ?? ""} />
-                    </Field>
-                    <Field label="Timepoint label" required>
+        <CardContent className="space-y-4">
+          <div className="overflow-hidden rounded-lg border border-stone-200">
+            <table className="w-full border-collapse text-sm">
+              <thead className="bg-gradient-to-r from-stone-100 to-stone-50">
+                <tr>
+                  {["Timepoint", "Date", "Time", "Pulse /min", "BP Sys mmHg", "BP Dia mmHg", "Temp C", "RR /min", "Nurse / ID"].map((heading) => (
+                    <th key={heading} className="border border-stone-200 px-4 py-3 text-left font-semibold text-stone-700">
+                      {heading}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-200">
+                {rows.map((row, index) => (
+                  <tr key={row.id} className={index < 2 ? "bg-white hover:bg-stone-50" : "bg-stone-50/50 hover:bg-stone-100"}>
+                    <td className="border border-stone-200 px-4 py-3">
                       <select
-                        className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                        className="h-10 w-full rounded-md border border-stone-300 bg-white px-3 text-sm text-stone-800 outline-none transition-colors focus:ring-2 focus:ring-blue-500/20"
                         value={row.timepointLabel}
-                        onChange={(event) => updateRow(row.id, { timepointLabel: event.target.value as VitalsRow["timepointLabel"] })}
+                        onChange={(event) => updateRow(row.id, { timepointLabel: event.target.value as MonitoringScheduleItem["label"] })}
                       >
                         {timepointOptions.map((option) => (
                           <option key={option} value={option}>
@@ -253,173 +179,188 @@ export function NurseBloodAdministrationPage() {
                           </option>
                         ))}
                       </select>
-                      <InlineError message={rowErrors[index]?.timepointLabel ?? ""} />
-                    </Field>
-                    <Field label="Pulse/HR (/min)" required>
-                      <Input type="number" value={row.pulse} onChange={(event) => updateRow(row.id, { pulse: event.target.value })} />
-                      {/* <InlineError message={rowErrors[index]?.pulse ?? ""} /> */}
-                    </Field>
-                    <Field label="BP systolic" required>
-                      <Input type="number" value={row.systolic} onChange={(event) => updateRow(row.id, { systolic: event.target.value })} />
-                      {/* <InlineError message={rowErrors[index]?.systolic ?? ""} /> */}
-                    </Field>
-                    <Field label="BP diastolic" required>
-                      <Input type="number" value={row.diastolic} onChange={(event) => updateRow(row.id, { diastolic: event.target.value })} />
-                      {/* <InlineError message={rowErrors[index]?.diastolic ?? ""} /> */}
-                    </Field>
-                    <Field label="Temperature (C)" required>
-                      <Input type="number" step="0.1" value={row.temperature} onChange={(event) => updateRow(row.id, { temperature: event.target.value })} />
-                      {/* <InlineError message={rowErrors[index]?.temperature ?? ""} /> */}
-                    </Field>
-                    <Field label="Respiratory rate (/min)" required>
-                      <Input type="number" value={row.respiratoryRate} onChange={(event) => updateRow(row.id, { respiratoryRate: event.target.value })} />
-                      {/* <InlineError message={rowErrors[index]?.respiratoryRate ?? ""} /> */}
-                    </Field>
-                    <Field label="Sign / Name / Clock no." required>
-                      <Input value={`${row.nurseName} / ${row.clockNo}`} readOnly />
-                      {/* <InlineError message={rowErrors[index]?.nurseName ?? rowErrors[index]?.clockNo ?? ""} /> */}
-                    </Field>
-                  </div>
-                </div>
-              ))}
-
-              <div className="flex flex-wrap gap-2">
-                <Button type="button" variant="outline" onClick={addRow}>
-                  Add scheduled entry
-                </Button>
-                {/* <Button type="button" variant="outline" onClick={addAdhocRow}>
-                  Add ad-hoc entry
-                </Button> */}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Reaction panel</CardTitle>
-              {/* <CardDescription>Always visible and mandatory when any symptom is selected.</CardDescription> */}
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-2 md:grid-cols-2">
-                {reactionSymptoms.map((symptom) => (
-                  <button
-                    key={symptom}
-                    type="button"
-                    onClick={() => toggleSymptom(symptom)}
-                    className={`rounded-lg border px-3 py-2 text-left text-sm ${symptoms[symptom] ? "border-danger bg-danger/5" : "border-border bg-background"}`}
-                  >
-                    {symptom}
-                  </button>
+                    </td>
+                    <td className="border border-stone-200 px-4 py-3">
+                      <CellInput value={row.date} onChange={(value) => updateRow(row.id, { date: value })} />
+                      <InlineError message={rowErrors[index]?.date ?? ""} />
+                    </td>
+                    <td className="border border-stone-200 px-4 py-3">
+                      <CellInput value={row.time} onChange={(value) => updateRow(row.id, { time: value })} />
+                      <InlineError message={rowErrors[index]?.time ?? ""} />
+                    </td>
+                    <td className="border border-stone-200 px-4 py-3">
+                      <CellInput value={row.pulse} onChange={(value) => updateRow(row.id, { pulse: value })} />
+                      <InlineError message={rowErrors[index]?.pulse ?? ""} />
+                    </td>
+                    <td className="border border-stone-200 px-4 py-3">
+                      <CellInput value={row.systolic} onChange={(value) => updateRow(row.id, { systolic: value })} />
+                      <InlineError message={rowErrors[index]?.systolic ?? ""} />
+                    </td>
+                    <td className="border border-stone-200 px-4 py-3">
+                      <CellInput value={row.diastolic} onChange={(value) => updateRow(row.id, { diastolic: value })} />
+                      <InlineError message={rowErrors[index]?.diastolic ?? ""} />
+                    </td>
+                    <td className="border border-stone-200 px-4 py-3">
+                      <CellInput value={row.temperature} onChange={(value) => updateRow(row.id, { temperature: value })} />
+                      <InlineError message={rowErrors[index]?.temperature ?? ""} />
+                    </td>
+                    <td className="border border-stone-200 px-4 py-3">
+                      <CellInput value={row.respiratoryRate} onChange={(value) => updateRow(row.id, { respiratoryRate: value })} />
+                      <InlineError message={rowErrors[index]?.respiratoryRate ?? ""} />
+                    </td>
+                    <td className="border border-stone-200 px-4 py-3"><CellInput value={`${row.nurseName} / ${row.clockNo}`} readOnly /></td>
+                  </tr>
                 ))}
+              </tbody>
+            </table>
+          </div>
+          <Button type="button" variant="outline" onClick={addRow}>Add vitals entry</Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle>Reaction Symptoms</CardTitle>
+            <CardDescription>Tick if present during transfusion</CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {reactionSymptoms.map((symptom) => (
+              <label
+                key={symptom}
+                className={`flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 text-sm font-medium transition-colors ${symptoms[symptom] ? "border-red-400 bg-red-50 text-red-950" : "border-stone-300 bg-white text-stone-800 hover:border-stone-400"}`}
+              >
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-stone-400 text-danger focus:ring-danger"
+                  checked={symptoms[symptom]}
+                  onChange={() => toggleSymptom(symptom)}
+                />
+                <span>{symptom}</span>
+              </label>
+            ))}
+          </div>
+
+          {reactionTriggered ? (
+            <div className="mt-6 space-y-4">
+              <AlertBanner
+                icon={AlertTriangle}
+                tone="danger"
+                title="STOP TRANSFUSION"
+                className="rounded-lg border-danger/40 bg-danger/5 text-danger"
+              >
+                Stop transfusion immediately, inform doctor and Blood Bank, retain the blood bag, and keep the IV line patent.
+              </AlertBanner>
+
+              <div>
+                <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-700">Reaction Description</p>
+                <textarea
+                  className="min-h-28 w-full rounded-lg border border-stone-300 bg-white px-4 py-3 text-sm outline-none transition-colors focus:ring-2 focus:ring-blue-500/20"
+                  value={reactionDescription}
+                  onChange={(event) => setReactionDescription(event.target.value)}
+                  placeholder="Describe severity, onset, and timing of symptoms..."
+                />
+                <InlineError message={reactionDescription.trim() ? "" : "Required when any reaction symptom is selected."} />
               </div>
 
-              {reactionTriggered ? (
-                <div className="space-y-4 rounded-xl border border-danger/30 bg-danger/5 p-4">
-                  <Field label="Reaction severity / description" required>
-                    <textarea
-                      className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring/20"
-                      value={reactionSeverity}
-                      onChange={(event) => setReactionSeverity(event.target.value)}
-                      placeholder="Describe symptoms, severity, onset time, and clinical concern."
-                    />
-                    <InlineError message={reactionSeverity.trim() ? "" : "Required when any reaction symptom is selected."} />
-                  </Field>
-                  <Field label="Action taken" required>
-                    <textarea
-                      className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring/20"
-                      value={actionTaken}
-                      onChange={(event) => setActionTaken(event.target.value)}
-                      placeholder="Transfusion stopped, doctor informed, blood bag retained, blood bank notified..."
-                    />
-                    <InlineError message={actionTaken.trim() ? "" : "Required when any reaction symptom is selected."} />
-                  </Field>
-                  <label className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2 text-sm">
-                    <input type="checkbox" checked={complicationAcknowledged} onChange={(event) => setComplicationAcknowledged(event.target.checked)} />
-                    Retain blood bag, send samples + compatibility form, keep IV line patent
-                  </label>
-                  <Button type="button" variant="outline" onClick={() => toast.info("Transfusion Reaction Report launch placeholder")}>
-                    Open Reaction Report
-                  </Button>
+              <div>
+                <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-700">Actions Taken</p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {["Transfusion stopped", "Doctor informed", "IV line kept patent", "Blood bag retained", "Blood Bank notified", "Samples sent"].map((action) => (
+                    <label key={action} className="flex cursor-pointer items-center gap-2 rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-800 transition-colors hover:bg-stone-100">
+                      <input type="checkbox" checked={Boolean(actionsTaken[action])} onChange={() => toggleAction(action)} className="h-4 w-4 rounded border-stone-400 text-danger focus:ring-danger" />
+                      {action}
+                    </label>
+                  ))}
                 </div>
-              ) : null}
-            </CardContent>
-          </Card>
-        </div>
+                <InlineError message={Object.values(actionsTaken).some(Boolean) ? "" : "At least one action is required when reaction symptoms are selected."} />
+              </div>
+              {/* <Button type="button" variant="outline" onClick={() => setShowReactionReportPrompt(true)}>
+                Open Transfusion Reaction Report
+              </Button> */}
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
 
-        <div className="space-y-6">
-          {/* <Card>
-            <CardHeader>
-              <CardTitle>Completion gate</CardTitle>
-              <CardDescription>Completion requires final entry, and for PRC/Whole Blood one hour after completion is also expected.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
-                <span className="text-sm text-muted-foreground">Final / completion entry</span>
-                <Badge tone={rows.some((row) => row.timepointLabel === "At completion of each pack") ? "success" : "warning"}>
-                  {rows.some((row) => row.timepointLabel === "At completion of each pack") ? "Done" : "Pending"}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
-                <span className="text-sm text-muted-foreground">1 hr post-completion</span>
-                <Badge tone={requiresFinalObservation ? (rows.some((row) => row.timepointLabel === "One hour after completion") ? "success" : "warning") : "muted"}>
-                  {requiresFinalObservation ? (rows.some((row) => row.timepointLabel === "One hour after completion") ? "Done" : "Pending") : "Not required"}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
-                <span className="text-sm text-muted-foreground">Reaction workflow</span>
-                <Badge tone={reactionTriggered ? "danger" : "success"}>{reactionTriggered ? "Triggered" : "Clear"}</Badge>
-              </div>
-            </CardContent>
-          </Card> */}
-          <div className="flex justify-end gap-2">
-                      <Button type="button" disabled={!canComplete} onClick={() => setEpisodeCompleted(true)}>
-                         Complete Transfusion
-                      </Button>
-                        {episodeCompleted ? <AlertBanner icon={ShieldAlert} tone="success" title="Flowsheet completed">Monitoring episode closed for {bloodAdministrationEpisode.patientName}.</AlertBanner> : null}
-                    </div>  
-          {/* <Card> */}
-            {/* <CardHeader>
-              <CardTitle>Episode actions</CardTitle>
-              <CardDescription>Close only after required monitoring is completed.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button type="button" className="w-full" disabled={!canComplete} onClick={() => setEpisodeCompleted(true)}>
-                Mark episode completed
-              </Button>
-              <Button type="button" variant="outline" className="w-full" onClick={() => toast.info("Overdue reminder placeholder")}>
-                Show overdue reminders
-              </Button>
-              {episodeCompleted ? <AlertBanner icon={ShieldAlert} tone="success" title="Flowsheet completed">Monitoring episode closed for {bloodAdministrationEpisode.patientName}.</AlertBanner> : null}
-            </CardContent> */}
-          {/* </Card> */}
-
-          {/* <AlertBanner icon={Clock3} tone="warning" title="Overdue reminder">
-            Missed or overdue timepoints should be flagged for the assigned nurse.
-          </AlertBanner> */}
-        </div>
-      </div>
+      {/* <Card>
+        <CardHeader>
+          <CardTitle>Sign-Off</CardTitle>
+          <CardDescription>Completion signatures and timestamp</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 xl:grid-cols-3">
+            <SignCard title="Nurse signature" name="S. Reddy" time="10:22" />
+            <SignCard title="Doctor signature" name="Dr. R. Mehta" time="10:23" />
+            <SignCard title="Timestamp" name="16 Jun 2025 - 02:15 pm" time="" />
+          </div>
+          <Button type="button" className="w-full" disabled={!canComplete} onClick={() => setEpisodeCompleted(true)}>
+            Transfusion marked complete
+          </Button>
+          {!canComplete ? <p className="text-sm text-stone-500">Complete required vitals, schedule timepoints, and reaction fields before closing.</p> : null}
+        </CardContent>
+      </Card> */}
+      <div className="flex justify-end gap-2">
+        <Button type="button" disabled={!canComplete} onClick={() => setEpisodeCompleted(true)}>
+            Transfusion marked complete
+        </Button>
+           {/* {!canComplete ? <p className="text-sm text-stone-500">Complete required vitals, schedule timepoints, and reaction fields before closing.</p> : null} */}
+      </div>  
+      {showReactionReportPrompt ? (
+        <AlertBanner icon={AlertTriangle} tone="warning" title="Transfusion Reaction Report">
+          Open this workflow to document the reaction details, retain the bag and samples, record compatibility form handling, notify doctor and Blood Bank, and close the episode only after the reaction fields are complete.
+        </AlertBanner>
+      ) : null}
+      {episodeCompleted ? <AlertBanner icon={ShieldAlert} tone="success" title="Flowsheet completed">Monitoring episode closed for {bloodAdministrationEpisode.patientName}.</AlertBanner> : null}
     </div>
   );
 }
 
-function Meta({ label, value }: { label: string; value: string }) {
+function Pill({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-border bg-surface-muted p-3">
-      <div className="text-xs font-medium text-muted-foreground">{label}</div>
-      <div className="mt-1 text-sm font-semibold text-foreground">{value}</div>
+    <div className="rounded-lg border border-stone-300 bg-white px-4 py-3 text-sm shadow-sm">
+      <div className="font-medium text-stone-600">{label}</div>
+      <div className="mt-1 text-base font-semibold text-stone-900">{value}</div>
     </div>
   );
 }
 
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+function SignCard({ title, name, time }: { title: string; name: string; time: string }) {
   return (
-    <label className="space-y-2">
-      <div className="text-xs font-medium text-muted-foreground">
-        {label}
-        {required ? <span className="text-danger"> *</span> : null}
+    <div className="rounded-lg border border-stone-300 bg-white p-4 shadow-sm">
+      <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-stone-600">[ ] {title}</div>
+      <div className="mt-2">
+        <div className="text-base font-semibold text-stone-900">{name}</div>
+        {time && <div className="mt-1 text-sm text-stone-600">{time}</div>}
       </div>
-      {children}
-    </label>
+      <Button type="button" variant="outline" className="mt-4 w-full text-sm">
+        Sign
+      </Button>
+    </div>
+  );
+}
+
+function CellInput({
+  value,
+  onChange,
+  placeholder,
+  readOnly,
+}: {
+  value: string;
+  onChange?: (value: string) => void;
+  placeholder?: string;
+  readOnly?: boolean;
+}) {
+  return (
+    <Input
+      className="h-10 rounded-md border-stone-300 bg-white text-center text-sm shadow-none outline-none transition-colors focus:ring-2 focus:ring-blue-500/20"
+      value={value}
+      placeholder={placeholder}
+      readOnly={readOnly}
+      onChange={(event) => onChange?.(event.target.value)}
+    />
   );
 }
 

@@ -2,11 +2,19 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { bloodAdministrationEpisode, otherComponentMonitoringSchedule, wholeBloodMonitoringSchedule } from "../blood-administration-data";
 
 type PatientSummaryField = {
   label: string;
   value: string;
 };
+const schedule = getScheduleFor(bloodAdministrationEpisode.componentType);
+function getScheduleFor(componentType: string) {
+  return componentType === "Packed Red Cells" || componentType === "Whole Blood / Leucoreduced Red Cells"
+    ? wholeBloodMonitoringSchedule
+    : otherComponentMonitoringSchedule;
+}
+  const requiresFinalPost = bloodAdministrationEpisode.componentType === "Packed Red Cells" || bloodAdministrationEpisode.componentType === "Whole Blood / Leucoreduced Red Cells";
 
 const patientFields: PatientSummaryField[] = [
   { label: "Name", value: "Meera Joshi" },
@@ -46,6 +54,27 @@ export function PatientSummaryBanner() {
             <PatientField key={field.label} {...field} />
           ))}
         </div>
+
+        <div>
+            <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-700">Monitoring Schedule</p>
+            <div className="flex flex-wrap gap-3">
+              {[
+                schedule[0]?.label === "Immediately before starting transfusion" ? "Pre-start" : "Pre-start",
+                schedule[1]?.label === "15 min after commencement" ? "15 min" : "15 min",
+                requiresFinalPost ? "1 hr - due now" : "Completion due now",
+                "Completion",
+                requiresFinalPost ? "1 hr post" : "No post-completion",
+              ].map((label: string, index: number) => (
+                <button
+                  key={label}
+                  type="button"
+                  className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${index < 2 ? "border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100" : index === 2 ? "border-amber-400 bg-amber-50 text-amber-900 hover:bg-amber-100" : "border-stone-300 bg-stone-50 text-stone-700 hover:bg-stone-100"}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
       </CardContent>
     </Card>
   );

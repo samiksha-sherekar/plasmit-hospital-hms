@@ -51,19 +51,19 @@ export type BloodAdministrationEpisode = {
 };
 
 export const bloodAdministrationEpisode: BloodAdministrationEpisode = {
-  patientName: "Meera Joshi",
-  mrn: "UHID-45821",
-  wardBed: "Ward 3 / Bed 12",
-  bloodGroup: "A+",
+  patientName: "Amit Kumar",
+  mrn: "00284761",
+  wardBed: "Ward 4B - Bed 12",
+  bloodGroup: "B +ve",
   componentType: "Packed Red Cells",
-  bagNo: "BU-10231",
-  startTime: "2026-06-15 09:15",
-  baselinePulse: 82,
+  bagNo: "PRC-2024-00871",
+  startTime: "09:15",
+  baselinePulse: 78,
   baselineSystolic: 118,
   baselineDiastolic: 76,
   baselineTemperature: 36.8,
-  baselineRespiratoryRate: 18,
-  clockNo: "CN-1442",
+  baselineRespiratoryRate: 16,
+  clockNo: "4421",
 };
 
 export const wholeBloodMonitoringSchedule: MonitoringScheduleItem[] = [
