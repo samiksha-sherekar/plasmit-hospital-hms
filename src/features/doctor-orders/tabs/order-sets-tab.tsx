@@ -95,7 +95,7 @@ export function OrderSetsTab() {
   const updateIncluded = (id: string, values: Partial<IncludedOrder>) => setDraft((current) => ({ ...current, includedOrders: current.includedOrders.map((item) => (item.id === id ? { ...item, ...values } : item)) }));
   return (
     <div className="space-y-4">
-      <PatientSummaryBanner />
+      {/* <PatientSummaryBanner /> */}
       <Card>
         <CardHeader>
           <CardTitle>Order Sets</CardTitle>

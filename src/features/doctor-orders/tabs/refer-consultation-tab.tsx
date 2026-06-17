@@ -89,7 +89,7 @@ export function ReferConsultationTab() {
 
   return (
     <div className="space-y-4">
-      <PatientSummaryBanner />
+      {/* <PatientSummaryBanner /> */}
       <Card>
         <CardHeader>
           <CardTitle>Referral / Consult</CardTitle>

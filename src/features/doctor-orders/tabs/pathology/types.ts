@@ -1,4 +1,7 @@
 export type PathologyPriority = "Routine" | "Urgent" | "STAT" | "ASAP";
+export type PathologySex = "Male" | "Female" | "Other";
+export type PathologyIndicationType = "Therapeutic" | "Surgery";
+export type PathologyRequestType = "Routine" | "Emergency";
 
 export type PathologyTest = {
   id: string;

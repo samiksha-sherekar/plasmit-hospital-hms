@@ -110,7 +110,7 @@ export function LaboratoryTab() {
 
   return (
     <div className="space-y-4">
-      <PatientSummaryBanner />
+      {/* <PatientSummaryBanner /> */}
 
       {/* <div className="grid gap-3 md:grid-cols-3">
         <StatTile label="Lab orders" value={`${orders.length}`} meta="Current request queue" />

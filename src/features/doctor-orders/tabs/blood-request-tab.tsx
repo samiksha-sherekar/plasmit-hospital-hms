@@ -144,6 +144,9 @@ interface FormState {
   bloodGroupSource: string;
   rhGroupSource: string;
   bloodCountsLinked: boolean;
+  groupHoldRequested: boolean;
+  crossMatchRequested: boolean;
+  crossMatchUnits: string;
   productType: string;
   quantity: string;
   selectedProducts: ProductSelection[];
@@ -201,6 +204,9 @@ const initialForm: FormState = {
   bloodGroupSource: "lab",
   rhGroupSource: "lab",
   bloodCountsLinked: true,
+  groupHoldRequested: false,
+  crossMatchRequested: true,
+  crossMatchUnits: "2",
   productType: "Packed Red Cells",
   quantity: "2",
   selectedProducts: [{ type: "Packed Red Cells", quantity: "2", notes: "" }],
@@ -291,6 +297,8 @@ function PreviewDrawer({
               <tr className="border-t"><td className="py-2 font-medium text-muted-foreground">Antibodies Detected</td><td className="py-2 text-foreground">{form.antibodiesDetected}{form.antibodyNames ? ` — ${form.antibodyNames}` : ''}</td></tr>
               <tr className="border-t"><td className="py-2 font-medium text-muted-foreground">Blood Group Source / Rh Source</td><td className="py-2 text-foreground">{form.bloodGroupSource} / {form.rhGroupSource}</td></tr>
               <tr className="border-t"><td className="py-2 font-medium text-muted-foreground">Counts Linked</td><td className="py-2 text-foreground">{form.bloodCountsLinked ? 'Yes' : 'No'}</td></tr>
+              <tr className="border-t"><td className="py-2 font-medium text-muted-foreground">Group & Hold</td><td className="py-2 text-foreground">{form.groupHoldRequested ? 'Yes' : 'No'}</td></tr>
+              <tr className="border-t"><td className="py-2 font-medium text-muted-foreground">Cross Match</td><td className="py-2 text-foreground">{form.crossMatchRequested ? `Yes (${form.crossMatchUnits || '-' } unit${form.crossMatchUnits === '1' ? '' : 's'})` : 'No'}</td></tr>
               <tr className="border-t"><td className="py-2 font-medium text-muted-foreground">Request Type</td><td className="py-2 text-foreground">{form.requestType}</td></tr>
               <tr className="border-t"><td className="py-2 font-medium text-muted-foreground">Nature of Emergency</td><td className="py-2 text-foreground">{form.natureOfEmergency || '-'}</td></tr>
               <tr className="border-t"><td className="py-2 font-medium text-muted-foreground">Replacement Donors (count)</td><td className="py-2 text-foreground">{form.donorsCount}</td></tr>
@@ -364,6 +372,7 @@ export function BloodRequestTab() {
   const isBloodGroupLabVerified = form.bloodGroupSource === "lab";
   const isRhLabVerified = form.rhGroupSource === "lab";
   const areBloodCountsLinked = form.bloodCountsLinked;
+  const showCrossMatchUnits = form.crossMatchRequested;
   const replacementDonorCount = Number(form.donorsCount) || 0;
   const replacementDonors = Array.isArray(form.replacementDonors) ? form.replacementDonors : [];
   const hasReplacementDonors = replacementDonorCount > 0;
@@ -445,6 +454,7 @@ export function BloodRequestTab() {
     if (!form.consentExplained) nextErrors.push("Consent for transfusion must be confirmed before submission.");
     if (!form.doctorSignature.trim()) nextErrors.push("Doctor signature is required.");
     if (!form.patientBloodGroup.trim() || !form.patientRh.trim()) nextErrors.push("ABO and Rh blood group must be captured.");
+    if (form.crossMatchRequested && (!form.crossMatchUnits.trim() || Number(form.crossMatchUnits) < 1)) nextErrors.push("Cross Match units are required when Cross Match is selected.");
 
     if (requiredDateTime && !isEmergency && requiredDateTime.getTime() < Date.now()) {
       nextErrors.push("Required date/time cannot be in the past unless Emergency is selected.");
@@ -468,75 +478,48 @@ export function BloodRequestTab() {
 
   return (
     <div className="space-y-4">
-      <PatientSummaryBanner />
+      
       <Card>
         <CardContent className="space-y-6">
-          <section className="space-y-3">
-            <h3 className="text-sm font-semibold text-foreground">Order Context</h3>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <label className="space-y-2"><FieldLabel>Requisitioning Unit</FieldLabel>
-                <FieldSelect value={form.requisitionUnit} onChange={(requisitionUnit) => setForm((current) => ({
-                  ...current,
-                  requisitionUnit,
-                  requisitionUnitOther: requisitionUnit === "Others" ? current.requisitionUnitOther : "",
-                }))}>
-                  {requisitionUnits.map((unit) => <option key={unit} value={unit}>{unit}</option>)}
-                </FieldSelect>
-              </label>
-              {isOtherRequisitionUnit ? (
-                <label className="space-y-2 "><FieldLabel>Requisitioning Unit (Other)</FieldLabel>
-                  <Input value={form.requisitionUnitOther} onChange={(event) => setForm((current) => ({ ...current, requisitionUnitOther: event.target.value }))} placeholder="Enter other requisition unit" />
+          <div className="grid gap-4 lg:grid-cols-2">
+            <section className="space-y-3">
+              <h3 className="text-sm font-semibold text-foreground">Order Context</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {/* <label className="space-y-2"><FieldLabel>Requisitioning Unit</FieldLabel>
+                  <FieldSelect value={form.requisitionUnit} onChange={(requisitionUnit) => setForm((current) => ({
+                    ...current,
+                    requisitionUnit,
+                    requisitionUnitOther: requisitionUnit === "Others" ? current.requisitionUnitOther : "",
+                  }))}>
+                    {requisitionUnits.map((unit) => <option key={unit} value={unit}>{unit}</option>)}
+                  </FieldSelect>
                 </label>
-              ) : null}
-              {/* <Input value={form.requisitionUnit} readOnly /></label> */}
-              <label className="space-y-2"><FieldLabel>Consultant In-charge</FieldLabel>
-                <FieldSelect value={form.consultant} onChange={(consultant) => setForm((current) => ({ ...current, consultant }))}>
-                  {consultants.map((doc) => <option key={doc} value={doc}>{doc}</option>)}
-                </FieldSelect>
-              </label>
-              {/* <Input value={form.consultant} onChange={(event) => setForm((current) => ({ ...current, consultant: event.target.value }))} /></label> */}
-              <label className="space-y-2"><FieldLabel>Name of Requesting Doctor</FieldLabel>
-                <FieldSelect value={form.requestingDoctor} onChange={(requestingDoctor) => setForm((current) => ({ ...current, requestingDoctor }))}>
-                    {requestingDoctors.map((doc) => <option key={doc} value={doc}>{doc}</option>)}
-                </FieldSelect>
-              </label>
-              {/* <Input value={form.requestingDoctor} onChange={(event) => setForm((current) => ({ ...current, requestingDoctor: event.target.value }))} /></label> */}
-              <label className="space-y-2"><FieldLabel>Clinical Diagnosis</FieldLabel><Input value={form.diagnosis} onChange={(event) => setForm((current) => ({ ...current, diagnosis: event.target.value }))} placeholder="Free text or ICD-10 search" /></label>
-              
-            </div>
-          </section>
-
-          {/* {isSurgery ? <AlertBanner icon={ShieldAlert} tone="warning" title="Surgery selected">The transfusion indication is required for surgery cases and should be documented clearly.</AlertBanner> : null} */}
-          <section className="space-y-3">
-            <h3 className="text-sm font-semibold text-foreground">Indication</h3>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <FieldLabel className="mb-0">
-                  Indication Type
-                </FieldLabel>
-                  <Toggle
-                    checked={form.indicationType === "Surgery"}
-                    onChange={(checked) =>
-                      setForm((current) => ({
-                        ...current,
-                        indicationType: checked ? "Surgery" : "Therapeutic",
-                        indicationForTransfusion: "",
-                      }))
-                    }
-                    label=""
-                  />
-                  <span className="text-sm font-medium text-foreground">
-                    {form.indicationType}
-                  </span>
+                {isOtherRequisitionUnit ? (
+                  <label className="space-y-2 "><FieldLabel>Requisitioning Unit (Other)</FieldLabel>
+                    <Input value={form.requisitionUnitOther} onChange={(event) => setForm((current) => ({ ...current, requisitionUnitOther: event.target.value }))} placeholder="Enter other requisition unit" />
+                  </label>
+                ) : null} */}
+                {/* <Input value={form.requisitionUnit} readOnly /></label> */}
+                {/* <Input value={form.consultant} onChange={(event) => setForm((current) => ({ ...current, consultant: event.target.value }))} /></label> */}
+                <label className="space-y-2"><FieldLabel>Name of Requesting Doctor</FieldLabel><Input value={form.requestingDoctor} onChange={(event) => setForm((current) => ({ ...current, requestingDoctor: event.target.value }))} /></label>
+                <label className="space-y-2"><FieldLabel>Clinical Diagnosis</FieldLabel><Input value={form.diagnosis} onChange={(event) => setForm((current) => ({ ...current, diagnosis: event.target.value }))} placeholder="Free text or ICD-10 search" /></label>
               </div>
-              </div>
-                {isSurgery ? (
-                  <label className="space-y-2"><FieldLabel>Type of Surgical Procedure</FieldLabel><Input value={form.indicationForTransfusion} onChange={(event) => setForm((current) => ({ ...current, indicationForTransfusion: event.target.value }))} placeholder="Required for Surgery indication" /></label>
-                ) : null}
-            </div>
-          </section>    
+            </section>
 
+            {/* {isSurgery ? <AlertBanner icon={ShieldAlert} tone="warning" title="Surgery selected">The transfusion indication is required for surgery cases and should be documented clearly.</AlertBanner> : null} */}
+            <section className="space-y-3">
+              <h3 className="text-sm font-semibold text-foreground">Indication</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <FieldLabel className="mb-0">
+                    Indication Type
+                  </FieldLabel>
+                  <Input value={form.indicationType} onChange={(event) => setForm((current) => ({ ...current, indicationType: event.target.value }))} />
+
+                </div>
+              </div>
+            </section>    
+          </div>
           <section className="space-y-3">
             <h3 className="text-sm font-semibold text-foreground">Patient Blood</h3>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -574,7 +557,7 @@ export function BloodRequestTab() {
                         previousTransfusionDetails: event.target.value,
                       }))
                     }
-                    placeholder="Transfusion details (optional)"
+                    placeholder="Transfusion details"
                   />
                 )}
               </div>
@@ -751,7 +734,8 @@ export function BloodRequestTab() {
 
           <section className="space-y-3">
             <h3 className="text-sm font-semibold text-foreground">Blood Group & Counts</h3>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
               <label className="space-y-2"><FieldLabel>Blood Group of Patient - ABO</FieldLabel>
                 {/* <FieldSelect value={form.patientBloodGroup} disabled={isBloodGroupLabVerified} onChange={(patientBloodGroup) => setForm((current) => ({ ...current, patientBloodGroup, bloodGroupSource: "manual" }))}>
                   {bloodGroups.map((group) => <option key={group} value={group}>{group}</option>)}
@@ -765,9 +749,9 @@ export function BloodRequestTab() {
               </label>
               <div className="space-y-2">
                 <FieldLabel>Blood Group of Patient - Rh</FieldLabel>
-
+                <input type="text" readOnly value={form.patientRh} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm" />
                 <div className="flex items-center gap-2">
-                  <Toggle
+                  {/* <Toggle
                     disabled={isRhLabVerified}
                     checked={form.patientRh === "Positive"}
                     onChange={(checked) =>
@@ -782,7 +766,7 @@ export function BloodRequestTab() {
 
                   <span className="text-sm font-medium text-foreground">
                     {form.patientRh}
-                  </span>
+                  </span> */}
                 </div>
 
                 <div className="text-xs text-muted-foreground">
@@ -793,7 +777,7 @@ export function BloodRequestTab() {
               </div>
               <label className="space-y-2"><FieldLabel>Group + Screen Done On (Date)</FieldLabel><Input type="date" max={todayIso()} value={form.groupScreenDate} onChange={(event) => setForm((current) => ({ ...current, groupScreenDate: event.target.value }))} /></label>
               <label className="space-y-2"><FieldLabel>Hemoglobin (Hb)</FieldLabel><Input readOnly={areBloodCountsLinked} value={form.hb} onChange={(event) => setForm((current) => ({ ...current, hb: event.target.value }))} placeholder="g/dL" /></label>
-              <label className="space-y-2"><FieldLabel>WBC</FieldLabel><Input readOnly={areBloodCountsLinked} value={form.wbc} onChange={(event) => setForm((current) => ({ ...current, wbc: event.target.value }))} /></label>
+              {/* <label className="space-y-2"><FieldLabel>WBC</FieldLabel><Input readOnly={areBloodCountsLinked} value={form.wbc} onChange={(event) => setForm((current) => ({ ...current, wbc: event.target.value }))} /></label> */}
               <label className="space-y-2"><FieldLabel>RBC</FieldLabel><Input readOnly={areBloodCountsLinked} value={form.rbc} onChange={(event) => setForm((current) => ({ ...current, rbc: event.target.value }))} /></label>
               <label className="space-y-2"><FieldLabel>PCV / Hematocrit</FieldLabel><Input readOnly={areBloodCountsLinked} value={form.pcv} onChange={(event) => setForm((current) => ({ ...current, pcv: event.target.value }))} /></label>
               <label className="space-y-2"><FieldLabel>Platelet Count</FieldLabel><Input readOnly={areBloodCountsLinked} value={form.platelets} onChange={(event) => setForm((current) => ({ ...current, platelets: event.target.value }))} /></label>
@@ -806,6 +790,49 @@ export function BloodRequestTab() {
                   {/* {areBloodCountsLinked ? "Values are auto-pulled from latest linked lab result." : "Manual entry allowed when lab-linked values are unavailable."} */}
                 </div>
               </label>
+              <label className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm transition hover:bg-surface-muted">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-primary"
+                  checked={form.groupHoldRequested}
+                  onChange={(event) => setForm((current) => ({ ...current, groupHoldRequested: event.target.checked }))}
+                />
+                <span>Group &amp; Hold</span>
+              </label>
+              <label className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm transition hover:bg-surface-muted">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-primary"
+                  checked={form.crossMatchRequested}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      crossMatchRequested: event.target.checked,
+                      crossMatchUnits: event.target.checked ? current.crossMatchUnits || "1" : "",
+                    }))
+                  }
+                />
+                <span>Cross Match</span>
+              </label>
+              {/* <div className="flex flex-wrap gap-3 ">
+            </div>  */}
+              {showCrossMatchUnits ? (
+                <label className="space-y-2">
+                  <FieldLabel>Cross Match Units</FieldLabel>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={form.crossMatchUnits}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        crossMatchUnits: event.target.value.replace(/[^0-9]/g, ""),
+                      }))
+                    }
+                    placeholder="No. of units"
+                  />
+                </label>
+              ) : null}
             </div>
           </section>
 

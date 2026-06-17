@@ -1,6 +1,5 @@
 "use client";
-
-import { ArrowLeftRight, Pencil, Save, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronsUpDown, Pencil, Save, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,28 @@ import { Card, CardContent } from "@/components/ui/card";
 import type { PathologySummaryRow } from "./types";
 
 type SummarySortKey = keyof Pick<PathologySummaryRow, "name" | "loinc" | "cpt" | "specialty" | "specimen" | "priority">;
+
+function SortButton({
+  label,
+  column,
+  sort,
+  onSort,
+}: {
+  label: string;
+  column: SummarySortKey;
+  sort: { key: SummarySortKey; direction: "asc" | "desc" };
+  onSort: (key: SummarySortKey) => void;
+}) {
+  const active = sort.key === column;
+  const SortIcon = active ? (sort.direction === "asc" ? ArrowUp : ArrowDown) : ChevronsUpDown;
+
+  return (
+    <button type="button" className="flex items-center gap-2 text-left font-semibold uppercase tracking-wide hover:text-foreground" onClick={() => onSort(column)}>
+      {label}
+      <SortIcon className={active ? "h-3.5 w-3.5 text-foreground" : "h-3.5 w-3.5 text-muted-foreground/70"} />
+    </button>
+  );
+}
 
 export function PathologyOrderSummaryTab({
   rows,
@@ -58,7 +79,7 @@ export function PathologyOrderSummaryTab({
             <Badge tone="info">PATHOLOGY</Badge>
           </div>
 
-          <div className="rounded-md border border-border bg-surface-muted p-3 text-sm text-muted-foreground">{billingNote}</div>
+          {/* <div className="rounded-md border border-border bg-surface-muted p-3 text-sm text-muted-foreground">{billingNote}</div> */}
 
           <div className="overflow-x-auto rounded-lg border border-border">
             <table className="min-w-[1200px] w-full border-collapse text-left text-sm">
@@ -66,10 +87,7 @@ export function PathologyOrderSummaryTab({
                 <tr>
                   {headers.map((header) => (
                     <th key={header.key} className="px-4 py-3">
-                      <button type="button" className="inline-flex items-center gap-2" onClick={() => onSort(header.key)}>
-                        {header.label}
-                        <ArrowLeftRight className="h-3.5 w-3.5" />
-                      </button>
+                      <SortButton label={header.label} column={header.key} sort={sort} onSort={onSort} />
                     </th>
                   ))}
                   <th className="px-4 py-3">Status</th>
@@ -126,10 +144,10 @@ export function PathologyOrderSummaryTab({
                 <Save className="h-4 w-4" />
                 Save
               </Button>
-              {/* <Button type="button" variant="outline" onClick={onAddToBill}>
+              <Button type="button" variant="outline" onClick={onAddToBill}>
                 Add to bill
               </Button>
-              <Button type="button" onClick={onSaveAndBill}>
+              {/* <Button type="button" onClick={onSaveAndBill}>
                 Save & add to bill
               </Button> */}
             </div>

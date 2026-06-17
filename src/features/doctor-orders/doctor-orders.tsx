@@ -16,6 +16,7 @@ import { ProceduresTab } from "./tabs/procedures-tab";
 import { RadiologyTab } from "./tabs/radiology-tab";
 import { ReferConsultationTab } from "./tabs/refer-consultation-tab";
 import { RequestsTab } from "./tabs/requests-tab";
+import { PatientSummaryBanner } from "./tabs/shared/patient-summary-banner";
 
 type OrderTab = {
   id: string;
@@ -114,7 +115,7 @@ const defaultTab = "blood";
         //   </Button>
         // }
       />
-
+      <PatientSummaryBanner />
       <Tabs defaultValue={defaultTab} className="w-full">
         <div className="space-y-4">
           <div className="space-y-3">

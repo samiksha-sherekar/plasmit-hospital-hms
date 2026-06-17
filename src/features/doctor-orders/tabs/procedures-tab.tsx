@@ -92,7 +92,7 @@ export function ProceduresTab() {
 
   return (
     <div className="space-y-4">
-      <PatientSummaryBanner />
+      {/* <PatientSummaryBanner /> */}
       <Card>
         <CardHeader>
           <CardTitle>Procedures Order</CardTitle>

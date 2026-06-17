@@ -30,7 +30,6 @@ export function PathologyTab() {
   const [specimenSource, setSpecimenSource] = React.useState("Blood");
   const [priority, setPriority] = React.useState<PathologyPriority>("Routine");
   const [fasting, setFasting] = React.useState(false);
-  const [instructions, setInstructions] = React.useState("");
   const [clinicalNotes, setClinicalNotes] = React.useState("");
   const [instructionsForLab, setInstructionsForLab] = React.useState("");
   const [collectionDate, setCollectionDate] = React.useState(new Date().toISOString().slice(0, 10));
@@ -174,7 +173,7 @@ export function PathologyTab() {
 
   return (
     <div className="space-y-4">
-      <PatientSummaryBanner />
+      {/* <PatientSummaryBanner /> */}
 
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as MainTab)} className="w-full">
         <div className="space-y-3">
@@ -242,8 +241,6 @@ export function PathologyTab() {
             onPriorityChange={setPriority}
             fasting={fasting}
             onFastingChange={setFasting}
-            instructions={instructions}
-            onInstructionsChange={setInstructions}
             clinicalNotes={clinicalNotes}
             onClinicalNotesChange={setClinicalNotes}
             instructionsForLab={instructionsForLab}
