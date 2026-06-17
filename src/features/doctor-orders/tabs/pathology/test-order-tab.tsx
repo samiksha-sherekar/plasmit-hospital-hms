@@ -51,84 +51,84 @@ export function PathologyTestOrderTab({
   filteredTests,
   selectedTestIds,
   selectedGroupIds,
-  patientName,
-  onPatientNameChange,
-  uhid,
-  onUhidChange,
-  admissionNo,
-  onAdmissionNoChange,
-  age,
-  onAgeChange,
-  sex,
-  onSexChange,
-  wardBedNo,
-  onWardBedNoChange,
-  consultant,
-  onConsultantChange,
-  requestingDoctor,
-  onRequestingDoctorChange,
-  clinicalDiagnosis,
-  onClinicalDiagnosisChange,
-  indicationType,
-  onIndicationTypeChange,
-  surgicalProcedure,
-  onSurgicalProcedureChange,
-  previousTransfusion,
-  onPreviousTransfusionChange,
-  previousTransfusionDetails,
-  onPreviousTransfusionDetailsChange,
-  previousReaction,
-  onPreviousReactionChange,
-  previousReactionDetails,
-  onPreviousReactionDetailsChange,
-  pregnancies,
-  onPregnanciesChange,
-  miscarriage,
-  onMiscarriageChange,
-  stillBirth,
-  onStillBirthChange,
-  erythroblastosis,
-  onErythroblastosisChange,
-  antibodiesDetected,
-  onAntibodiesDetectedChange,
-  antibodyNames,
-  onAntibodyNamesChange,
-  patientBloodGroup,
-  onPatientBloodGroupChange,
-  patientRh,
-  onPatientRhChange,
-  groupScreenDate,
-  onGroupScreenDateChange,
-  wbc,
-  onWbcChange,
-  rbc,
-  onRbcChange,
-  hb,
-  onHbChange,
-  pcv,
-  onPcvChange,
-  platelets,
-  onPlateletsChange,
-  pt,
-  onPtChange,
-  ptt,
-  onPttChange,
-  otherLabs,
-  onOtherLabsChange,
-  requestType,
-  onRequestTypeChange,
-  requiredDate,
-  onRequiredDateChange,
-  requiredTime,
-  onRequiredTimeChange,
-  natureOfEmergency,
-  onNatureOfEmergencyChange,
-  consentExplained,
-  onConsentExplainedChange,
-  doctorSignature,
-  onDoctorSignatureChange,
-  consentText,
-  onConsentTextChange,
+  patientName = "",
+  onPatientNameChange = () => {},
+  uhid = "",
+  onUhidChange = () => {},
+  admissionNo = "",
+  onAdmissionNoChange = () => {},
+  age = "",
+  onAgeChange = () => {},
+  sex = "Female",
+  onSexChange = () => {},
+  wardBedNo = "",
+  onWardBedNoChange = () => {},
+  consultant = "",
+  onConsultantChange = () => {},
+  requestingDoctor = "",
+  onRequestingDoctorChange = () => {},
+  clinicalDiagnosis = "",
+  onClinicalDiagnosisChange = () => {},
+  indicationType = "Therapeutic",
+  onIndicationTypeChange = () => {},
+  surgicalProcedure = "",
+  onSurgicalProcedureChange = () => {},
+  previousTransfusion = "No",
+  onPreviousTransfusionChange = () => {},
+  previousTransfusionDetails = "",
+  onPreviousTransfusionDetailsChange = () => {},
+  previousReaction = "No",
+  onPreviousReactionChange = () => {},
+  previousReactionDetails = "",
+  onPreviousReactionDetailsChange = () => {},
+  pregnancies = "N/A",
+  onPregnanciesChange = () => {},
+  miscarriage = "",
+  onMiscarriageChange = () => {},
+  stillBirth = "",
+  onStillBirthChange = () => {},
+  erythroblastosis = "",
+  onErythroblastosisChange = () => {},
+  antibodiesDetected = "No",
+  onAntibodiesDetectedChange = () => {},
+  antibodyNames = "",
+  onAntibodyNamesChange = () => {},
+  patientBloodGroup = "",
+  onPatientBloodGroupChange = () => {},
+  patientRh = "",
+  onPatientRhChange = () => {},
+  groupScreenDate = "",
+  onGroupScreenDateChange = () => {},
+  wbc = "",
+  onWbcChange = () => {},
+  rbc = "",
+  onRbcChange = () => {},
+  hb = "",
+  onHbChange = () => {},
+  pcv = "",
+  onPcvChange = () => {},
+  platelets = "",
+  onPlateletsChange = () => {},
+  pt = "",
+  onPtChange = () => {},
+  ptt = "",
+  onPttChange = () => {},
+  otherLabs = "",
+  onOtherLabsChange = () => {},
+  requestType = "Routine",
+  onRequestTypeChange = () => {},
+  requiredDate = "",
+  onRequiredDateChange = () => {},
+  requiredTime = "",
+  onRequiredTimeChange = () => {},
+  natureOfEmergency = "",
+  onNatureOfEmergencyChange = () => {},
+  consentExplained = true,
+  onConsentExplainedChange = () => {},
+  doctorSignature = "",
+  onDoctorSignatureChange = () => {},
+  consentText = "",
+  onConsentTextChange = () => {},
   errors = [],
   problems,
   newProblem,
@@ -244,35 +244,35 @@ export function PathologyTestOrderTab({
   consentText: string;
   onConsentTextChange: (value: string) => void;
   errors?: string[];
-  problems: string[];
-  newProblem: string;
-  onNewProblemChange: (value: string) => void;
-  problemListVisible: boolean;
-  activeProblemView: "Active" | "Find";
-  onProblemListVisibleChange: (value: boolean) => void;
-  onActiveProblemViewChange: (value: "Active" | "Find") => void;
-  onAddProblem: () => void;
-  onToggleTest: (id: string) => void;
-  onToggleGroup: (id: string) => void;
-  specimenSource: string;
-  onSpecimenSourceChange: (value: string) => void;
-  priority: PathologyPriority;
-  onPriorityChange: (value: PathologyPriority) => void;
-  fasting: boolean;
-  onFastingChange: (value: boolean) => void;
-  clinicalNotes: string;
-  onClinicalNotesChange: (value: string) => void;
-  instructionsForLab: string;
-  onInstructionsForLabChange: (value: string) => void;
-  collectionDate: string;
-  onCollectionDateChange: (value: string) => void;
-  collectionTime: string;
-  onCollectionTimeChange: (value: string) => void;
-  onOpenSummary: () => void;
-  onSave: () => void;
-  onSaveAndBill: () => void;
-  onAddToBill: () => void;
-  onReorderPrevious: (historyId: string) => void;
+  problems?: string[];
+  newProblem?: string;
+  onNewProblemChange?: (value: string) => void;
+  problemListVisible?: boolean;
+  activeProblemView?: "Active" | "Find";
+  onProblemListVisibleChange?: (value: boolean) => void;
+  onActiveProblemViewChange?: (value: "Active" | "Find") => void;
+  onAddProblem?: () => void;
+  onToggleTest?: (id: string) => void;
+  onToggleGroup?: (id: string) => void;
+  specimenSource?: string;
+  onSpecimenSourceChange?: (value: string) => void;
+  priority?: PathologyPriority;
+  onPriorityChange?: (value: PathologyPriority) => void;
+  fasting?: boolean;
+  onFastingChange?: (value: boolean) => void;
+  clinicalNotes?: string;
+  onClinicalNotesChange?: (value: string) => void;
+  instructionsForLab?: string;
+  onInstructionsForLabChange?: (value: string) => void;
+  collectionDate?: string;
+  onCollectionDateChange?: (value: string) => void;
+  collectionTime?: string;
+  onCollectionTimeChange?: (value: string) => void;
+  onOpenSummary?: () => void;
+  onSave?: () => void;
+  onSaveAndBill?: () => void;
+  onAddToBill?: () => void;
+  onReorderPrevious?: (historyId: string) => void;
 }) {
   const historyOptions: PathologyOrderHistory[] = [
     { id: "hist-cbc", label: "CBC (12 Apr 2026)", selectedTestIds: ["cbc"], selectedGroupIds: [] },
@@ -316,7 +316,7 @@ export function PathologyTestOrderTab({
                               "border-l border-input px-3 py-1 text-xs font-medium first:border-l-0",
                               activeProblemView === mode ? "bg-primary text-primary-foreground" : "text-muted-foreground",
                             ].join(" ")}
-                            onClick={() => onActiveProblemViewChange(mode)}
+                            onClick={() => onActiveProblemViewChange?.(mode)}
                           >
                             {mode}
                           </button>
@@ -325,7 +325,7 @@ export function PathologyTestOrderTab({
                     </div>
                     {activeProblemView === "Find" ? (
                       <div className="mt-3">
-                        <Input placeholder="Search problem..." value={newProblem} onChange={(event) => onNewProblemChange(event.target.value)} />
+                        <Input placeholder="Search problem..." value={newProblem} onChange={(event) => onNewProblemChange?.(event.target.value)} />
                       </div>
                     ) : null}
                     <div className="mt-3 overflow-hidden border border-border">
@@ -380,7 +380,7 @@ export function PathologyTestOrderTab({
                               <td className="border-t border-r border-border px-2 py-2 text-muted-foreground">{item.label.split("(")[1]?.replace(")", "") ?? "-"}</td>
                               <td className="border-t border-r border-border px-2 py-2 font-medium text-foreground">{item.label.split(" (")[0]}</td>
                               <td className="border-t border-border px-2 py-2">
-                                <Button type="button" size="sm" variant="outline" onClick={() => onReorderPrevious(item.id)}>
+                                <Button type="button" size="sm" variant="outline" onClick={() => onReorderPrevious?.(item.id)}>
                                   Reorder
                                 </Button>
                               </td>
@@ -410,7 +410,7 @@ export function PathologyTestOrderTab({
                       <div className="border-b border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Select grouped tests</div>
                       <div className="max-h-[360px] overflow-auto px-3">
                         {groupedTests.map((group) => (
-                          <CheckboxRow key={group.id} label={group.name} checked={selectedGroupIds.includes(group.id)} onToggle={() => onToggleGroup(group.id)} />
+                          <CheckboxRow key={group.id} label={group.name} checked={selectedGroupIds.includes(group.id)} onToggle={() => onToggleGroup?.(group.id)} />
                         ))}
                       </div>
                     </div>
@@ -419,7 +419,7 @@ export function PathologyTestOrderTab({
                       <div className="border-b border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Select tests</div>
                       <div className="max-h-[360px] overflow-auto px-3">
                         {filteredTests.map((test) => (
-                          <CheckboxRow key={test.id} label={`${test.name} - ${test.description}`} checked={selectedTestIds.includes(test.id)} onToggle={() => onToggleTest(test.id)} />
+                          <CheckboxRow key={test.id} label={`${test.name} - ${test.description}`} checked={selectedTestIds.includes(test.id)} onToggle={() => onToggleTest?.(test.id)} />
                         ))}
                         {filteredTests.some((test) => test.children?.length) ? (
                           <div className="pl-5">
@@ -453,20 +453,20 @@ export function PathologyTestOrderTab({
                                 <td className="px-3 py-2 font-medium text-foreground">{test.name}</td>
                                 <td className="px-3 py-2 text-muted-foreground">{test.code || "-"}</td>
                                 <td className="px-3 py-2">
-                                  <select className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm" value={specimenSource} onChange={(event) => onSpecimenSourceChange(event.target.value)}>
+                                  <select className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm" value={specimenSource} onChange={(event) => onSpecimenSourceChange?.(event.target.value)}>
                                     {specimenSources.map((source) => <option key={source} value={source}>{source}</option>)}
                                   </select>
                                 </td>
                                 <td className="px-3 py-2">
                                   <label className="flex items-center gap-2">
-                                    <input type="checkbox" className="h-4 w-4 accent-primary" checked={fasting} onChange={(event) => onFastingChange(event.target.checked)} />
+                                    <input type="checkbox" className="h-4 w-4 accent-primary" checked={fasting} onChange={(event) => onFastingChange?.(event.target.checked)} />
                                     <span className="text-sm">No</span>
-                                    <input type="checkbox" className="h-4 w-4 accent-primary" checked={!fasting} onChange={(event) => onFastingChange(!event.target.checked)} />
+                                    <input type="checkbox" className="h-4 w-4 accent-primary" checked={!fasting} onChange={(event) => onFastingChange?.(!event.target.checked)} />
                                     <span className="text-sm">Yes</span>
                                   </label>
                                 </td>
                                 <td className="px-3 py-2">
-                                  <select className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm" value={priority} onChange={(event) => onPriorityChange(event.target.value as PathologyPriority)}>
+                                  <select className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm" value={priority} onChange={(event) => onPriorityChange?.(event.target.value as PathologyPriority)}>
                                     {priorities.map((item) => <option key={item} value={item}>{item}</option>)}
                                   </select>
                                 </td>
@@ -477,20 +477,20 @@ export function PathologyTestOrderTab({
                                 <td className="px-3 py-2 font-medium text-foreground">{group.name}</td>
                                 <td className="px-3 py-2 text-muted-foreground">-</td>
                                 <td className="px-3 py-2">
-                                  <select className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm" value={specimenSource} onChange={(event) => onSpecimenSourceChange(event.target.value)}>
+                                  <select className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm" value={specimenSource} onChange={(event) => onSpecimenSourceChange?.(event.target.value)}>
                                     {specimenSources.map((source) => <option key={source} value={source}>{source}</option>)}
                                   </select>
                                 </td>
                                 <td className="px-3 py-2">
                                   <label className="flex items-center gap-2">
-                                    <input type="checkbox" className="h-4 w-4 accent-primary" checked={fasting} onChange={(event) => onFastingChange(event.target.checked)} />
+                                    <input type="checkbox" className="h-4 w-4 accent-primary" checked={fasting} onChange={(event) => onFastingChange?.(event.target.checked)} />
                                     <span className="text-sm">No</span>
-                                    <input type="checkbox" className="h-4 w-4 accent-primary" checked={!fasting} onChange={(event) => onFastingChange(!event.target.checked)} />
+                                    <input type="checkbox" className="h-4 w-4 accent-primary" checked={!fasting} onChange={(event) => onFastingChange?.(!event.target.checked)} />
                                     <span className="text-sm">Yes</span>
                                   </label>
                                 </td>
                                 <td className="px-3 py-2">
-                                  <select className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm" value={priority} onChange={(event) => onPriorityChange(event.target.value as PathologyPriority)}>
+                                  <select className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm" value={priority} onChange={(event) => onPriorityChange?.(event.target.value as PathologyPriority)}>
                                     {priorities.map((item) => <option key={item} value={item}>{item}</option>)}
                                   </select>
                                 </td>
@@ -518,7 +518,7 @@ export function PathologyTestOrderTab({
                 className="min-h-[92px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-border focus:ring-0"
                 placeholder="Free text instructions for the lab"
                 value={instructionsForLab}
-                onChange={(event) => onInstructionsForLabChange(event.target.value)}
+                onChange={(event) => onInstructionsForLabChange?.(event.target.value)}
               />
             </label>
           </div>
@@ -528,10 +528,10 @@ export function PathologyTestOrderTab({
             <div className="text-sm text-muted-foreground">{selectedTestIds.length + selectedGroupIds.length} tests selected</div>
             
             <div className="ml-auto flex flex-wrap gap-2">
-              <Button type="button" variant="outline" onClick={onOpenSummary}>
+              <Button type="button" variant="outline" onClick={() => onOpenSummary?.()}>
                 View order summary
               </Button>
-              <Button type="button"  onClick={onSave}>
+              <Button type="button"  onClick={() => onSave?.()}>
                 Save
               </Button>
               {/* <Button type="button" variant="outline" onClick={onAddToBill}>
