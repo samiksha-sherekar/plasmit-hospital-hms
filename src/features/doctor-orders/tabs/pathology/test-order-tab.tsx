@@ -279,6 +279,7 @@ export function PathologyTestOrderTab({
     { id: "hist-lft", label: "LFT (02 Mar 2025)", selectedTestIds: ["lft"], selectedGroupIds: ["liver"] },
     { id: "hist-kft", label: "KFT (02 Mar 2025)", selectedTestIds: ["kft"], selectedGroupIds: ["renal"] },
   ];
+  const safeProblems = problems ?? [];
   const selectedTests = filteredTests.filter((test) => selectedTestIds.includes(test.id));
   const selectedGroups = groupedTests.filter((group) => selectedGroupIds.includes(group.id));
 
@@ -338,14 +339,14 @@ export function PathologyTestOrderTab({
                           </tr>
                         </thead>
                         <tbody>
-                          {(problemListVisible ? problems : []).slice(0, 4).map((problem, index) => (
+                          {(problemListVisible ? safeProblems : []).slice(0, 4).map((problem, index) => (
                             <tr key={problem} className={index % 2 === 0 ? "bg-background" : "bg-surface-muted/40"}>
                               <td className="border-t border-r border-border px-2 py-2 text-muted-foreground">12 May 2026</td>
                               <td className="border-t border-r border-border px-2 py-2 text-foreground">{problem}</td>
                               <td className="border-t border-border px-2 py-2 text-muted-foreground">-</td>
                             </tr>
                           ))}
-                          {problemListVisible && !problems.length ? (
+                          {problemListVisible && !safeProblems.length ? (
                             <tr>
                               <td colSpan={3} className="border-t border-border px-2 py-4 text-center text-muted-foreground">
                                 No problems reported
