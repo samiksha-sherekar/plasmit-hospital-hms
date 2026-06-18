@@ -534,16 +534,8 @@ export function PrescriptionPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Doctor Workspace"
         title="Prescription"
-        description="Create a prescription and send medicines to the drug ordering queue."
         className="static mx-0 border-b bg-transparent px-0 py-2"
-        // actions={
-        //   <Button onClick={submitPrescription}>
-        //     <Save className="h-4 w-4" />
-        //     Submit Prescription
-        //   </Button>
-        // }
       />
 
       <PatientInformation

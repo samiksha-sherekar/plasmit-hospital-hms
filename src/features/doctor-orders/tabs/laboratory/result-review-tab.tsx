@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
 import { diagnosisTypes } from "./data";
-import type { PathologyResultBlock } from "./types";
+import type { LaboratoryResultBlock } from "./types";
 
 function StatusPill({ status }: { status: string }) {
   const tone =
@@ -24,12 +24,12 @@ function StatusPill({ status }: { status: string }) {
 
 type ReviewRow = {
   id: string;
-  block: PathologyResultBlock;
-  row: PathologyResultBlock["rows"][number];
+  block: LaboratoryResultBlock;
+  row: LaboratoryResultBlock["rows"][number];
   isFirstInBlock: boolean;
 };
 
-export function PathologyResultReviewTab({
+export function LaboratoryResultReviewTab({
   resultBlocks: blocks,
   diagnosisSearch,
   diagnosisType,
@@ -43,7 +43,7 @@ export function PathologyResultReviewTab({
   onDeleteResult,
   onReorderResult,
 }: {
-  resultBlocks: PathologyResultBlock[];
+  resultBlocks: LaboratoryResultBlock[];
   diagnosisSearch: string;
   diagnosisType: string;
   diagnosisOpen: boolean;
@@ -107,7 +107,7 @@ export function PathologyResultReviewTab({
 
   const downloadReport = () => {
     const lines = [
-      "Pathology Result History",
+      "Laboratory Result History",
       "",
       ...rows.map((item) =>
         [item.block.name, item.row.parameter, item.row.result, item.row.unit, item.row.referenceRange, item.row.flag].join(" | "),
@@ -117,7 +117,7 @@ export function PathologyResultReviewTab({
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "pathology-result-history.txt";
+    link.download = "Laboratory-result-history.txt";
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -153,17 +153,17 @@ export function PathologyResultReviewTab({
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardContent className="space-y-4 p-4">
+      {/* <Card>
+        <CardContent className="space-y-4 p-4"> */}
           <div className="flex flex-wrap items-center justify-end gap-2">
               <Button type="button" variant="outline" size="sm" onClick={downloadReport}>
                 <Download className="h-4 w-4" />
                 Download
               </Button>
-              {/* <Button type="button" variant="outline" size="sm">
+              <Button type="button" variant="outline" size="sm">
                 <Eye className="h-4 w-4" />
                 View report
-              </Button> */}
+              </Button>
           </div>
 
           <div className="overflow-auto rounded-md border border-border">
@@ -178,7 +178,7 @@ export function PathologyResultReviewTab({
                   <th className="px-3 py-3">Order Date</th>
                   <th className="px-3 py-3">Order completion Date</th>
                   <th className="px-3 py-3">Result Status</th>
-                  <th className="px-3 py-3">Intent</th>
+                  <th className="px-3 py-3">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -339,57 +339,58 @@ export function PathologyResultReviewTab({
               Save
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        {/* </CardContent>
+      </Card> */}
 
       {detailRow && selectedDetail ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-2xl rounded-md border border-border bg-white shadow-xl">
-            <div className="border-b border-border px-4 py-3 text-sm font-semibold text-foreground">Result Details</div>
-            <div className="space-y-4 p-4">
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="rounded-md border border-border p-3"><div className="flex items-center gap-2 text-sm"><span className="text-muted-foreground">Test:</span><span className="font-medium">{selectedDetail.test}</span></div></div>
-                <div className="rounded-md border border-border p-3"><div className="flex items-center gap-2 text-sm"><span className="text-muted-foreground">Sample:</span><span className="font-medium">{selectedDetail.sample}</span></div></div>
-                <div className="rounded-md border border-border p-3"><div className="flex items-center gap-2 text-sm"><span className="text-muted-foreground">Collected On:</span><span className="font-medium">{selectedDetail.collectedOn}</span></div></div>
-                <div className="rounded-md border border-border p-3"><div className="flex items-center gap-2 text-sm"><span className="text-muted-foreground">Completed On:</span><span className="font-medium">{selectedDetail.completedOn}</span></div></div>
-                <div className="rounded-md border border-border p-3"><div className="flex items-center gap-2 text-sm"><span className="text-muted-foreground">LOINC Code:</span><span className="font-medium">{selectedDetail.loinc}</span></div></div>
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                <div className="w-full max-w-2xl rounded-md border border-border bg-white shadow-xl">
+                  <div className="border-b border-border px-4 py-3 text-sm font-semibold text-foreground">Result Details</div>
+                  <div className="space-y-4 p-4">
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="rounded-md border border-border p-3"><div className="flex items-center gap-2 text-sm"><span className="text-muted-foreground">Test:</span><span className="font-medium">{selectedDetail.test}</span></div></div>
+                      <div className="rounded-md border border-border p-3"><div className="flex items-center gap-2 text-sm"><span className="text-muted-foreground">Department:</span><span className="font-medium">{selectedDetail.department}</span></div></div>
+                      <div className="rounded-md border border-border p-3"><div className="flex items-center gap-2 text-sm"><span className="text-muted-foreground">Sample:</span><span className="font-medium">{selectedDetail.sample}</span></div></div>
+                      <div className="rounded-md border border-border p-3"><div className="flex items-center gap-2 text-sm"><span className="text-muted-foreground">Collected On:</span><span className="font-medium">{selectedDetail.collectedOn}</span></div></div>
+                      <div className="rounded-md border border-border p-3"><div className="flex items-center gap-2 text-sm"><span className="text-muted-foreground">Completed On:</span><span className="font-medium">{selectedDetail.completedOn}</span></div></div>
+                      <div className="rounded-md border border-border p-3"><div className="flex items-center gap-2 text-sm"><span className="text-muted-foreground">LOINC Code:</span><span className="font-medium">{selectedDetail.loinc}</span></div></div>
+                    </div>
+                    <div className="overflow-hidden rounded-md border border-border">
+                      <table className="w-full border-collapse text-left text-sm">
+                        <thead className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          <tr>
+                            <th className="px-3 py-2">Parameter</th>
+                            <th className="px-3 py-2">Result</th>
+                            <th className="px-3 py-2">Unit</th>
+                            <th className="px-3 py-2">Range</th>
+                            <th className="px-3 py-2">Flag</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="border-t border-border">
+                            <td className="px-3 py-2 font-medium text-foreground">{selectedDetail.test}</td>
+                            <td className="px-3 py-2 text-foreground">{selectedDetail.result}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{selectedDetail.units}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{selectedDetail.range}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{selectedDetail.status === "Received" ? "H/L" : "-"}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    
+                    {/* <div className="rounded-md border border-border p-3">
+                      <div className="text-xs text-muted-foreground">Previous Result</div>
+                      <div className="mt-1 text-sm font-medium text-foreground">{selectedDetail.previousResult}</div>
+                    </div> */}
+                  </div>
+                  <div className="flex justify-end gap-2 border-t border-border px-4 py-3">
+                    <Button type="button" variant="outline" onClick={() => setDetailRow(null)}>
+                      Close
+                    </Button>
+                  </div>
+                </div>
               </div>
-              <div className="overflow-hidden rounded-md border border-border">
-                <table className="w-full border-collapse text-left text-sm">
-                  <thead className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    <tr>
-                      <th className="px-3 py-2">Parameter</th>
-                      <th className="px-3 py-2">Result</th>
-                      <th className="px-3 py-2">Unit</th>
-                      <th className="px-3 py-2">Range</th>
-                      <th className="px-3 py-2">Flag</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-t border-border">
-                      <td className="px-3 py-2 font-medium text-foreground">{selectedDetail.test}</td>
-                      <td className="px-3 py-2 text-foreground">{selectedDetail.result}</td>
-                      <td className="px-3 py-2 text-muted-foreground">{selectedDetail.units}</td>
-                      <td className="px-3 py-2 text-muted-foreground">{selectedDetail.range}</td>
-                      <td className="px-3 py-2 text-muted-foreground">{selectedDetail.status === "Received" ? "H/L" : "-"}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              
-              {/* <div className="rounded-md border border-border p-3">
-                <div className="text-xs text-muted-foreground">Previous Result</div>
-                <div className="mt-1 text-sm font-medium text-foreground">{selectedDetail.previousResult}</div>
-              </div> */}
-            </div>
-            <div className="flex justify-end gap-2 border-t border-border px-4 py-3">
-              <Button type="button" variant="outline" onClick={() => setDetailRow(null)}>
-                Close
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+            ) : null}
 
       {diagnosisOpen ? (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-3 sm:items-center sm:p-4">
@@ -505,7 +506,7 @@ export function PathologyResultReviewTab({
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2">
-                  <label className="space-y-2">
+                  {/* <label className="space-y-2">
                     <div className="text-xs font-medium text-muted-foreground">Selected Clinical Conclusion</div>
                     <Input value={selectedDiagnosis?.conclusion ?? ""} readOnly />
                   </label>
@@ -516,7 +517,7 @@ export function PathologyResultReviewTab({
                   <label className="space-y-2">
                     <div className="text-xs font-medium text-muted-foreground">Type</div>
                     <Input value={selectedDiagnosis?.type ?? diagnosisType ?? ""} readOnly />
-                  </label>
+                  </label> */}
                   <label className="space-y-2 md:col-span-2">
                     <div className="text-xs font-medium text-muted-foreground">Comments</div>
                     <textarea

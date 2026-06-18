@@ -70,10 +70,10 @@ export const navigationItems: NavigationItem[] = [
   { id: "blood-product", label: "Blood/Blood Product", icon: Archive, route: "/nurse/blood-product", group: "Nurse", allowedRoles: ["Nurse"], status: "ready" },
   { id: "blood-receipt-verification", label: "Blood Receipt & Verification", icon: CheckCircle2, route: "/nurse/blood-receipt-verification", group: "Nurse", allowedRoles: ["Nurse"], status: "ready" },
   { id: "blood-administration", label: "Blood Administration", icon: CheckCircle2, route: "/nurse/blood-administration", group: "Nurse", allowedRoles: ["Nurse"], status: "ready" },
-  { id: "active-order", label: "Active Order", icon: Archive, route: "/nurse/active-order", group: "Nurse", allowedRoles: ["Nurse"], status: "ready" },
+  // { id: "active-order", label: "Active Order", icon: Archive, route: "/nurse/active-order", group: "Nurse", allowedRoles: ["Nurse"], status: "ready" },
   { id: "drug-administration", label: "Drug Administration", icon: Pill, route: "/nurse/drug-administration", group: "Nurse", allowedRoles: ["Nurse"], status: "ready" },
-  { id: "completed-order", label: "Completed Orders", icon: ClipboardCheck, route: "/nurse/completed-order", group: "Nurse", allowedRoles: ["Nurse"], status: "ready" },
-  { id: "discontinued-order", label: "Discontinued Orders", icon: Ban, route: "/nurse/discontinued-order", group: "Nurse", allowedRoles: ["Nurse"], status: "ready" },
+  // { id: "completed-order", label: "Completed Orders", icon: ClipboardCheck, route: "/nurse/completed-order", group: "Nurse", allowedRoles: ["Nurse"], status: "ready" },
+  // { id: "discontinued-order", label: "Discontinued Orders", icon: Ban, route: "/nurse/discontinued-order", group: "Nurse", allowedRoles: ["Nurse"], status: "ready" },
   { id: "ldt-management", label: "LDT Management", icon: ListPlus, route: "/nurse/ldt-management", group: "Nurse", allowedRoles: ["Nurse"], status: "ready" },
   
   { id: "blood-request", label: "Blood Requests", icon: Droplets, route: "/blood-bank/blood-request", group: "Blood Bank", allowedRoles: ["Blood Bank"], status: "ready" },

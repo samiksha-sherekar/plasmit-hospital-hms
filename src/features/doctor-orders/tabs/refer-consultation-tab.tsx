@@ -91,10 +91,10 @@ export function ReferConsultationTab() {
     <div className="space-y-4">
       {/* <PatientSummaryBanner /> */}
       <Card>
-        <CardHeader>
+        {/* <CardHeader>
           <CardTitle>Referral / Consult</CardTitle>
           <CardDescription>Doctor referral screen with department, consultant, reason, notes, and review flow.</CardDescription>
-        </CardHeader>
+        </CardHeader> */}
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
             {(["test-order", "order-summary"] as const).map((tab) => (

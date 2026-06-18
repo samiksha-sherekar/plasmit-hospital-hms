@@ -507,9 +507,7 @@ export function LdtManagementPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Nursing - LDT Management"
         title="LDT Management"
-        description="Add patient lines, drains, and tubes, then capture their properties and assessment."
         className="static mx-0 border-b bg-transparent px-0 py-2"
       />
 

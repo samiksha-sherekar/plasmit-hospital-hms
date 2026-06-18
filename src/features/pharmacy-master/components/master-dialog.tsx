@@ -52,7 +52,7 @@ export function MasterDialog({
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>{onDelete ? <Button variant="danger" onClick={() => setConfirmDelete(true)}><Trash2 className="h-4 w-4" />{deleteLabel}</Button> : null}</div>
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => onOpenChange(false)}><X className="h-4 w-4" />Cancel</Button>
+                <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
                 <Button onClick={onSubmit}><ClipboardCheck className="h-4 w-4" />{submitLabel}</Button>
               </div>
             </div>

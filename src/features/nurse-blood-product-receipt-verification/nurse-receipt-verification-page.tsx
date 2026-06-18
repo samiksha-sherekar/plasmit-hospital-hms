@@ -216,7 +216,6 @@ export function NurseReceiptVerificationPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Nurse"
         title="Pre-Transfusion Bedside Verification"
       />
 

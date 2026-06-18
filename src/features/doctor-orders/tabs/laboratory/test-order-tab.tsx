@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
 import { groupedTests, priorities, specimenSources, testList, visitProblems } from "./data";
-import type { PathologyIndicationType, PathologyPriority, PathologyOrderHistory, PathologyRequestType, PathologySex, PathologyTest } from "./types";
+import type { LaboratoryIndicationType, LaboratoryPriority, LaboratoryOrderHistory, LaboratoryRequestType, LaboratorySex, LaboratoryTest } from "./types";
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return <div className="text-[11px] font-semibold uppercase tracking-[0.04em] text-muted-foreground">{children}</div>;
@@ -29,12 +29,12 @@ function CheckboxRow({ label, checked, indent = false, onToggle }: { label: stri
   );
 }
 
-function SelectField({ value, onChange, options }: { value: PathologyPriority; onChange: (value: PathologyPriority) => void; options: PathologyPriority[] }) {
+function SelectField({ value, onChange, options }: { value: LaboratoryPriority; onChange: (value: LaboratoryPriority) => void; options: LaboratoryPriority[] }) {
   return (
     <select
       className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground outline-none transition focus:border-border focus:ring-0"
       value={value}
-      onChange={(event) => onChange(event.target.value as PathologyPriority)}
+      onChange={(event) => onChange(event.target.value as LaboratoryPriority)}
     >
       {options.map((option) => (
         <option key={option} value={option}>
@@ -45,10 +45,12 @@ function SelectField({ value, onChange, options }: { value: PathologyPriority; o
   );
 }
 
-export function PathologyTestOrderTab({
+export function LaboratoryTestOrderTab({
   search,
   onSearchChange,
   filteredTests,
+  departmentFilter = "All",
+  onDepartmentFilterChange = () => {},
   selectedTestIds,
   selectedGroupIds,
   patientName = "",
@@ -162,7 +164,9 @@ export function PathologyTestOrderTab({
 }: {
   search: string;
   onSearchChange: (value: string) => void;
-  filteredTests: PathologyTest[];
+  filteredTests: LaboratoryTest[];
+  departmentFilter?: string;
+  onDepartmentFilterChange?: (value: string) => void;
   selectedTestIds: string[];
   selectedGroupIds: string[];
    patientName?: string;
@@ -173,8 +177,8 @@ export function PathologyTestOrderTab({
    onAdmissionNoChange?: (value: string) => void;
    age?: string;
    onAgeChange?: (value: string) => void;
-   sex?: PathologySex;
-   onSexChange?: (value: PathologySex) => void;
+   sex?: LaboratorySex;
+   onSexChange?: (value: LaboratorySex) => void;
    wardBedNo?: string;
    onWardBedNoChange?: (value: string) => void;
    consultant?: string;
@@ -183,8 +187,8 @@ export function PathologyTestOrderTab({
    onRequestingDoctorChange?: (value: string) => void;
    clinicalDiagnosis?: string;
    onClinicalDiagnosisChange?: (value: string) => void;
-   indicationType?: PathologyIndicationType;
-   onIndicationTypeChange?: (value: PathologyIndicationType) => void;
+   indicationType?: LaboratoryIndicationType;
+   onIndicationTypeChange?: (value: LaboratoryIndicationType) => void;
    surgicalProcedure?: string;
    onSurgicalProcedureChange?: (value: string) => void;
    previousTransfusion?: string;
@@ -229,8 +233,8 @@ export function PathologyTestOrderTab({
    onPttChange?: (value: string) => void;
    otherLabs?: string;
    onOtherLabsChange?: (value: string) => void;
-   requestType?: PathologyRequestType;
-   onRequestTypeChange?: (value: PathologyRequestType) => void;
+   requestType?: LaboratoryRequestType;
+   onRequestTypeChange?: (value: LaboratoryRequestType) => void;
    requiredDate?: string;
    onRequiredDateChange?: (value: string) => void;
    requiredTime?: string;
@@ -256,8 +260,8 @@ export function PathologyTestOrderTab({
   onToggleGroup?: (id: string) => void;
   specimenSourceById?: Record<string, string>;
   onSpecimenSourceChange?: (id: string, value: string) => void;
-  priority?: PathologyPriority;
-  onPriorityChange?: (value: PathologyPriority) => void;
+  priority?: LaboratoryPriority;
+  onPriorityChange?: (value: LaboratoryPriority) => void;
   fasting?: boolean;
   onFastingChange?: (value: boolean) => void;
   clinicalNotes?: string;
@@ -274,14 +278,14 @@ export function PathologyTestOrderTab({
   onAddToBill?: () => void;
   onReorderPrevious?: (historyId: string) => void;
 }) {
-  const historyOptions: PathologyOrderHistory[] = [
+  const historyOptions: LaboratoryOrderHistory[] = [
     { id: "hist-cbc", label: "CBC (12 Apr 2026)", selectedTestIds: ["cbc"], selectedGroupIds: [] },
     { id: "hist-lft", label: "LFT (02 Mar 2025)", selectedTestIds: ["lft"], selectedGroupIds: ["liver"] },
     { id: "hist-kft", label: "KFT (02 Mar 2025)", selectedTestIds: ["kft"], selectedGroupIds: ["renal"] },
   ];
   const doctorSuggestions = ["Dr. Kavita Rao", "Dr. Aman Verma", "Dr. Priya Singh", "Dr. Rohit Mehta", "Dr. Neha Sharma", "Dr. Sandeep Yadav"];
   const safeProblems = problems ?? [];
-  const selectedTests = filteredTests.filter((test) => selectedTestIds.includes(test.id));
+  const selectedTests = testList.filter((test) => selectedTestIds.includes(test.id));
   const selectedGroups = groupedTests.filter((group) => selectedGroupIds.includes(group.id));
   const getSpecimenSource = (id: string) => specimenSourceById?.[id] ?? "Blood";
   const departmentOptions = [
@@ -422,6 +426,17 @@ export function PathologyTestOrderTab({
                       <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input className="pl-9" value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="Search by entering few characters." />
                     </div>
+                    <select
+                      className="h-10 min-w-[220px] rounded-md border border-input bg-background px-3 text-sm text-foreground outline-none transition focus:border-border focus:ring-0"
+                      value={departmentFilter}
+                      onChange={(event) => onDepartmentFilterChange(event.target.value)}
+                    >
+                      {departmentOptions.map((department, index) => (
+                        <option key={`${department}-${index}`} value={department}>
+                          {department}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="grid min-w-0 gap-4 xl:grid-cols-[220px_minmax(0,1fr)]">
@@ -456,14 +471,14 @@ export function PathologyTestOrderTab({
                   <div className="min-w-0 max-w-full overflow-hidden rounded-md border border-border">
                     <table className="w-full text-sm">
                       <thead className="bg-surface-muted text-xs text-muted-foreground">
-                        <tr>
-                          <th className="px-3 py-2 text-left">Selected Tests</th>
-                          <th className="px-3 py-2 text-left">LOINC Code</th>
-                          <th className="px-3 py-2 text-left">Department</th>
-                          <th className="px-3 py-2 text-left">Choose Specimen Source</th>
-                          <th className="px-3 py-2 text-left">Choose Fasting Status</th>
-                          <th className="px-3 py-2 text-left">Choose Priority</th>
-                        </tr>
+                          <tr>
+                            <th className="px-3 py-2 text-left">Selected Tests</th>
+                            <th className="px-3 py-2 text-left">LOINC Code</th>
+                            <th className="px-3 py-2 text-left">Department</th>
+                            <th className="px-3 py-2 text-left">Choose Specimen Source</th>
+                            <th className="px-3 py-2 text-left">Choose Fasting Status</th>
+                            <th className="px-3 py-2 text-left">Choose Priority</th>
+                          </tr>
                       </thead>
                       <tbody>
                         {(selectedTests.length || selectedGroups.length) ? (
@@ -487,7 +502,7 @@ export function PathologyTestOrderTab({
                                   </label>
                                 </td>
                                 <td className="px-3 py-2">
-                                  <select className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm" value={priority} onChange={(event) => onPriorityChange?.(event.target.value as PathologyPriority)}>
+                                  <select className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm" value={priority} onChange={(event) => onPriorityChange?.(event.target.value as LaboratoryPriority)}>
                                     {priorities.map((item) => <option key={item} value={item}>{item}</option>)}
                                   </select>
                                 </td>
@@ -496,6 +511,7 @@ export function PathologyTestOrderTab({
                             {selectedGroups.map((group) => (
                               <tr key={group.id} className="border-t bg-surface-muted/40">
                                 <td className="px-3 py-2 font-medium text-foreground">{group.name}</td>
+                                <td className="px-3 py-2 text-muted-foreground">-</td>
                                 <td className="px-3 py-2 text-muted-foreground">{group.department}</td>
                                 <td className="px-3 py-2">
                                   <select className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm" value={getSpecimenSource(group.id)} onChange={(event) => onSpecimenSourceChange?.(group.id, event.target.value)}>
@@ -511,7 +527,7 @@ export function PathologyTestOrderTab({
                                   </label>
                                 </td>
                                 <td className="px-3 py-2">
-                                  <select className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm" value={priority} onChange={(event) => onPriorityChange?.(event.target.value as PathologyPriority)}>
+                                  <select className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm" value={priority} onChange={(event) => onPriorityChange?.(event.target.value as LaboratoryPriority)}>
                                     {priorities.map((item) => <option key={item} value={item}>{item}</option>)}
                                   </select>
                                 </td>
@@ -520,7 +536,7 @@ export function PathologyTestOrderTab({
                           </>
                         ) : (
                           <tr>
-                            <td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">No tests selected yet</td>
+                            <td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">No tests selected yet</td>
                           </tr>
                         )}
                       </tbody>

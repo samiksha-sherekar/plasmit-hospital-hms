@@ -358,6 +358,7 @@ export function BloodRequestTab() {
   const [errors, setErrors] = React.useState<string[]>([]);
   const [form, setForm] = React.useState(initialForm);
   const [previewOpen, setPreviewOpen] = React.useState(false);
+  const [requestingDoctorOpen, setRequestingDoctorOpen] = React.useState(false);
 
   const isMale = form.sex === "Male";
   const isSurgery = form.indicationType === "Surgery";
@@ -380,6 +381,11 @@ export function BloodRequestTab() {
   const isRoutineLeadTimeWarning = form.requestType === "Routine" && requiredDateTime ? requiredDateTime.getTime() - Date.now() < 24 * 60 * 60 * 1000 : false;
   const productsRef = React.useRef<HTMLDivElement | null>(null);
   const [productsOpen, setProductsOpen] = React.useState(false);
+  const filteredRequestingDoctors = React.useMemo(() => {
+    const query = form.requestingDoctor.trim().toLowerCase();
+    if (query.length < 3) return [];
+    return requestingDoctors.filter((doctor) => doctor.toLowerCase().includes(query));
+  }, [form.requestingDoctor]);
   const selectedNamesDisplay = React.useMemo(() => {
     if (!Array.isArray(form.selectedProducts) || form.selectedProducts.length === 0) return "";
     const names = form.selectedProducts.map((p) => p.type);
@@ -501,7 +507,38 @@ export function BloodRequestTab() {
                 ) : null} */}
                 {/* <Input value={form.requisitionUnit} readOnly /></label> */}
                 {/* <Input value={form.consultant} onChange={(event) => setForm((current) => ({ ...current, consultant: event.target.value }))} /></label> */}
-                <label className="space-y-2"><FieldLabel>Name of Requesting Doctor</FieldLabel><Input value={form.requestingDoctor} onChange={(event) => setForm((current) => ({ ...current, requestingDoctor: event.target.value }))} /></label>
+                <label className="relative space-y-2">
+                  <FieldLabel>Name of Requesting Doctor</FieldLabel>
+                  <Input
+                    value={form.requestingDoctor}
+                    placeholder="Type doctor name"
+                    onFocus={() => setRequestingDoctorOpen(true)}
+                    onBlur={() => window.setTimeout(() => setRequestingDoctorOpen(false), 150)}
+                    onChange={(event) => {
+                      setForm((current) => ({ ...current, requestingDoctor: event.target.value }));
+                      setRequestingDoctorOpen(true);
+                    }}
+                  />
+                  {requestingDoctorOpen && filteredRequestingDoctors.length ? (
+                    <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-48 overflow-auto rounded-md border border-border bg-white shadow-lg">
+                      {filteredRequestingDoctors.map((doctor) => (
+                        <button
+                          key={doctor}
+                          type="button"
+                          className="block w-full border-b border-border px-3 py-2 text-left text-sm last:border-b-0 hover:bg-surface-muted"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => {
+                            setForm((current) => ({ ...current, requestingDoctor: doctor }));
+                            setRequestingDoctorOpen(false);
+                          }}
+                        >
+                          <div className="font-medium text-foreground">{doctor}</div>
+                          <div className="text-xs text-muted-foreground">Doctor already in list</div>
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </label>
                 <label className="space-y-2"><FieldLabel>Clinical Diagnosis</FieldLabel><Input value={form.diagnosis} onChange={(event) => setForm((current) => ({ ...current, diagnosis: event.target.value }))} placeholder="Free text or ICD-10 search" /></label>
               </div>
             </section>

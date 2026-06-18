@@ -144,9 +144,7 @@ export function NurseDrugAdministrationPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Nursing - Medication Administration"
         title="Drug Administration"
-        description="Time-wise MAR view for scheduled, SOS, intermittent, continuous, discontinued, and unscheduled drugs."
         className="static mx-0 border-b bg-transparent px-0 py-2"
       />
 
