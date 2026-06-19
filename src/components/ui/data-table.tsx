@@ -29,18 +29,19 @@ export function DataTable<TData>({
   className?: string;
 }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 });
 
   // TanStack Table intentionally returns table helpers that React Compiler cannot memoize safely.
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,
-    state: { sorting },
+    state: { sorting, pagination },
     onSortingChange: setSorting,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageSize: 10 } },
   });
 
   if (loading) {
@@ -111,9 +112,28 @@ export function DataTable<TData>({
         </table>
       </div>
       <div className="flex flex-col gap-2 border-t border-border/80 bg-white px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)] text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-        <span>
-          {data.length} static records - Page {pageIndex + 1} of {pageCount}
-        </span>
+        <div className="flex flex-wrap items-center gap-3">
+          <span>
+            {data.length} records - Page {pageIndex + 1} of {pageCount}
+          </span>
+          <label className="flex items-center gap-2">
+            <span>Rows</span>
+            <select
+              className="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground outline-none"
+              value={pagination.pageSize}
+              onChange={(event) => {
+                const nextSize = Number(event.target.value);
+                setPagination((current) => ({ ...current, pageSize: nextSize, pageIndex: 0 }));
+              }}
+            >
+              {[5, 10, 20, 50].map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
         <div className="flex flex-wrap items-center justify-end gap-1">
           <Button size="sm" variant="outline" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()} aria-label="First page">
             <ChevronsLeft className="h-3.5 w-3.5" />

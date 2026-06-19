@@ -533,7 +533,7 @@ export function BloodRequestTab() {
                           }}
                         >
                           <div className="font-medium text-foreground">{doctor}</div>
-                          <div className="text-xs text-muted-foreground">Doctor already in list</div>
+                          {/* <div className="text-xs text-muted-foreground">Doctor already in list</div> */}
                         </button>
                       ))}
                     </div>

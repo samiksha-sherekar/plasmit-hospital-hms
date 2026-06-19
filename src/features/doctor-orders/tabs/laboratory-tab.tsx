@@ -161,10 +161,10 @@ export function LaboratoryTab() {
   
     const addDiagnosis = () => {
       const label = diagnosisSearch.trim();
-      if (!label) {
-        toast.error("Search diagnosis first");
-        return;
-      }
+      // if (!label) {
+      //   toast.error("Search diagnosis first");
+      //   return;
+      // }
       setSelectedDiagnosisLabel(`${label} (${diagnosisType})`);
       setDiagnosisOpen(false);
       toast.success("Diagnosis added");
@@ -181,9 +181,14 @@ export function LaboratoryTab() {
       toast.success(`Editing ${name}`);
     };
   
-    const reorderResult = (name: string) => {
-      toast.success(`Reorder requested for ${name}`);
-    };
+  const reorderResult = (name: string) => {
+    toast.success(`Reorder requested for ${name}`);
+  };
+
+  const downloadAllReports = () => {
+    toast.info("Preparing laboratory reports download");
+    // The actual PDF generation stays in the result review tab; this keeps the test-order action visible here.
+  };
               
   return (
       <div className="space-y-4">
@@ -245,6 +250,7 @@ export function LaboratoryTab() {
               onSaveAndBill={saveAndBill}
               onAddToBill={addToBill}
               onReorderPrevious={selectHistory}
+              onDownloadAllReports={downloadAllReports}
             />
           </TabsContent>
           <TabsContent value="order-summary" className="mt-0">

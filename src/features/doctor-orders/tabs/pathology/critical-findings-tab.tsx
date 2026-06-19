@@ -27,15 +27,15 @@ export function PathologyCriticalFindingsTab({ resultBlocks }: { resultBlocks: P
             parameter: row.parameter,
             result: row.result,
             range: row.referenceRange,
-            flag: row.flag,
+            flag: row.flag as "H" | "L",
           })),
       ),
     [resultBlocks],
   );
 
   return (
-    // <Card>
-    //   <CardContent className="space-y-4 p-4">
+    <Card>
+      <CardContent className="space-y-4 p-4">
         <div className="rounded-md border border-danger/30 bg-danger/5 p-4">
           <div className="text-sm font-semibold text-danger">⚠ Critical Findings</div>
           {findings.length ? (
@@ -69,7 +69,7 @@ export function PathologyCriticalFindingsTab({ resultBlocks }: { resultBlocks: P
             <div className="mt-2 text-sm text-muted-foreground">No critical findings available.</div>
           )}
         </div>
-    //   </CardContent>
-    // </Card>
+      </CardContent>
+    </Card>
   );
 }

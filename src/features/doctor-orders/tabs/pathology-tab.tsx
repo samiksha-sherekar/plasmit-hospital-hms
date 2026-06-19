@@ -176,6 +176,11 @@ export function PathologyTab() {
     toast.success(`Reorder requested for ${name}`);
   };
 
+  const downloadAllReports = () => {
+    toast.info("Preparing pathology reports download");
+    // The actual PDF generation stays in the result review tab; this keeps the test-order action visible here.
+  };
+
   return (
     <div className="space-y-4">
       {/* <PatientSummaryBanner /> */}
@@ -234,6 +239,7 @@ export function PathologyTab() {
             onSaveAndBill={saveAndBill}
             onAddToBill={addToBill}
             onReorderPrevious={selectHistory}
+            onDownloadAllReports={downloadAllReports}
           />
         </TabsContent>
         <TabsContent value="order-summary" className="mt-0">

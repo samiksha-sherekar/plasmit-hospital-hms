@@ -27,7 +27,7 @@ export function LaboratoryCriticalFindingsTab({ resultBlocks }: { resultBlocks: 
             parameter: row.parameter,
             result: row.result,
             range: row.referenceRange,
-            flag: row.flag,
+            flag: row.flag as "H" | "L",
           })),
       ),
     [resultBlocks],

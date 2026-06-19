@@ -159,6 +159,7 @@ export function PathologyTestOrderTab({
   onSaveAndBill,
   onAddToBill,
   onReorderPrevious,
+  onDownloadAllReports,
 }: {
   search: string;
   onSearchChange: (value: string) => void;
@@ -273,6 +274,7 @@ export function PathologyTestOrderTab({
   onSaveAndBill?: () => void;
   onAddToBill?: () => void;
   onReorderPrevious?: (historyId: string) => void;
+  onDownloadAllReports?: () => void;
 }) {
   const historyOptions: PathologyOrderHistory[] = [
     { id: "hist-cbc", label: "CBC (12 Apr 2026)", selectedTestIds: ["cbc"], selectedGroupIds: [] },
@@ -520,7 +522,7 @@ export function PathologyTestOrderTab({
                           </>
                         ) : (
                           <tr>
-                            <td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">No tests selected yet</td>
+                            <td colSpan={7} className="px-3 py-6 text-center text-muted-foreground">No tests selected yet</td>
                           </tr>
                         )}
                       </tbody>
@@ -549,6 +551,9 @@ export function PathologyTestOrderTab({
             <div className="text-sm text-muted-foreground">{selectedTestIds.length + selectedGroupIds.length} tests selected</div>
             
             <div className="ml-auto flex flex-wrap gap-2">
+              <Button type="button" variant="outline" onClick={() => onDownloadAllReports?.()}>
+                Download All Reports
+              </Button>
               <Button type="button" variant="outline" onClick={() => onOpenSummary?.()}>
                 View order summary
               </Button>

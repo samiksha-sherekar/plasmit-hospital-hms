@@ -161,6 +161,7 @@ export function LaboratoryTestOrderTab({
   onSaveAndBill,
   onAddToBill,
   onReorderPrevious,
+  onDownloadAllReports,
 }: {
   search: string;
   onSearchChange: (value: string) => void;
@@ -277,6 +278,7 @@ export function LaboratoryTestOrderTab({
   onSaveAndBill?: () => void;
   onAddToBill?: () => void;
   onReorderPrevious?: (historyId: string) => void;
+  onDownloadAllReports?: () => void;
 }) {
   const historyOptions: LaboratoryOrderHistory[] = [
     { id: "hist-cbc", label: "CBC (12 Apr 2026)", selectedTestIds: ["cbc"], selectedGroupIds: [] },
@@ -475,10 +477,10 @@ export function LaboratoryTestOrderTab({
                             <th className="px-3 py-2 text-left">Selected Tests</th>
                             <th className="px-3 py-2 text-left">LOINC Code</th>
                             <th className="px-3 py-2 text-left">Department</th>
-                            <th className="px-3 py-2 text-left">Choose Specimen Source</th>
-                            <th className="px-3 py-2 text-left">Choose Fasting Status</th>
-                            <th className="px-3 py-2 text-left">Choose Priority</th>
-                          </tr>
+                          <th className="px-3 py-2 text-left">Choose Specimen Source</th>
+                          <th className="px-3 py-2 text-left">Choose Fasting Status</th>
+                          <th className="px-3 py-2 text-left">Choose Priority</th>
+                        </tr>
                       </thead>
                       <tbody>
                         {(selectedTests.length || selectedGroups.length) ? (
@@ -536,7 +538,7 @@ export function LaboratoryTestOrderTab({
                           </>
                         ) : (
                           <tr>
-                            <td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">No tests selected yet</td>
+                            <td colSpan={7} className="px-3 py-6 text-center text-muted-foreground">No tests selected yet</td>
                           </tr>
                         )}
                       </tbody>
@@ -565,6 +567,9 @@ export function LaboratoryTestOrderTab({
             <div className="text-sm text-muted-foreground">{selectedTestIds.length + selectedGroupIds.length} tests selected</div>
             
             <div className="ml-auto flex flex-wrap gap-2">
+              <Button type="button" variant="outline" onClick={() => onDownloadAllReports?.()}>
+                Download All Reports
+              </Button>
               <Button type="button" variant="outline" onClick={() => onOpenSummary?.()}>
                 View order summary
               </Button>

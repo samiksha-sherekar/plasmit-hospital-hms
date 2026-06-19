@@ -150,15 +150,15 @@ export function NurseBloodAdministrationPage() {
       <Card>
         <CardHeader>
           <CardTitle>Vitals Flowsheet</CardTitle>
-          <CardDescription>Repeatable rows for transfusion monitoring.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="overflow-hidden rounded-lg border border-stone-200">
-            <table className="w-full border-collapse text-sm">
+            <div className="max-w-full overflow-x-auto">
+              <table className="min-w-[1120px] w-full border-collapse text-sm">
               <thead className="bg-gradient-to-r from-stone-100 to-stone-50">
                 <tr>
                   {["Timepoint", "Date", "Time", "Pulse /min", "BP Sys mmHg", "BP Dia mmHg", "Temp C", "RR /min", "Nurse / ID"].map((heading) => (
-                    <th key={heading} className="border border-stone-200 px-4 py-3 text-left font-semibold text-stone-700">
+                    <th key={heading} className="border border-stone-200 px-3 py-3 text-left font-semibold text-stone-700 md:px-4">
                       {heading}
                     </th>
                   ))}
@@ -167,7 +167,7 @@ export function NurseBloodAdministrationPage() {
               <tbody className="divide-y divide-stone-200">
                 {rows.map((row, index) => (
                   <tr key={row.id} className={index < 2 ? "bg-white hover:bg-stone-50" : "bg-stone-50/50 hover:bg-stone-100"}>
-                    <td className="border border-stone-200 px-4 py-3">
+                    <td className="border border-stone-200 px-3 py-3 md:px-4">
                       <select
                         className="h-10 w-full rounded-md border border-stone-300 bg-white px-3 text-sm text-stone-800 outline-none transition-colors focus:ring-2 focus:ring-blue-500/20"
                         value={row.timepointLabel}
@@ -180,39 +180,40 @@ export function NurseBloodAdministrationPage() {
                         ))}
                       </select>
                     </td>
-                    <td className="border border-stone-200 px-4 py-3">
+                    <td className="border border-stone-200 px-3 py-3 md:px-4">
                       <CellInput value={row.date} onChange={(value) => updateRow(row.id, { date: value })} />
                       <InlineError message={rowErrors[index]?.date ?? ""} />
                     </td>
-                    <td className="border border-stone-200 px-4 py-3">
+                    <td className="border border-stone-200 px-3 py-3 md:px-4">
                       <CellInput value={row.time} onChange={(value) => updateRow(row.id, { time: value })} />
                       <InlineError message={rowErrors[index]?.time ?? ""} />
                     </td>
-                    <td className="border border-stone-200 px-4 py-3">
+                    <td className="border border-stone-200 px-3 py-3 md:px-4">
                       <CellInput value={row.pulse} onChange={(value) => updateRow(row.id, { pulse: value })} />
                       <InlineError message={rowErrors[index]?.pulse ?? ""} />
                     </td>
-                    <td className="border border-stone-200 px-4 py-3">
+                    <td className="border border-stone-200 px-3 py-3 md:px-4">
                       <CellInput value={row.systolic} onChange={(value) => updateRow(row.id, { systolic: value })} />
                       <InlineError message={rowErrors[index]?.systolic ?? ""} />
                     </td>
-                    <td className="border border-stone-200 px-4 py-3">
+                    <td className="border border-stone-200 px-3 py-3 md:px-4">
                       <CellInput value={row.diastolic} onChange={(value) => updateRow(row.id, { diastolic: value })} />
                       <InlineError message={rowErrors[index]?.diastolic ?? ""} />
                     </td>
-                    <td className="border border-stone-200 px-4 py-3">
+                    <td className="border border-stone-200 px-3 py-3 md:px-4">
                       <CellInput value={row.temperature} onChange={(value) => updateRow(row.id, { temperature: value })} />
                       <InlineError message={rowErrors[index]?.temperature ?? ""} />
                     </td>
-                    <td className="border border-stone-200 px-4 py-3">
+                    <td className="border border-stone-200 px-3 py-3 md:px-4">
                       <CellInput value={row.respiratoryRate} onChange={(value) => updateRow(row.id, { respiratoryRate: value })} />
                       <InlineError message={rowErrors[index]?.respiratoryRate ?? ""} />
                     </td>
-                    <td className="border border-stone-200 px-4 py-3"><CellInput value={`${row.nurseName} / ${row.clockNo}`} readOnly /></td>
+                    <td className="border border-stone-200 px-3 py-3 md:px-4"><CellInput value={`${row.nurseName} / ${row.clockNo}`} readOnly /></td>
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
           <Button type="button" variant="outline" onClick={addRow}>Add vitals entry</Button>
         </CardContent>

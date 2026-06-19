@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 import type { PathologySummaryRow } from "./types";
 
-type SummarySortKey = keyof Pick<PathologySummaryRow, "name" | "loinc" | "cpt" | "specimen" | "priority">;
+type SummarySortKey = keyof Pick<PathologySummaryRow, "name" | "loinc" | "cpt" | "department" | "specimen" | "priority">;
 
 function SortButton({
   label,
@@ -62,7 +62,7 @@ export function PathologyOrderSummaryTab({
     { key: "name", label: "Test name" },
     { key: "loinc", label: "LOINC code" },
     { key: "cpt", label: "CPT code" },
-    // { key: "specialty", label: "Speciality" },
+    { key: "department", label: "Department" },
     { key: "specimen", label: "Specimen" },
     { key: "priority", label: "Priority" },
   ];
@@ -95,7 +95,7 @@ export function PathologyOrderSummaryTab({
                     <td className="px-4 py-3 font-medium text-foreground">{row.name}</td>
                     <td className="px-4 py-3 text-muted-foreground">{row.loinc}</td>
                     <td className="px-4 py-3 text-muted-foreground">{row.cpt}</td>
-                    {/* <td className="px-4 py-3">{row.specialty}</td> */}
+                    <td className="px-4 py-3 text-muted-foreground">{row.department}</td>
                     <td className="px-4 py-3">{row.specimen}</td>
                     <td className="px-4 py-3">
                       <Badge tone={row.priority === "Urgent" || row.priority === "STAT" ? "warning" : "default"}>{row.priority}</Badge>

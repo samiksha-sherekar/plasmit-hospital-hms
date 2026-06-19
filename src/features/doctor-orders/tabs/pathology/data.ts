@@ -60,9 +60,9 @@ export const resultBlocks: PathologyResultBlock[] = [
     name: "CBC - complete blood count",
     specialty: "Hematology",
     rows: [
-      { parameter: "Hemoglobin", result: "9.8", unit: "g/dL", referenceRange: "12.0 - 16.0", flag: "L" },
-      { parameter: "WBC", result: "7.2", unit: "x10^3/uL", referenceRange: "4.5 - 11.0", flag: "N" },
-      { parameter: "Platelets", result: "240", unit: "x10^3/uL", referenceRange: "150 - 400", flag: "N" },
+      { parameter: "Hemoglobin", result: "17.8", unit: "g/dL", referenceRange: "12.0 - 16.0", flag: "L" },
+      { parameter: "WBC", result: "7.2", unit: "x10^3/uL", referenceRange: "4.5 - 11.0", flag: "H" },
+      { parameter: "Platelets", result: "240", unit: "x10^3/uL", referenceRange: "150 - 400", flag: "H" },
       { parameter: "RBC", result: "3.4", unit: "x10^6/uL", referenceRange: "4.2 - 5.4", flag: "L" },
       { parameter: "Hematocrit (PCV)", result: "30.2", unit: "%", referenceRange: "36 - 48", flag: "L" },
     ],

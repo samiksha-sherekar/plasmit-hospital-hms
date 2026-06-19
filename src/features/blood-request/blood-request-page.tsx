@@ -326,9 +326,7 @@ export function BloodRequestPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Blood Bank"
         title="Blood Requests"
-        description="Review hospital requests, verify units, and send blood products for administration."
         className="static mx-0 border-b bg-transparent px-0 py-2"
       />
 

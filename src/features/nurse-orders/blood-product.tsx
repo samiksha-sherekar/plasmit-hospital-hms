@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Drawer } from "@/components/ui/drawer";
 import { PatientSummaryBanner } from "./shared/patient-summary-banner";
-
+import { PageHeader } from "@/components/shell/page-header";
 function FieldLabel({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <span className={(className ? className + " " : "") + "text-xs font-medium text-muted-foreground"}>
@@ -478,6 +478,10 @@ export function BloodProduct() {
 
   return (
     <div className="space-y-4">
+      <PageHeader
+              title="Blood/ Blood Product"
+              className="static mx-0 border-b bg-transparent px-0 py-2"
+      />
       <PatientSummaryBanner/>
       <Card>
         <CardContent className="space-y-6">

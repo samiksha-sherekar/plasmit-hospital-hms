@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
+import { PatientSummaryBanner } from "@/components/ui/patient-summary-banner";
 import { useRole } from "@/components/providers/role-provider";
 import { mockPatients } from "@/data/patients";
 import { PatientSearchSelect } from "@/features/patients/patient-search-select";
@@ -194,22 +195,22 @@ function PatientInformation({
 
   return (
     <div className="space-y-4">
-      <Card>
+      {/* <Card>
         <CardContent className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4">
           <PatientSearchSelect patientId={selectedPatientId} onPatientChange={onPatientSelect} />
           {details.map((detail) => (
             <DetailItem key={detail.label} label={detail.label} value={detail.value || "-"} />
           ))}
         </CardContent>
-      </Card>
-
+      </Card> */}
+      <PatientSummaryBanner />
       <Card>
-        <CardHeader>
+        {/* <CardHeader>
           <div>
             <CardTitle>Clinical Details</CardTitle>
             <CardDescription>Add the diagnosis for this prescription.</CardDescription>
           </div>
-        </CardHeader>
+        </CardHeader> */}
         <CardContent>
           <label className="space-y-1">
             <span className="text-xs font-medium text-muted-foreground">
