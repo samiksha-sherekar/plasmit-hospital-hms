@@ -36,7 +36,7 @@ export function ExpiringStockReportPage() {
   return (
     <ReportPageShell title="Expiring Stock" icon={Archive}>
       <FilterBar search={search} onSearch={setSearch} placeholder="Search drug, batch, expiry date, alert...">
-        <NativeSelect label="Expiry window" value={expiryWindow} onChange={setExpiryWindow} options={expiryWindows} />
+        <NativeSelect label="" value={expiryWindow} onChange={setExpiryWindow} options={expiryWindows} />
       </FilterBar>
       <DataTable data={filtered} columns={columns} />
     </ReportPageShell>

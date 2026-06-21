@@ -6,6 +6,7 @@ import { PackageCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { AlertBanner } from "@/components/ui/alert-banner";
+import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { FilterBar } from "@/features/admin/admin-shared";
 import { MasterDialog } from "@/features/pharmacy-master/components/master-dialog";
@@ -66,7 +67,12 @@ export function GoodsReceiptNotePage() {
   return (
     <PurchaseShell title="Goods Receipt Note (GRN)" icon={PackageCheck} onCreate={() => openRecord(emptyRecord(), "create")}>
       <AlertBanner icon={PackageCheck} tone="success" title="Inventory auto update">Saving GRN increases Current Stock and Batch Stock for the received batch.</AlertBanner>
-      <FilterBar search={search} onSearch={setSearch} placeholder="Search GRN, PO, supplier, drug, batch..." />
+      <FilterBar search={search} onSearch={setSearch} placeholder="Search GRN, PO, supplier, drug, batch...">
+        <Button onClick={() => openRecord(emptyRecord(), "create")}>
+          <PackageCheck className="h-4 w-4" />
+          Create GRN
+        </Button>
+      </FilterBar>
       <DataTable data={filtered} columns={columns} />
       <MasterDialog open={open} onOpenChange={setOpen} title={mode === "view" ? "View GRN" : "Create GRN"} submitLabel={mode === "view" ? "Close" : "Save GRN"} onSubmit={mode === "view" ? () => setOpen(false) : save}>
         <PurchaseRecordForm value={draft} fields={fields} readOnly={mode === "view"} onChange={setDraft} />

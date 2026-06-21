@@ -55,7 +55,6 @@ export function SelectDrugsCard({
       <CardHeader>
         <div>
           <CardTitle>Select Drugs</CardTitle>
-          <CardDescription>Search and tick drugs to add them into the order summary.</CardDescription>
         </div>
         {/* <Badge tone="info">{selectedIds.length} Selected</Badge> */}
       </CardHeader>

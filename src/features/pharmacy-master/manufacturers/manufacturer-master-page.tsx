@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Factory } from "lucide-react";
+import { Factory, Layers3 } from "lucide-react";
 import { toast } from "sonner";
 
 import { FilterBar, NativeSelect } from "@/features/admin/admin-shared";
@@ -12,6 +12,7 @@ import { ManufacturerForm } from "@/features/pharmacy-master/manufacturers/manuf
 import { ManufacturerTable } from "@/features/pharmacy-master/manufacturers/manufacturer-table";
 import type { ManufacturerRecord, MasterMode } from "@/features/pharmacy-master/types";
 import { includesText, makeId, toggleStatus, validateManufacturer } from "@/features/pharmacy-master/utils/pharmacy-master-utils";
+import { Button } from "@/components/ui/button";
 
 const emptyManufacturer = (): ManufacturerRecord => ({ id: makeId("mfg"), manufacturerName: "", code: "", contactPerson: "", phoneNumber: "", email: "", gstNumber: "", address: "", status: "Active" });
 
@@ -38,8 +39,8 @@ export function ManufacturerMasterPage() {
   function remove(record: ManufacturerRecord) { setRecords((current) => current.filter((item) => item.id !== record.id)); toast.success("Manufacturer deleted"); setOpen(false); }
 
   return (
-    <MasterPageShell title="Manufacturer Master" icon={Factory} actionLabel="New manufacturer" onCreate={openCreate}>
-      <FilterBar search={search} onSearch={setSearch} placeholder="Search manufacturer, code, contact, phone, email, GST..."><NativeSelect label="Status" value={status} onChange={setStatus} options={["All status", "Active", "Inactive"]} /></FilterBar>
+    <MasterPageShell title="Manufacturer Master" icon={Factory} actionLabel="New manufacturer" onCreate={openCreate} actions={<></>}>
+      <FilterBar search={search} onSearch={setSearch} placeholder="Search manufacturer, code, contact, phone, email, GST..."><NativeSelect label="" value={status} onChange={setStatus} options={["All status", "Active", "Inactive"]} /><Button onClick={openCreate}><Layers3 className="h-4 w-4" />New manufacturer</Button></FilterBar>
       <ManufacturerTable records={filtered} onEdit={openEdit} onToggle={(record) => setRecords((current) => current.map((item) => item.id === record.id ? { ...item, status: toggleStatus(item.status) } : item))} onDelete={remove} />
       <MasterDialog open={open} onOpenChange={setOpen} title={mode === "edit" ? "Edit manufacturer" : "New manufacturer"} submitLabel={mode === "edit" ? "Update manufacturer" : "Create manufacturer"} onSubmit={save} onDelete={mode === "edit" ? () => remove(draft) : undefined}>
         <ManufacturerForm value={draft} errors={errors} onChange={setDraft} />

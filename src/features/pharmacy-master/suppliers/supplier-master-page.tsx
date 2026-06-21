@@ -4,6 +4,7 @@ import * as React from "react";
 import { Truck } from "lucide-react";
 import { toast } from "sonner";
 
+import { Button } from "@/components/ui/button";
 import { FilterBar, NativeSelect } from "@/features/admin/admin-shared";
 import { MasterDialog } from "@/features/pharmacy-master/components/master-dialog";
 import { MasterPageShell } from "@/features/pharmacy-master/components/master-page-shell";
@@ -69,12 +70,13 @@ export function SupplierMasterPage() {
   }
 
   return (
-    <MasterPageShell title="Supplier Master" description="CRUD for supplier records with contact, GST, payment terms, and Active/Inactive control." icon={Truck} actionLabel="New supplier" onCreate={openCreate}>
+    <MasterPageShell title="Supplier Master" description="CRUD for supplier records with contact, GST, payment terms, and Active/Inactive control." icon={Truck} actionLabel="New supplier" onCreate={openCreate} actions={<></>}>
       <FilterBar search={search} onSearch={setSearch} placeholder="Search supplier, contact, phone, email, GST, terms...">
-        <NativeSelect label="Status" value={status} onChange={setStatus} options={["All status", "Active", "Inactive"]} />
+        <NativeSelect label="" value={status} onChange={setStatus} options={["All status", "Active", "Inactive"]} />
+        <Button onClick={openCreate}><Truck className="h-4 w-4" />New supplier</Button>
       </FilterBar>
       <SupplierTable records={filtered} onEdit={openEdit} onToggle={(record) => setRecords((current) => current.map((item) => item.id === record.id ? { ...item, status: toggleStatus(item.status) } : item))} onDelete={remove} />
-      <MasterDialog open={open} onOpenChange={setOpen} title={mode === "edit" ? "Edit supplier" : "New supplier"} description="Supplier Name, Contact Person, Phone, Email, GST Number, Address, Payment Terms, and Status" submitLabel={mode === "edit" ? "Update supplier" : "Create supplier"} onSubmit={save} onDelete={mode === "edit" ? () => remove(draft) : undefined}>
+      <MasterDialog open={open} onOpenChange={setOpen} title={mode === "edit" ? "Edit supplier" : "New supplier"} description="" submitLabel={mode === "edit" ? "Update supplier" : "Create supplier"} onSubmit={save} onDelete={mode === "edit" ? () => remove(draft) : undefined}>
         <SupplierForm value={draft} errors={errors} onChange={setDraft} />
       </MasterDialog>
     </MasterPageShell>

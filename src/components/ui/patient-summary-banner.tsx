@@ -13,6 +13,7 @@ const defaultFields: PatientSummaryField[] = [
   { label: "UHID", value: "UHID-45821" },
   { label: "Age/Sex", value: "42 years / Female" },
   { label: "Ward/Bed", value: "Ward 3 / Bed 12" },
+  { label: "Blood Group", value: "A+" },
 ];
 
 export function PatientSummaryBanner({
@@ -29,33 +30,40 @@ export function PatientSummaryBanner({
   const [primaryField, ...rest] = fields;
 
   return (
-    <Card className={cn("border-primary/15 bg-gradient-to-r from-primary/10 via-primary/5 to-white shadow-sm", className)}>
-      <CardContent className="space-y-2 p-3 sm:p-4">
-        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary/70 sm:text-xs">{title}</div>
-        {primaryField ? <PatientPrimaryField field={primaryField} /> : null}
-        {rest.length ? (
-          <div className="grid gap-2 sm:grid-cols-2 xl:flex xl:flex-wrap">
-            {rest.map((field) => (
-              <PatientMetaField key={field.label} field={field} />
-            ))}
+    <Card className={cn("overflow-hidden border-blue-900/10 bg-white shadow-sm", className)}>
+      <CardContent className="space-y-3 p-0">
+        <div className="overflow-x-auto border-b border-blue-800/20 bg-gradient-to-r from-[#155bd8] via-[#0f63d1] to-[#0d4fb8] px-3 py-2 text-white sm:px-4">
+          <div className="flex min-w-max items-center gap-2 whitespace-nowrap">
+            {primaryField ? <PatientPrimaryField field={primaryField} /> : null}
+            {rest.length ? (
+              <div className="flex items-center gap-2">
+                {rest.map((field) => (
+                  <PatientMetaField key={field.label} field={field} />
+                ))}
+              </div>
+            ) : null}
           </div>
-        ) : null}
-        {children}
+        </div>
+        {/* <div className="px-3 pt-3 sm:px-4 sm:pb-4">{children}</div> */}
       </CardContent>
     </Card>
   );
 }
 
 function PatientPrimaryField({ field }: { field: PatientSummaryField }) {
-  return <div className="break-words text-base font-bold leading-5 text-primary sm:text-lg lg:text-xl">{field.value}</div>;
+  return (
+    <div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/15 px-3 py-1.5">
+      <div className="min-w-0 break-words text-sm font-bold leading-5 text-white sm:text-base lg:text-lg">{field.value}</div>
+    </div>
+  );
 }
 
 function PatientMetaField({ field }: { field: PatientSummaryField }) {
   return (
-    <div className="min-w-0 rounded-md bg-white/60 px-2 py-1.5 ring-1 ring-primary/10">
-      <div className="flex min-w-0 flex-col gap-0.5 text-[11px] leading-4 sm:flex-row sm:items-center sm:gap-2 sm:text-sm">
-        <span className="shrink-0 font-semibold text-muted-foreground">{field.label}:</span>
-        <span className="break-words font-semibold text-foreground">{field.value}</span>
+    <div className="min-w-0 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11px] leading-4 sm:text-sm">
+      <div className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5">
+        <span className="shrink-0 font-semibold text-white/80">{field.label}:</span>
+        <span className="break-words font-semibold text-white">{field.value}</span>
       </div>
     </div>
   );

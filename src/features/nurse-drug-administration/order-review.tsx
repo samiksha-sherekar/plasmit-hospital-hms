@@ -2,12 +2,13 @@
 
 import * as React from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { CheckCircle2, X } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Drawer } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 
 import { nurseDrugCategories } from "./data";
@@ -49,26 +50,16 @@ function PopupShell({
   footer: React.ReactNode;
 }) {
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-[1px]" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-3xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border border-border bg-white shadow-soft outline-none">
-          <div className="flex items-start justify-between gap-4 border-b border-border px-4 py-3">
-            <div>
-              <Dialog.Title className="text-sm font-semibold text-foreground">{action}</Dialog.Title>
-              <Dialog.Description className="mt-1 text-xs text-muted-foreground">{order.name} / {order.category}</Dialog.Description>
-            </div>
-            <Dialog.Close asChild>
-              <Button size="icon" variant="ghost" aria-label="Close popup">
-                <X className="h-4 w-4" />
-              </Button>
-            </Dialog.Close>
-          </div>
-          <div className="min-h-0 flex-1 space-y-4 overflow-auto p-4">{children}</div>
-          <div className="flex justify-end gap-2 border-t border-border bg-surface p-3">{footer}</div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+    <Drawer
+      open={open}
+      onOpenChange={onOpenChange}
+      title={action}
+      description={`${order.name} / ${order.category}`}
+      className="w-[calc(100vw-2rem)] max-w-3xl"
+      footer={<div className="flex justify-end gap-2">{footer}</div>}
+    >
+      <div className="space-y-4">{children}</div>
+    </Drawer>
   );
 }
 
@@ -195,7 +186,6 @@ function CategoryList({
     <Card className="xl:self-start">
       <CardHeader>
         <CardTitle>Orders</CardTitle>
-        <CardDescription>Review pharmacy receipt and order actions.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
         {nurseDrugCategories.map((category) => (
@@ -271,7 +261,6 @@ function OrdersPanel({
     <Card>
       <CardHeader>
         <CardTitle>{activeCategory}</CardTitle>
-        <CardDescription>Status opens detail popup. Action buttons open accept popups.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         {categoryOrders.length ? (

@@ -174,14 +174,10 @@ function DrugDispenseHistory() {
       <Card>
         <CardHeader>
           <div>
-            <CardTitle>Drug Dispense History</CardTitle>
-            <CardDescription>
-              One patient entry with full drug history available in view
-              history.
-            </CardDescription>
+            <CardTitle>Drug Dispense History</CardTitle>            
           </div>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-4">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <SearchInput
               className="sm:w-80"
@@ -368,9 +364,7 @@ export function PharmacistDrugDispenseHistoryPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Pharmacist Workspace"
         title="Drug Dispense History"
-        description="Review patient-wise dispense history and open detailed drug records."
         className="static mx-0 border-b bg-transparent px-0 py-2"
       />
       <DrugDispenseHistory />

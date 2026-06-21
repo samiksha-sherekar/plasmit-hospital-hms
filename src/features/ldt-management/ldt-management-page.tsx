@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { mockPatients } from "@/data/patients";
 import { PatientSearchSelect } from "@/features/patients/patient-search-select";
 import type { Role } from "@/types";
+import { PatientSummaryBanner } from "@/components/ui/patient-summary-banner";
 
 type LdtType = "Line" | "Tube" | "Drain";
 type FieldType = "Free text" | "Date" | "Time" | "Number" | "Dropdown" | "Checkbox";
@@ -245,7 +246,6 @@ function PropertiesDrawer({
       open={open}
       onOpenChange={onOpenChange}
       title={ldt ? `${ldt.name} Properties` : "LDT Properties"}
-      description="Configured from Hospital Admin properties setup."
       footer={
         <div className="flex justify-end gap-2">
           <Button className="bg-danger" onClick={() => onOpenChange(false)}>
@@ -323,7 +323,6 @@ function LdtList({
       <CardHeader>
         <div>
           <CardTitle>LDT List</CardTitle>
-          <CardDescription>Select an LDT and complete its properties or assessment.</CardDescription>
         </div>
         <Badge tone="info">{ldts.length} Items</Badge>
       </CardHeader>
@@ -455,7 +454,6 @@ function LdtManagementWorkspace() {
         <CardHeader>
           <div>
             <CardTitle>Select LDT Type</CardTitle>
-            <CardDescription>Select Line, Tube, or Drain to view the matching list below.</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
@@ -510,15 +508,7 @@ export function LdtManagementPage() {
         title="LDT Management"
         className="static mx-0 border-b bg-transparent px-0 py-2"
       />
-
-      <Card>
-        <CardContent className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4">
-          <PatientSearchSelect patientId={patient.id} onPatientChange={setPatientId} />
-          <DetailItem label="Age/Gender" value={`${patient.age} / ${patient.gender}`} />
-          <DetailItem label="Blood Group" value={patient.bloodGroup} />
-          {/* <DetailItem label="Ward/Bed" value="ICU-2" /> */}
-        </CardContent>
-      </Card>
+      <PatientSummaryBanner />
 
       <LdtManagementWorkspace />
     </div>

@@ -47,9 +47,9 @@ export function CurrentStockPage() {
   return (
     <InventoryShell title="Current Stock" icon={Store}>
       <FilterBar search={search} onSearch={setSearch} placeholder="Search drug, batch, store, status...">
-        <NativeSelect label="Status" value={status} onChange={setStatus} options={["All status", "Available", "Low Stock", "Expired"]} />
+        <NativeSelect label="" value={status} onChange={setStatus} options={["All status", "Available", "Low Stock", "Expired"]} />
       </FilterBar>
-      <button className="inline-flex items-center gap-2 text-sm font-semibold text-primary" onClick={() => toast.success("Current stock export queued")} type="button"><FileDown className="h-4 w-4" />Export current stock</button>
+      {/* <button className="inline-flex items-center gap-2 text-sm font-semibold text-primary" onClick={() => toast.success("Current stock export queued")} type="button"><FileDown className="h-4 w-4" />Export current stock</button> */}
       <DataTable data={filtered} columns={columns} />
       <MasterDialog open={Boolean(selected)} onOpenChange={(open) => !open && setSelected(null)} title="View current stock" submitLabel="Close" onSubmit={() => setSelected(null)}>
         {selected ? <InventoryRecordForm value={selected} fields={fields} readOnly onChange={setSelected} /> : null}

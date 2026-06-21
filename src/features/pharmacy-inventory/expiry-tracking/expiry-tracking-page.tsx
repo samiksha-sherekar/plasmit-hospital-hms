@@ -27,7 +27,7 @@ export function ExpiryTrackingPage() {
   return (
     <InventoryShell title="Expiry Tracking" icon={Archive}>
       <AlertBanner icon={Archive} tone="warning" title="Expiry alerts">Near-expiry and expired batches are highlighted for pharmacy review before dispensing.</AlertBanner>
-      <FilterBar search={search} onSearch={setSearch} placeholder="Search drug, batch, location..."><NativeSelect label="Status" value={status} onChange={setStatus} options={["All status", "Safe", "Near Expiry", "Expired"]} /></FilterBar>
+      <FilterBar search={search} onSearch={setSearch} placeholder="Search drug, batch, location..."><NativeSelect label="" value={status} onChange={setStatus} options={["All status", "Safe", "Near Expiry", "Expired"]} /></FilterBar>
       <DataTable data={filtered} columns={columns} />
     </InventoryShell>
   );

@@ -6,6 +6,7 @@ import { Repeat } from "lucide-react";
 import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { FilterBar } from "@/features/admin/admin-shared";
 import { MasterDialog } from "@/features/pharmacy-master/components/master-dialog";
@@ -53,7 +54,12 @@ export function StockTransferPage() {
 
   return (
     <InventoryShell title="Stock Transfer" icon={Repeat} actionLabel="Create transfer" onCreate={() => openRecord(emptyRecord(), "create")}>
-      <FilterBar search={search} onSearch={setSearch} placeholder="Search transfer, store, drug, batch..." />
+      <FilterBar search={search} onSearch={setSearch} placeholder="Search transfer, store, drug, batch...">
+        <Button onClick={() => openRecord(emptyRecord(), "create")}>
+          <Repeat className="h-4 w-4" />
+          Create transfer
+        </Button>
+      </FilterBar>
       <DataTable data={filtered} columns={columns} />
       <MasterDialog open={open} onOpenChange={setOpen} title={mode === "view" ? "View stock transfer" : mode === "edit" ? "Edit stock transfer" : "Create stock transfer"} submitLabel={mode === "view" ? "Close" : mode === "edit" ? "Update transfer" : "Create transfer"} onSubmit={mode === "view" ? () => setOpen(false) : save}>
         <InventoryRecordForm value={draft} fields={fields} readOnly={mode === "view"} onChange={setDraft} />

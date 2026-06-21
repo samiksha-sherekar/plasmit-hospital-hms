@@ -45,7 +45,7 @@ export function BatchStockPage() {
   ], []);
   return (
     <InventoryShell title="Batch Stock" icon={Boxes}>
-      <FilterBar search={search} onSearch={setSearch} placeholder="Search drug, batch, location, status..."><NativeSelect label="Status" value={status} onChange={setStatus} options={["All status", "Available", "Near Expiry", "Expired"]} /></FilterBar>
+      <FilterBar search={search} onSearch={setSearch} placeholder="Search drug, batch, location, status..."><NativeSelect label="" value={status} onChange={setStatus} options={["All status", "Available", "Near Expiry", "Expired"]} /></FilterBar>
       <DataTable data={filtered} columns={columns} />
       <MasterDialog open={Boolean(selected)} onOpenChange={(open) => !open && setSelected(null)} title="View batch stock" submitLabel="Close" onSubmit={() => setSelected(null)}>
         {selected ? <InventoryRecordForm value={selected} fields={fields} readOnly onChange={setSelected} /> : null}

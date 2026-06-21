@@ -6,6 +6,7 @@ import { CheckCircle2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Drawer } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 
 import type { AdministrationAction, AdministrationDetail, FluidAdministrationDetail } from "./types";
@@ -103,26 +104,16 @@ function Modal({
   footer: React.ReactNode;
 }) {
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-[1px]" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-3xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border border-border bg-white shadow-soft outline-none">
-          <div className="flex items-start justify-between gap-4 border-b border-border px-4 py-3">
-            <div>
-              <Dialog.Title className="text-sm font-semibold text-foreground">{title}</Dialog.Title>
-              {description ? <Dialog.Description className="mt-1 text-xs text-muted-foreground">{description}</Dialog.Description> : null}
-            </div>
-            <Dialog.Close asChild>
-              <Button size="icon" variant="ghost" aria-label="Close popup">
-                <X className="h-4 w-4" />
-              </Button>
-            </Dialog.Close>
-          </div>
-          <div className="min-h-0 flex-1 overflow-auto p-4">{children}</div>
-          <div className="border-t border-border bg-surface p-3">{footer}</div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+    <Drawer
+      open={open}
+      onOpenChange={onOpenChange}
+      title={title}
+      description={description}
+      className="w-[calc(100vw-2rem)] max-w-3xl"
+      footer={footer}
+    >
+      {children}
+    </Drawer>
   );
 }
 

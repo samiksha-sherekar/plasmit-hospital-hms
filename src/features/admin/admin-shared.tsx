@@ -23,6 +23,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Drawer } from "@/components/ui/drawer";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { StatusPill } from "@/components/ui/status-pill";
 import { cn } from "@/lib/utils";
 import type { Role, StatusTone } from "@/types";
@@ -82,11 +83,10 @@ export function FilterBar({
   return (
     <Card>
       <CardContent className="flex flex-col gap-3 p-3 lg:flex-row lg:items-center">
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <Input value={search} onChange={(event) => onSearch(event.target.value)} placeholder={placeholder} aria-label={placeholder} />
+        <div className="min-w-0 flex-1">
+          <SearchInput value={search} onChange={(event) => onSearch(event.target.value)} placeholder={placeholder} aria-label={placeholder} className="w-full" />
         </div>
-        {children ? <div className="flex flex-wrap gap-2">{children}</div> : null}
+        {children ? <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">{children}</div> : null}
       </CardContent>
     </Card>
   );
@@ -104,10 +104,11 @@ export function NativeSelect({
   options: string[];
 }) {
   return (
-    <label className="flex min-w-[150px] items-center gap-2 text-xs text-muted-foreground">
+    <label className="flex min-w-[160px] flex-col gap-1 text-xs text-muted-foreground">
       <span className="sr-only">{label}</span>
+      <span className="text-[11px] font-medium uppercase tracking-[0.04em]">{label}</span>
       <select
-        className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring/20"
+        className="h-[var(--density-control-height)] w-full rounded-lg border border-input bg-white px-3.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/15"
         value={value}
         onChange={(event) => onChange(event.target.value)}
       >

@@ -6,6 +6,7 @@ import { ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 
 import { DataTable } from "@/components/ui/data-table";
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { FilterBar } from "@/features/admin/admin-shared";
 import { MasterDialog } from "@/features/pharmacy-master/components/master-dialog";
@@ -59,7 +60,12 @@ export function PurchaseOrderPage() {
 
   return (
     <PurchaseShell title="Purchase Order" icon={ShoppingCart} onCreate={() => openRecord(emptyRecord(), "create")}>
-      <FilterBar search={search} onSearch={setSearch} placeholder="Search PO number, supplier, drug..." />
+      <FilterBar search={search} onSearch={setSearch} placeholder="Search PO number, supplier, drug...">
+        <Button onClick={() => openRecord(emptyRecord(), "create")}>
+          <ShoppingCart className="h-4 w-4" />
+          Create PO
+        </Button>
+      </FilterBar>
       <DataTable data={filtered} columns={columns} />
       <MasterDialog open={open} onOpenChange={setOpen} title={mode === "view" ? "View purchase order" : mode === "edit" ? "Edit purchase order" : "Create purchase order"} submitLabel={mode === "view" ? "Close" : mode === "edit" ? "Update PO" : "Create PO"} onSubmit={mode === "view" ? () => setOpen(false) : save}>
         <PurchaseRecordForm value={draft} fields={fields} readOnly={mode === "view"} onChange={setDraft} />

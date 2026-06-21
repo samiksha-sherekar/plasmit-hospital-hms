@@ -25,6 +25,7 @@ import type { Role } from "@/types";
 
 import { nurseDrugOrders } from "@/features/nurse-drug-administration/data";
 import type { NurseDrugOrder } from "@/features/nurse-drug-administration/types";
+import { PatientSummaryBanner } from "@/components/ui/patient-summary-banner";
 
 const pharmacistRoles: Role[] = ["Pharmacist", "Super Admin", "Hospital Admin"];
 type SortKey =
@@ -227,25 +228,14 @@ export function PharmacistDrugDispensePage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Pharmacist Workspace"
         title="Drug Dispense"
         className="static mx-0 border-b bg-transparent px-0 py-2"
         // description="Doctor drug orders are dispensed here before nurse receipt and administration."
       />
 
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Pill className="h-4 w-4 text-primary" />
-            Doctor Order Queue
-          </CardTitle>
-          {/* <CardDescription>Search and sort drug orders before dispensing.</CardDescription> */}
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <PatientSummaryCard
-            patientId={selectedPatientId}
-            onPatientChange={setSelectedPatientId}
-          />
+        <CardContent className="space-y-4">
+          <PatientSummaryBanner />
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <SearchInput
               className="sm:w-80"

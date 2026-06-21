@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { mockPatients } from "@/data/patients";
 import { PatientSearchSelect } from "@/features/patients/patient-search-select";
 import type { Role } from "@/types";
+import { PatientSummaryBanner } from "@/components/ui/patient-summary-banner";
 
 type FieldType = "Free text" | "Date" | "Time" | "Number" | "Dropdown" | "Checkbox";
 type SelectionMode = "Single" | "Multi";
@@ -293,7 +294,6 @@ function AssessmentEntryForm({
             <ClipboardCheck className="h-4 w-4 text-primary" />
             Add Assessment
           </CardTitle>
-          <CardDescription>Enter assessment name, configured value, and time. Submit maps the value into the matching hourly slot.</CardDescription>
         </div>
       </CardHeader>
       <CardContent>
@@ -356,7 +356,6 @@ function AssessmentSlotTable({
       <CardHeader>
         <div>
           <CardTitle>Assessment / Time</CardTitle>
-          <CardDescription>Rows are assessment names. Columns are 1 hour time intervals, and each value appears in its mapped slot.</CardDescription>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
@@ -416,9 +415,7 @@ function AssessmentSlotTable({
               </tbody>
             </table>
           </div>
-          <div className="border-t border-border px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)] text-xs text-muted-foreground">
-            Times with minutes are grouped into their hour slot, while the exact time remains visible inside the cell.
-          </div>
+          
         </div>
       </CardContent>
     </Card>
@@ -507,7 +504,6 @@ function IntakeOutputPanel({ entries }: { entries: IntakeOutputEntry[] }) {
             <Send className="h-4 w-4 text-primary" />
             Intake / Output Updates
           </CardTitle>
-          <CardDescription>Number fields configured for Intake or Output are pushed here automatically.</CardDescription>
         </div>
         <div className="flex flex-wrap gap-2">
           <Badge tone="success">Intake {intakeTotal} ml</Badge>
@@ -663,29 +659,11 @@ export function LdtAssessmentPage({ ldtId = defaultLdtId }: { ldtId?: string }) 
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Nursing - LDT Assessment"
         title={`${ldtConfig.name} Assessment`}
-        description="Capture time-wise assessment values from the selected LDT admin configuration."
-        className="static mx-0 border-b bg-transparent px-0 py-2"
-        actions={
-          <Button variant="outline" asChild>
-            <Link href="/nurse/ldt-management">
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Link>
-          </Button>
-        }
+        className="static mx-0 border-b bg-transparent px-0 py-2"       
       />
-
-      <Card>
-        <CardContent className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4">
-          <PatientSearchSelect patientId={patient.id} onPatientChange={setPatientId} />
-          <DetailItem label="Age/Gender" value={`${patient.age} / ${patient.gender}`} />
-          <DetailItem label="Blood Group" value={patient.bloodGroup} />
-          <DetailItem label="LDT" value={`${ldtConfig.name} (${ldtConfig.type})`} />
-        </CardContent>
-      </Card>
-
+      <PatientSummaryBanner />
+      
       <AssessmentEntryForm
         fields={ldtConfig.assessments}
         values={formValues}

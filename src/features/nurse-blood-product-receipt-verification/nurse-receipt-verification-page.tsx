@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shell/page-header";
-import { PatientSummaryBanner } from "./shared/patient-summary-banner";
+import { PatientSummaryBanner } from "@/components/ui/patient-summary-banner";
 import { nurseBloodProductStaticRecords, nurseBloodProductTypes, type BagVerification } from "./receipt-verification-data";
 
 type BloodGroup = "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-";
@@ -227,7 +227,7 @@ export function NurseReceiptVerificationPage() {
       {hasExpiredBag ? <AlertBanner icon={Clock3} tone="danger" title="Expired unit">One or more units are expired. Return the unit to Blood Bank before proceeding.</AlertBanner> : null}
       {!form.crossmatchConfirmed ? <AlertBanner icon={Droplets} tone="warning" title="Crossmatch pending">Start Transfusion stays blocked until crossmatch compatibility is confirmed.</AlertBanner> : null}
       {form.vitals.temperature && Number(form.vitals.temperature) >= 38 ? <AlertBanner icon={BellRing} tone="warning" title="Temperature warning">Temperature is 38.0 C or above. Review whether transfusion should be delayed per policy.</AlertBanner> : null}
-      <PatientSummaryBanner />
+      <PatientSummaryBanner/>
 
       <div className="grid gap-6 ">
         <div className="space-y-6">

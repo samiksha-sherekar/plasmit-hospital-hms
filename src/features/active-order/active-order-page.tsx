@@ -25,6 +25,7 @@ import { PageHeader } from "@/components/shell/page-header";
 import { mockPatients } from "@/data/patients";
 import { PatientSearchSelect } from "@/features/patients/patient-search-select";
 import type { Role, StatusTone } from "@/types";
+import { PatientSummaryBanner } from "@/components/ui/patient-summary-banner";
 
 type UnitStatus = "In Progress" | "Completed" | "Discontinued";
 
@@ -373,16 +374,7 @@ export function ActiveOrderPage() {
         title="Active Order"
         className="static mx-0 border-b bg-transparent px-0 py-2"
       />
-
-      <Card className="sticky top-4 z-20">
-        <CardContent className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4">
-          <PatientSearchSelect patientId={patient.id} onPatientChange={setPatientId} />
-          {/* <DetailItem label="UHID" value="UH1023" /> */}
-          <DetailItem label="Age/Gender" value={`${patient.age} / ${patient.gender}`} />
-          <DetailItem label="Blood Group" value={patient.bloodGroup} />
-          {/* <DetailItem label="Ward/Bed" value="ICU-2" /> */}
-        </CardContent>
-      </Card>
+      <PatientSummaryBanner/>
 
       <ActiveOrdersCard />
     </div>

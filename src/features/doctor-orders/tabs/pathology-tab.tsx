@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 import { PatientSummaryBanner } from "./shared/patient-summary-banner";
+import { ClinicalInformationPanel } from "./shared/clinical-information-panel";
 import { previousTestOrders, resultBlocks as initialResultBlocks, groupedTests, summaryRows as initialSummaryRows, testList } from "./pathology/data";
 import { PathologyCriticalFindingsTab } from "./pathology/critical-findings-tab";
 import { PathologyOrderSummaryTab } from "./pathology/order-summary-tab";
@@ -15,7 +16,7 @@ import { PathologyResultReviewTab } from "./pathology/result-review-tab";
 import { PathologyTestOrderTab } from "./pathology/test-order-tab";
 import type { PathologyPriority, PathologyResultBlock, PathologySummaryRow } from "./pathology/types";
 
-type MainTab = "test-order" | "order-summary" | "result-review" | "critical-findings";
+type MainTab = "test-order" | "clinical-information" | "order-summary" | "result-review" | "critical-findings";
 type SummarySortKey = keyof Pick<PathologySummaryRow, "name" | "loinc" | "cpt" | "department" | "specimen" | "priority">;
 
 const selectedByDefault = ["cbc", "kft"];
@@ -188,17 +189,17 @@ export function PathologyTab() {
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as MainTab)} className="w-full">
         <Card>
           <CardContent className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-              {(["test-order", "order-summary", "result-review", "critical-findings"] as const).map((tab) => (
+            <div className="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:pb-0">
+              {(["test-order", "clinical-information", "order-summary", "result-review", "critical-findings"] as const).map((tab) => (
                 <Button
                   key={tab}
                   type="button"
                   size="sm"
                   variant={activeTab === tab ? "default" : "outline"}
                   onClick={() => setActiveTab(tab)}
-                  className="min-w-[132px]"
+                  className="min-w-[132px] shrink-0"
                 >
-                  {tab === "test-order" ? "Test Order" : tab === "order-summary" ? "Order Summary" : tab === "result-review" ? "Result Review" : "Critical Findings"}
+                  {tab === "test-order" ? "Test Order" : tab === "clinical-information" ? "Clinical Information" : tab === "order-summary" ? "Order Summary" : tab === "result-review" ? "Result Review" : "Critical Findings"}
                 </Button>
               ))}
             </div>
@@ -240,6 +241,22 @@ export function PathologyTab() {
             onAddToBill={addToBill}
             onReorderPrevious={selectHistory}
             onDownloadAllReports={downloadAllReports}
+          />
+        </TabsContent>
+        <TabsContent value="clinical-information" className="mt-0">
+          <ClinicalInformationPanel
+            problems={problems}
+            problemListVisible={problemListVisible}
+            activeProblemView={activeProblemView}
+            newProblem={newProblem}
+            onNewProblemChange={setNewProblem}
+            onActiveProblemViewChange={setActiveProblemView}
+            onReorderPrevious={selectHistory}
+            historyOptions={[
+              { id: "hist-cbc", label: "CBC (12 Apr 2026)" },
+              { id: "hist-lft", label: "LFT (02 Mar 2025)" },
+              { id: "hist-kft", label: "KFT (02 Mar 2025)" },
+            ]}
           />
         </TabsContent>
         <TabsContent value="order-summary" className="mt-0">

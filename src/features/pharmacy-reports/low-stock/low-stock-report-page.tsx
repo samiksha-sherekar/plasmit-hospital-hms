@@ -36,8 +36,8 @@ export function LowStockReportPage() {
   return (
     <ReportPageShell title="Low Stock">
       <FilterBar search={search} onSearch={setSearch} placeholder="Search drug, category, location, status...">
-        <NativeSelect label="Category" value={category} onChange={setCategory} options={categories} />
-        <NativeSelect label="Status" value={status} onChange={setStatus} options={statuses} />
+        <NativeSelect label="" value={category} onChange={setCategory} options={categories} />
+        <NativeSelect label="" value={status} onChange={setStatus} options={statuses} />
       </FilterBar>
       <DataTable data={filtered} columns={columns} />
     </ReportPageShell>

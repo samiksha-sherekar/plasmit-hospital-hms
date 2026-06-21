@@ -5,6 +5,7 @@ import { Tags } from "lucide-react";
 import { toast } from "sonner";
 
 import { FilterBar, NativeSelect } from "@/features/admin/admin-shared";
+import { Button } from "@/components/ui/button";
 import { MasterDialog } from "@/features/pharmacy-master/components/master-dialog";
 import { MasterPageShell } from "@/features/pharmacy-master/components/master-page-shell";
 import { initialDrugCategories } from "@/features/pharmacy-master/data/pharmacy-master-data";
@@ -59,12 +60,13 @@ export function CategoryMasterPage() {
   }
 
   return (
-    <MasterPageShell title="Category Master" description="CRUD for pharmacy medicine categories with Active/Inactive control." icon={Tags} actionLabel="New category" onCreate={openCreate}>
+    <MasterPageShell title="Category Master" description="CRUD for pharmacy medicine categories with Active/Inactive control." icon={Tags} actionLabel="New category" onCreate={openCreate} actions={<></>}>
       <FilterBar search={search} onSearch={setSearch} placeholder="Search category name, code, status, description...">
-        <NativeSelect label="Status" value={status} onChange={setStatus} options={["All status", "Active", "Inactive"]} />
+        <NativeSelect label="" value={status} onChange={setStatus} options={["All status", "Active", "Inactive"]} />
+        <Button onClick={openCreate}><Tags className="h-4 w-4" />New category</Button>
       </FilterBar>
       <CategoryTable records={filtered} onEdit={openEdit} onToggle={(record) => setRecords((current) => current.map((item) => item.id === record.id ? { ...item, status: toggleStatus(item.status) } : item))} onDelete={remove} />
-      <MasterDialog open={open} onOpenChange={setOpen} title={mode === "edit" ? "Edit category" : "New category"} description="Category Name, Code, Status, and Description" submitLabel={mode === "edit" ? "Update category" : "Create category"} onSubmit={save} onDelete={mode === "edit" ? () => remove(draft) : undefined}>
+      <MasterDialog open={open} onOpenChange={setOpen} title={mode === "edit" ? "Edit category" : "New category"} description="" submitLabel={mode === "edit" ? "Update category" : "Create category"} onSubmit={save} onDelete={mode === "edit" ? () => remove(draft) : undefined}>
         <CategoryForm value={draft} errors={errors} onChange={setDraft} />
       </MasterDialog>
     </MasterPageShell>

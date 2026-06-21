@@ -697,34 +697,17 @@ function HourlyRecordTable({ parameter, title, unit }: { parameter: AbdominalPar
 
 function ComparisonTable() {
   const hours = ["06", "08", "10", "12", "14", "16", "17", "18"];
+  const columns = React.useMemo<ColumnDef<(typeof abdominalComparisonRecords)[number]>[]>(() => [
+    { header: "Parameter", accessorKey: "parameter" },
+    ...hours.map((hour, index) => ({
+      header: `${hour}:00`,
+      cell: ({ row }: { row: { original: (typeof abdominalComparisonRecords)[number] } }) => row.original.hourly[index],
+    })),
+    { header: "12 hour total", cell: ({ row }: { row: { original: (typeof abdominalComparisonRecords)[number] } }) => row.original.total12h },
+    { header: "24 hour total", cell: ({ row }: { row: { original: (typeof abdominalComparisonRecords)[number] } }) => row.original.total24h },
+  ], []);
   return (
-    <Card>
-      <CardHeader><div><CardTitle>24 Hour Detailed Records</CardTitle><CardDescription>Wide comparison table with hourly columns and totals</CardDescription></div></CardHeader>
-      <CardContent className="p-0">
-        <div className="max-w-full overflow-x-auto">
-          <table className="w-full min-w-[980px] border-collapse text-left text-sm">
-            <thead className="bg-[#f7f7fb] text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              <tr>
-                <th className="border-b border-border px-3 py-3">Parameter</th>
-                {hours.map((hour) => <th className="border-b border-border px-3 py-3" key={hour}>{hour}:00</th>)}
-                <th className="border-b border-border px-3 py-3">12 hour total</th>
-                <th className="border-b border-border px-3 py-3">24 hour total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {abdominalComparisonRecords.map((record) => (
-                <tr className="border-b border-border/70 last:border-0 hover:bg-surface-muted/80" key={record.parameter}>
-                  <td className="px-3 py-3 font-semibold text-foreground">{record.parameter}</td>
-                  {record.hourly.map((value, index) => <td className="px-3 py-3 text-foreground" key={`${record.parameter}-${index}`}>{value}</td>)}
-                  <td className="px-3 py-3 font-semibold text-foreground">{record.total12h}</td>
-                  <td className="px-3 py-3 font-semibold text-foreground">{record.total24h}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </CardContent>
-    </Card>
+    <DataTable data={abdominalComparisonRecords} columns={columns} />
   );
 }
 

@@ -406,10 +406,9 @@ function AssessmentFormDrawer({
       open={Boolean(state)}
       onOpenChange={(open) => !open && onClose()}
       title={editingRecord ? "Edit Assessment" : "Add Assessment"}
-      description="Assessment field configuration"
       footer={
         <div className="flex justify-end gap-2">
-          <Button type="button" className="bg-danger" onClick={onClose}>
+          <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit" form="assessment-form">
@@ -496,11 +495,10 @@ export function AssessmentConfigurationPage({ ldtId }: { ldtId?: string }) {
             <div className="flex flex-wrap gap-2">
               <Button size="sm" variant="outline" onClick={() => setDrawerState({ type: "edit", record })}>
                 <Pencil className="h-3.5 w-3.5" />
-                Edit
               </Button>
               <Button size="sm" variant="danger" onClick={() => handleDelete(record)}>
                 <Trash2 className="h-3.5 w-3.5" />
-                Delete
+                
               </Button>
             </div>
           );
@@ -517,12 +515,7 @@ export function AssessmentConfigurationPage({ ldtId }: { ldtId?: string }) {
           <PageHeader
             title="Assessment Configuration"
             className="static mx-0 border-b bg-transparent px-0 py-2"
-            actions={
-              <Button disabled={readOnly} onClick={() => setDrawerState({ type: "add" })}>
-                <Plus className="h-4 w-4" />
-                Add Assessment
-              </Button>
-            }
+            actions={null}
           />
           {/* <div className="grid gap-3 md:grid-cols-3">
             <StatCard label="Configured" value={records.length} icon={ListChecks} change="Live" context="Available records" tone="info" />
@@ -536,12 +529,18 @@ export function AssessmentConfigurationPage({ ldtId }: { ldtId?: string }) {
               tone="warning"
             />
           </div> */}
-          <FilterBar search={search} onSearch={setSearch} placeholder="Search assessment, type, configuration..." />
           <AdminSection
             title={ldtId ? `Assessment Configuration - ${ldtId}` : "Assessment Configuration"}
-            description="Create assessment fields with type-specific configuration and number-based intake/output tracking."
           >
-            <DataTable data={filteredRecords} columns={columns} />
+            <div className="space-y-4">
+              <FilterBar search={search} onSearch={setSearch} placeholder="Search assessment, type, configuration...">
+                <Button disabled={readOnly} onClick={() => setDrawerState({ type: "add" })}>
+                  <Plus className="h-4 w-4" />
+                  Add Assessment
+                </Button>
+              </FilterBar>
+              <DataTable data={filteredRecords} columns={columns} />
+            </div>
           </AdminSection>
           <AssessmentFormDrawer state={drawerState} records={records} onClose={() => setDrawerState(null)} onSave={handleSave} />
           {/* <StickyActionBar readOnly={readOnly} saveLabel="Save Assessment Configuration" /> */}

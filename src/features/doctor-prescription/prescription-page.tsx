@@ -385,7 +385,6 @@ function DrugTable({
       <CardHeader>
         <div>
           <CardTitle>Drug Table</CardTitle>
-          <CardDescription>Add medicines, dosing, frequency, route, and dispensing quantity.</CardDescription>
         </div>
         <Button onClick={onAdd}>
           <Plus className="h-4 w-4" />

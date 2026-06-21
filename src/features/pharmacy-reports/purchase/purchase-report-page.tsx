@@ -49,9 +49,9 @@ export function PurchaseReportPage() {
         </label>
         <label className="flex min-w-[150px] items-center gap-2 text-xs text-muted-foreground">
           <span className="sr-only">To date</span>
-          <Input type="date" value={toDate} min={fromDate || undefined} onChange={(event) => setToDate(event.target.value)} aria-label="To date" aria-invalid={Boolean(dateError)} />
+          <Input type="date" value={toDate} min={fromDate || undefined} onChange={(event) => setToDate(event.target.value)} aria-label="To date" aria-invalid={Boolean(dateError)} placeholder="To date" />
         </label>
-        <NativeSelect label="Supplier" value={supplier} onChange={setSupplier} options={suppliers} />
+        <NativeSelect label="" value={supplier} onChange={setSupplier} options={suppliers} />
       </FilterBar>
       {dateError ? <AlertBanner icon={ReceiptText} tone="danger" title="Invalid date range">{dateError}</AlertBanner> : null}
       <DataTable data={filtered} columns={columns} />

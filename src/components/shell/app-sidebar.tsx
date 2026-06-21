@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -20,6 +20,7 @@ export function AppSidebar({
   collapsed: boolean;
   onCollapsedChange: (collapsed: boolean) => void;
 }) {
+  const router = useRouter();
   const pathname = usePathname();
   const { role } = useRole();
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
@@ -79,20 +80,32 @@ export function AppSidebar({
                   if (hasChildren && !collapsed) {
                     return (
                       <div key={item.id}>
-                        <button
+                        <div
                           className={cn(
                             "group flex h-10 w-full items-center gap-3 rounded-lg px-2.5 text-sm font-semibold outline-none transition hover:bg-primary-soft hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/25",
                             active && "bg-gradient-to-r from-[#7367f0] to-[#5b8def] text-sidebar-active-foreground shadow-[0_8px_20px_rgba(115,103,240,0.24)] hover:text-white",
                             neuroIcu && !active && "hover:bg-[linear-gradient(90deg,rgba(79,110,247,0.10),rgba(124,107,255,0.10))] hover:text-[#4F6EF7]",
                             neuroIcu && active && "bg-[linear-gradient(90deg,#4F6EF7,#7C6BFF)] shadow-[0_10px_26px_rgba(79,110,247,0.34),0_0_0_1px_rgba(124,107,255,0.22)]",
                           )}
-                          onClick={() => setOpenItems((current) => ({ ...current, [item.id]: !expanded }))}
-                          type="button"
                         >
-                          <Icon className="h-4 w-4 shrink-0" />
-                          <span className="min-w-0 flex-1 truncate text-left">{item.label}</span>
-                          <ChevronDown className={cn("h-4 w-4 shrink-0 transition", expanded && "rotate-180")} />
-                        </button>
+                          <button
+                            className="flex min-w-0 flex-1 items-center gap-3 text-left outline-none"
+                            onClick={() => router.push(item.route)}
+                            type="button"
+                            aria-label={item.label}
+                          >
+                            <Icon className="h-4 w-4 shrink-0" />
+                            <span className="min-w-0 flex-1 truncate text-left">{item.label}</span>
+                          </button>
+                          <button
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md outline-none transition hover:bg-black/5 focus-visible:ring-2 focus-visible:ring-ring/25"
+                            onClick={() => setOpenItems((current) => ({ ...current, [item.id]: !expanded }))}
+                            type="button"
+                            aria-label={expanded ? `Collapse ${item.label}` : `Expand ${item.label}`}
+                          >
+                            <ChevronDown className={cn("h-4 w-4 transition", expanded && "rotate-180")} />
+                          </button>
+                        </div>
                         {expanded ? (
                           <div className="ml-4 mt-1 space-y-1 border-l border-border pl-2">
                             {item.children?.map((child) => {

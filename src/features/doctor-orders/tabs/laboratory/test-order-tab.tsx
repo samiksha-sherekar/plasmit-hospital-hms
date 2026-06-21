@@ -320,106 +320,7 @@ export function LaboratoryTestOrderTab({
       ) : null}
       {/* <Card>
         <CardContent className="space-y-4 p-4"> */}
-          <div className="grid min-w-0 gap-4 overflow-x-hidden lg:grid-cols-[360px_minmax(0,1fr)]">
-            {/* <Card className="min-w-0 overflow-hidden border-border">
-              <CardContent className="space-y-4 p-4"> */}
-                <div className="grid gap-3 ">
-                  <div className="max-w-full overflow-hidden rounded-md border border-border bg-background p-3">
-                    <div className="flex items-center gap-2">
-                      <SectionTitle>Clinical Diagnosis</SectionTitle>
-                      {/* <Button type="button" size="sm" variant="outline" onClick={onAddProblem}>
-                        <Plus className="h-4 w-4" />
-                        Add
-                      </Button> */}
-                      <div className="ml-auto flex overflow-hidden border border-input bg-surface-muted">
-                        {(["Active", "Find"] as const).map((mode) => (
-                          <button
-                            key={mode}
-                            type="button"
-                            className={[
-                              "border-l border-input px-3 py-1 text-xs font-medium first:border-l-0",
-                              activeProblemView === mode ? "bg-primary text-primary-foreground" : "text-muted-foreground",
-                            ].join(" ")}
-                            onClick={() => onActiveProblemViewChange?.(mode)}
-                          >
-                            {mode}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    {activeProblemView === "Find" ? (
-                      <div className="mt-3">
-                        <Input placeholder="Search problem..." value={newProblem} onChange={(event) => onNewProblemChange?.(event.target.value)} />
-                      </div>
-                    ) : null}
-                    <div className="mt-3 max-w-full overflow-hidden border border-border">
-                      <table className="w-full text-xs">
-                        <thead className="bg-surface-muted text-muted-foreground">
-                          <tr>
-                            <th className="border-r border-border px-2 py-2 text-left">Date</th>
-                            <th className="border-r border-border px-2 py-2 text-left">Clinical Dx</th>
-                            <th className="px-2 py-2 text-left">Code</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {(problemListVisible ? safeProblems : []).slice(0, 4).map((problem, index) => (
-                            <tr key={problem} className={index % 2 === 0 ? "bg-background" : "bg-surface-muted/40"}>
-                              <td className="border-t border-r border-border px-2 py-2 text-muted-foreground">12 May 2026</td>
-                              <td className="border-t border-r border-border px-2 py-2 text-foreground">{problem}</td>
-                              <td className="border-t border-border px-2 py-2 text-muted-foreground">-</td>
-                            </tr>
-                          ))}
-                          {problemListVisible && !safeProblems.length ? (
-                            <tr>
-                              <td colSpan={3} className="border-t border-border px-2 py-4 text-center text-muted-foreground">
-                                No problems reported
-                              </td>
-                            </tr>
-                          ) : null}
-                        </tbody>
-                      </table>
-                    </div>
-                    
-                  </div>
-
-                  <div className="max-w-full overflow-hidden rounded-md border border-border bg-background p-3">
-                    <div className="flex items-center justify-between">
-                      <SectionTitle>Reorder from previous tests</SectionTitle>
-                      {/* <Button type="button" size="sm" variant="outline" onClick={() => onProblemListVisibleChange(!problemListVisible)}>
-                        {problemListVisible ? "Hide" : "Show"}
-                      </Button> */}
-                    </div>
-                    <div className="mt-3 max-w-full overflow-hidden border border-border">
-                      <table className="w-full text-xs">
-                        <thead className="bg-surface-muted text-muted-foreground">
-                          <tr>
-                            <th className="border-r border-border px-2 py-2 text-left">Date</th>
-                            <th className="border-r border-border px-2 py-2 text-left">Test Name</th>
-                            <th className="px-2 py-2 text-left">Options</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {historyOptions.map((item, index) => (
-                            <tr key={item.id} className={index % 2 === 0 ? "bg-background" : "bg-surface-muted/40"}>
-                              <td className="border-t border-r border-border px-2 py-2 text-muted-foreground">{item.label.split("(")[1]?.replace(")", "") ?? "-"}</td>
-                              <td className="border-t border-r border-border px-2 py-2 font-medium text-foreground">{item.label.split(" (")[0]}</td>
-                              <td className="border-t border-border px-2 py-2">
-                                <Button type="button" size="sm" variant="outline" onClick={() => onReorderPrevious?.(item.id)}>
-                                  Reorder
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                  
-                </div>
-              {/* </CardContent>
-            </Card> */}
-
-            <div className="min-w-0 space-y-4">
+          <div className="min-w-0 space-y-4">
               {/* <Card className="min-w-0 overflow-hidden">
                 <CardContent className="space-y-3 p-4"> */}
                   <div className="flex flex-wrap items-center gap-3">
@@ -465,13 +366,13 @@ export function LaboratoryTestOrderTab({
                       </div>
                     </div>
                   </div>
-                {/* </CardContent>
+              {/* </CardContent>
               </Card> */}
 
               {/* <Card className="min-w-0">
                 <CardContent className="space-y-4 p-4"> */}
-                  <div className="min-w-0 max-w-full overflow-hidden rounded-md border border-border">
-                    <table className="w-full text-sm">
+                  <div className="min-w-0 max-w-full overflow-x-auto rounded-md border border-border">
+                    <table className="min-w-[960px] w-full text-sm">
                       <thead className="bg-surface-muted text-xs text-muted-foreground">
                           <tr>
                             <th className="px-3 py-2 text-left">Selected Tests</th>
@@ -546,16 +447,13 @@ export function LaboratoryTestOrderTab({
                   </div>
                 {/* </CardContent>
               </Card> */}
-            </div>
-          </div>
-
           <div className="grid min-w-0 gap-4 md:grid-cols-2">
            
             <label className="space-y-2">
               <SectionTitle>Instructions</SectionTitle>
               <textarea
                 className="min-h-[92px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-border focus:ring-0"
-                placeholder="Free text instructions for the lab"
+                placeholder="Instructions for the lab"
                 value={instructionsForLab}
                 onChange={(event) => onInstructionsForLabChange?.(event.target.value)}
               />
@@ -567,11 +465,11 @@ export function LaboratoryTestOrderTab({
             <div className="text-sm text-muted-foreground">{selectedTestIds.length + selectedGroupIds.length} tests selected</div>
             
             <div className="ml-auto flex flex-wrap gap-2">
-              <Button type="button" variant="outline" onClick={() => onDownloadAllReports?.()}>
+              {/* <Button type="button" variant="outline" onClick={() => onDownloadAllReports?.()}>
                 Download All Reports
-              </Button>
+              </Button> */}
               <Button type="button" variant="outline" onClick={() => onOpenSummary?.()}>
-                View order summary
+                View
               </Button>
               <Button type="button"  onClick={() => onSave?.()}>
                 Save
@@ -586,6 +484,7 @@ export function LaboratoryTestOrderTab({
           </div>
         {/* </CardContent>
       </Card> */}
+      </div>
     </div>
   );
 }

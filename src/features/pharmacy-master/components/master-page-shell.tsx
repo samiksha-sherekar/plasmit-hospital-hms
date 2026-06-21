@@ -5,6 +5,7 @@ import type { LucideIcon } from "lucide-react";
 
 import { PageHeader } from "@/components/shell/page-header";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { ProtectedOperations } from "@/features/operations/operations-shared";
 
 export function MasterPageShell({
@@ -13,12 +14,14 @@ export function MasterPageShell({
   actionLabel,
   onCreate,
   children,
+  actions,
 }: {
   title: string;
   description?: string;
   icon: LucideIcon;
   actionLabel: string;
   onCreate: () => void;
+  actions?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -27,12 +30,12 @@ export function MasterPageShell({
         <>
           <PageHeader
             title={title}
-            actions={
-              <Button onClick={onCreate}><Icon className="h-4 w-4" />{actionLabel}</Button>
-            }
+            actions={actions ?? <Button onClick={onCreate}><Icon className="h-4 w-4" />{actionLabel}</Button>}
             className="static mx-0 border-b bg-transparent px-0 py-2"
           />
-          <div className="space-y-4">{children}</div>
+          <Card>
+            <CardContent className="space-y-4 p-3">{children}</CardContent>
+          </Card>
         </>
       )}
     </ProtectedOperations>

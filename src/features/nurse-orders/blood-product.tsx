@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Drawer } from "@/components/ui/drawer";
 import { PatientSummaryBanner } from "./shared/patient-summary-banner";
 import { PageHeader } from "@/components/shell/page-header";
+
 function FieldLabel({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <span className={(className ? className + " " : "") + "text-xs font-medium text-muted-foreground"}>
@@ -243,7 +244,6 @@ function PreviewDrawer({
       open={open}
       onOpenChange={onOpenChange}
       title="Blood Request Preview"
-      description="Read-only summary of the current blood request"
       footer={
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
@@ -256,14 +256,14 @@ function PreviewDrawer({
       }
     >
       <div className="space-y-4">
-        <AlertBanner icon={Info} tone="info" title="Preview mode">
+        {/* <AlertBanner icon={Info} tone="info" title="Preview mode">
           This shows the filled blood request data before submission.
-        </AlertBanner>
+        </AlertBanner> */}
 
-        <div className="overflow-auto rounded-md border border-border bg-background p-3">
+        <div className="overflow-auto rounded-md border border-border p-3">
           <table className="w-full text-sm">
             <tbody>
-              <tr className="border-t"><td className="py-2 font-medium text-muted-foreground">Patient Name</td><td className="py-2 text-foreground">{form.patientName}</td></tr>
+              <tr><td className="py-2 font-medium text-muted-foreground">Patient Name</td><td className="py-2 text-foreground">{form.patientName}</td></tr>
               <tr className="border-t"><td className="py-2 font-medium text-muted-foreground">UHID</td><td className="py-2 text-foreground">{form.uhid}</td></tr>
               <tr className="border-t"><td className="py-2 font-medium text-muted-foreground">Admission No.</td><td className="py-2 text-foreground">{form.admissionNo}</td></tr>
               <tr className="border-t"><td className="py-2 font-medium text-muted-foreground">Age / Sex</td><td className="py-2 text-foreground">{form.age} / {form.sex}</td></tr>
@@ -358,6 +358,7 @@ export function BloodProduct() {
   const [errors, setErrors] = React.useState<string[]>([]);
   const [form, setForm] = React.useState(initialForm);
   const [previewOpen, setPreviewOpen] = React.useState(false);
+  const [requestingDoctorOpen, setRequestingDoctorOpen] = React.useState(false);
 
   const isMale = form.sex === "Male";
   const isSurgery = form.indicationType === "Surgery";
@@ -380,6 +381,11 @@ export function BloodProduct() {
   const isRoutineLeadTimeWarning = form.requestType === "Routine" && requiredDateTime ? requiredDateTime.getTime() - Date.now() < 24 * 60 * 60 * 1000 : false;
   const productsRef = React.useRef<HTMLDivElement | null>(null);
   const [productsOpen, setProductsOpen] = React.useState(false);
+  const filteredRequestingDoctors = React.useMemo(() => {
+    const query = form.requestingDoctor.trim().toLowerCase();
+    if (query.length < 3) return [];
+    return requestingDoctors.filter((doctor) => doctor.toLowerCase().includes(query));
+  }, [form.requestingDoctor]);
   const selectedNamesDisplay = React.useMemo(() => {
     if (!Array.isArray(form.selectedProducts) || form.selectedProducts.length === 0) return "";
     const names = form.selectedProducts.map((p) => p.type);
@@ -479,10 +485,9 @@ export function BloodProduct() {
   return (
     <div className="space-y-4">
       <PageHeader
-              title="Blood/ Blood Product"
-              className="static mx-0 border-b bg-transparent px-0 py-2"
+        title="Blood/ Blood Product"
+        className="static mx-0 border-b bg-transparent px-0 py-2"
       />
-      <PatientSummaryBanner/>
       <Card>
         <CardContent className="space-y-6">
           <div className="grid gap-4 lg:grid-cols-2">
@@ -505,7 +510,38 @@ export function BloodProduct() {
                 ) : null} */}
                 {/* <Input value={form.requisitionUnit} readOnly /></label> */}
                 {/* <Input value={form.consultant} onChange={(event) => setForm((current) => ({ ...current, consultant: event.target.value }))} /></label> */}
-                <label className="space-y-2"><FieldLabel>Name of Requesting Doctor</FieldLabel><Input value={form.requestingDoctor} onChange={(event) => setForm((current) => ({ ...current, requestingDoctor: event.target.value }))} /></label>
+                <label className="relative space-y-2">
+                  <FieldLabel>Name of Requesting Doctor</FieldLabel>
+                  <Input
+                    value={form.requestingDoctor}
+                    placeholder="Type doctor name"
+                    onFocus={() => setRequestingDoctorOpen(true)}
+                    onBlur={() => window.setTimeout(() => setRequestingDoctorOpen(false), 150)}
+                    onChange={(event) => {
+                      setForm((current) => ({ ...current, requestingDoctor: event.target.value }));
+                      setRequestingDoctorOpen(true);
+                    }}
+                  />
+                  {requestingDoctorOpen && filteredRequestingDoctors.length ? (
+                    <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-48 overflow-auto rounded-md border border-border bg-white shadow-lg">
+                      {filteredRequestingDoctors.map((doctor) => (
+                        <button
+                          key={doctor}
+                          type="button"
+                          className="block w-full border-b border-border px-3 py-2 text-left text-sm last:border-b-0 hover:bg-surface-muted"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => {
+                            setForm((current) => ({ ...current, requestingDoctor: doctor }));
+                            setRequestingDoctorOpen(false);
+                          }}
+                        >
+                          <div className="font-medium text-foreground">{doctor}</div>
+                          {/* <div className="text-xs text-muted-foreground">Doctor already in list</div> */}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </label>
                 <label className="space-y-2"><FieldLabel>Clinical Diagnosis</FieldLabel><Input value={form.diagnosis} onChange={(event) => setForm((current) => ({ ...current, diagnosis: event.target.value }))} placeholder="Free text or ICD-10 search" /></label>
               </div>
             </section>
@@ -747,9 +783,9 @@ export function BloodProduct() {
                 <FieldSelect value={form.patientBloodGroup} onChange={(patientBloodGroup) => setForm((current) => ({ ...current, patientBloodGroup, bloodGroupSource: "manual" }))}>
                   {bloodGroups.map((group) => <option key={group} value={group}>{group}</option>)}
                 </FieldSelect>
-                <div className="text-xs text-muted-foreground">
+                {/* <div className="text-xs text-muted-foreground">
                   {isBloodGroupLabVerified ? "Auto-filled from verified lab result" : "Manual entry — unverified until lab confirmation"}
-                </div>
+                </div> */}
               </label>
               <div className="space-y-2">
                 <FieldLabel>Blood Group of Patient - Rh</FieldLabel>
@@ -773,11 +809,11 @@ export function BloodProduct() {
                   </span> */}
                 </div>
 
-                <div className="text-xs text-muted-foreground">
+                {/* <div className="text-xs text-muted-foreground">
                   {isRhLabVerified
                     ? "Auto-filled from verified lab result"
                     : "Manual entry — unverified until lab confirmation"}
-                </div>
+                </div> */}
               </div>
               <label className="space-y-2"><FieldLabel>Group + Screen Done On (Date)</FieldLabel><Input type="date" max={todayIso()} value={form.groupScreenDate} onChange={(event) => setForm((current) => ({ ...current, groupScreenDate: event.target.value }))} /></label>
               <label className="space-y-2"><FieldLabel>Hemoglobin (Hb)</FieldLabel><Input readOnly={areBloodCountsLinked} value={form.hb} onChange={(event) => setForm((current) => ({ ...current, hb: event.target.value }))} placeholder="g/dL" /></label>
@@ -794,7 +830,7 @@ export function BloodProduct() {
                   {/* {areBloodCountsLinked ? "Values are auto-pulled from latest linked lab result." : "Manual entry allowed when lab-linked values are unavailable."} */}
                 </div>
               </label>
-              <label className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm transition hover:bg-surface-muted">
+              <label className="flex items-center gap-4 px-3 py-2 text-sm text-foreground ">
                 <input
                   type="checkbox"
                   className="h-4 w-4 accent-primary"
@@ -803,7 +839,7 @@ export function BloodProduct() {
                 />
                 <span>Group &amp; Hold</span>
               </label>
-              <label className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm transition hover:bg-surface-muted">
+              <label className="flex items-center gap-4 px-3 py-2 text-sm text-foreground ">
                 <input
                   type="checkbox"
                   className="h-4 w-4 accent-primary"
@@ -1028,25 +1064,7 @@ export function BloodProduct() {
                 </FieldSelect>
               </label>
             </div>
-            {isEmergency ? (
-              <div className="grid gap-4 lg:grid-cols-2">
-                <label className="space-y-2">
-                  <FieldLabel>Nature of Emergency</FieldLabel>
-                  <Input value={form.natureOfEmergency} onChange={(event) => setForm((current) => ({ ...current, natureOfEmergency: event.target.value }))} placeholder="Required for Emergency" />
-                </label>
-                <AlertBanner icon={Clock3} tone="warning" title="Emergency workflow">
-                  Emergency request becomes mandatory and routes an urgent notification to the Blood Bank queue.
-                </AlertBanner>
-              </div>
-            ) : isRoutineLeadTimeWarning ? (
-              <AlertBanner icon={Clock3} tone="warning" title="Routine lead time warning">
-                This routine request is scheduled less than 24 hours ahead. Please confirm that this meets local policy.
-              </AlertBanner>
-            ) : (
-              <AlertBanner icon={CalendarDays} tone="info" title="Routine workflow">
-                Routine requests should be scheduled with lead time per policy.
-              </AlertBanner>
-            )}
+            
           </section>
 
           <section className="space-y-3">

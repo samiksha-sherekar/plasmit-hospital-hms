@@ -56,7 +56,6 @@ export function AdministrationTimeline({
       <CardHeader>
         <div className="space-y-1">
           <CardTitle>Drug Administration Schedule</CardTitle>
-          <CardDescription>24 hour MAR grid with 1 hour intervals, dosage visibility, and overdue flagging.</CardDescription>
         </div>
         <label className="flex flex-wrap items-center gap-2 text-xs font-medium text-muted-foreground">
           Date

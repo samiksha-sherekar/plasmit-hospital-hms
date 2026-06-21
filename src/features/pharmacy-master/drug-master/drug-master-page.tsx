@@ -4,6 +4,7 @@ import * as React from "react";
 import { Pill } from "lucide-react";
 import { toast } from "sonner";
 
+import { Button } from "@/components/ui/button";
 import { FilterBar, NativeSelect } from "@/features/admin/admin-shared";
 import { MasterDialog } from "@/features/pharmacy-master/components/master-dialog";
 import { MasterPageShell } from "@/features/pharmacy-master/components/master-page-shell";
@@ -93,10 +94,11 @@ export function DrugMasterPage() {
   }
 
   return (
-    <MasterPageShell title="Drug Master" description="CRUD, clone, Active/Inactive, and dependent Category/Sub Category mapping for pharmacy drugs." icon={Pill} actionLabel="New drug" onCreate={openCreate}>
+    <MasterPageShell title="Drug Master" description="CRUD, clone, Active/Inactive, and dependent Category/Sub Category mapping for pharmacy drugs." icon={Pill} actionLabel="New drug" onCreate={openCreate} actions={<></>}>
       <FilterBar search={search} onSearch={setSearch} placeholder="Search drug, generic, category, form, route, status...">
-        <NativeSelect label="Category" value={category} onChange={setCategory} options={["All categories", ...initialDrugCategories.map((item) => item.categoryName)]} />
-        <NativeSelect label="Status" value={status} onChange={setStatus} options={["All status", "Active", "Inactive"]} />
+        <NativeSelect label="" value={category} onChange={setCategory} options={["All categories", ...initialDrugCategories.map((item) => item.categoryName)]} />
+        <NativeSelect label="" value={status} onChange={setStatus} options={["All status", "Active", "Inactive"]} />
+        <Button onClick={openCreate}><Pill className="h-4 w-4" />New drug</Button>
       </FilterBar>
       <DrugTable records={filtered} categories={initialDrugCategories} subCategories={initialDrugSubCategories} onEdit={openEdit} onClone={openClone} onToggle={(record) => setRecords((current) => current.map((item) => item.id === record.id ? { ...item, status: toggleStatus(item.status) } : item))} onDelete={remove} />
       <MasterDialog open={open} onOpenChange={setOpen} title={mode === "edit" ? "Edit drug" : mode === "clone" ? "Clone drug" : "New drug"} submitLabel={mode === "edit" ? "Update drug" : mode === "clone" ? "Save clone" : "Create drug"} onSubmit={save} onDelete={mode === "edit" ? () => remove(draft) : undefined}>

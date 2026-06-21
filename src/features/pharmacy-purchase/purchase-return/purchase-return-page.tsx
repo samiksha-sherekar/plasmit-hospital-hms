@@ -57,7 +57,7 @@ export function PurchaseReturnPage() {
 
   return (
     <PurchaseShell title="Purchase Return" icon={RotateCcw} onCreate={() => openRecord(emptyRecord(), "create")}>
-      <FilterBar search={search} onSearch={setSearch} placeholder="Search return, supplier, reason, drug, batch..."><NativeSelect label="Status" value={status} onChange={setStatus} options={purchaseStatuses.returns} /></FilterBar>
+      <FilterBar search={search} onSearch={setSearch} placeholder="Search return, supplier, reason, drug, batch..."><NativeSelect label="" value={status} onChange={setStatus} options={purchaseStatuses.returns} /></FilterBar>
       <DataTable data={filtered} columns={columns} />
       <MasterDialog open={open} onOpenChange={setOpen} title={mode === "view" ? "View purchase return" : "Create purchase return"} submitLabel={mode === "view" ? "Close" : "Create return"} onSubmit={mode === "view" ? () => setOpen(false) : save}>
         <PurchaseRecordForm value={draft} fields={fields} readOnly={mode === "view"} onChange={setDraft} />

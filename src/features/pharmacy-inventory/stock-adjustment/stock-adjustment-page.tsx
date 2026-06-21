@@ -6,6 +6,7 @@ import { PackageMinus } from "lucide-react";
 import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { FilterBar } from "@/features/admin/admin-shared";
 import { MasterDialog } from "@/features/pharmacy-master/components/master-dialog";
@@ -55,7 +56,12 @@ export function StockAdjustmentPage() {
 
   return (
     <InventoryShell title="Stock Adjustment" icon={PackageMinus} actionLabel="Create adjustment" onCreate={() => openRecord(emptyRecord(), "create")}>
-      <FilterBar search={search} onSearch={setSearch} placeholder="Search adjustment, drug, batch, reason..." />
+      <FilterBar search={search} onSearch={setSearch} placeholder="Search adjustment, drug, batch, reason...">
+        <Button onClick={() => openRecord(emptyRecord(), "create")}>
+          <PackageMinus className="h-4 w-4" />
+          Create adjustment
+        </Button>
+      </FilterBar>
       <DataTable data={filtered} columns={columns} />
       <MasterDialog open={open} onOpenChange={setOpen} title={mode === "view" ? "View stock adjustment" : mode === "edit" ? "Edit stock adjustment" : "Create stock adjustment"} submitLabel={mode === "view" ? "Close" : mode === "edit" ? "Update adjustment" : "Create adjustment"} onSubmit={mode === "view" ? () => setOpen(false) : save}>
         <InventoryRecordForm value={draft} fields={fields} readOnly={mode === "view"} onChange={setDraft} />

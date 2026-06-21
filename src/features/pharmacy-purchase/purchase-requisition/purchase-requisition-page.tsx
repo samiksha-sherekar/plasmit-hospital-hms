@@ -6,6 +6,7 @@ import { ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { FilterBar } from "@/features/admin/admin-shared";
 import { MasterDialog } from "@/features/pharmacy-master/components/master-dialog";
@@ -85,7 +86,12 @@ export function PurchaseRequisitionPage() {
 
   return (
     <PurchaseShell title="Purchase Requisition" icon={ClipboardList} onCreate={() => openRecord(emptyRecord(), "create")}>
-      <FilterBar search={search} onSearch={setSearch} placeholder="Search PR number, drug, requested by, priority..." />
+      <FilterBar search={search} onSearch={setSearch} placeholder="Search PR number, drug, requested by, priority...">
+        <Button onClick={() => openRecord(emptyRecord(), "create")}>
+          <ClipboardList className="h-4 w-4" />
+          Create PR
+        </Button>
+      </FilterBar>
       <DataTable data={filtered} columns={columns} />
       <MasterDialog open={open} onOpenChange={setOpen} title={mode === "view" ? "View purchase requisition" : mode === "edit" ? "Edit purchase requisition" : "Create purchase requisition"} submitLabel={mode === "view" ? "Close" : mode === "edit" ? "Update PR" : "Create PR"} onSubmit={mode === "view" ? () => setOpen(false) : save} onDelete={mode === "edit" ? () => setDeleteTarget(draft) : undefined}>
         <PurchaseRecordForm value={draft} fields={fields} readOnly={mode === "view"} onChange={setDraft} />

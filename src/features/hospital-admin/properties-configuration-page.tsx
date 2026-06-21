@@ -339,7 +339,6 @@ function PropertyFormDrawer({
       open={Boolean(state)}
       onOpenChange={(open) => !open && onClose()}
       title={editingRecord ? "Edit Property" : "Add Property"}
-      description="Properties configuration"
       submitLabel={editingRecord ? "Save Property" : "Add Property"}
       onSubmit={() => {
         const form = document.getElementById("property-form") as HTMLFormElement | null;
@@ -421,11 +420,11 @@ export function PropertiesConfigurationPage({ ldtId }: { ldtId?: string }) {
             <div className="flex flex-wrap gap-2">
               <Button size="sm" variant="outline" onClick={() => setDrawerState({ type: "edit", record })}>
                 <Pencil className="h-3.5 w-3.5" />
-                Edit
+                
               </Button>
               <Button size="sm" variant="danger" onClick={() => handleDelete(record)}>
                 <Trash2 className="h-3.5 w-3.5" />
-                Delete
+                
               </Button>
             </div>
           );
@@ -442,24 +441,25 @@ export function PropertiesConfigurationPage({ ldtId }: { ldtId?: string }) {
           <PageHeader
             title="Properties Configuration"
             className="static mx-0 border-b bg-transparent px-0 py-2"
-            actions={
-              <Button disabled={readOnly} onClick={() => setDrawerState({ type: "add" })}>
-                <Plus className="h-4 w-4" />
-                Add Property
-              </Button>
-            }
+            actions={null}
           />
           {/* <div className="grid gap-3 md:grid-cols-3">
             <StatCard label="Configured" value={records.length} icon={SlidersHorizontal} change="Live" context="Available records" tone="info" />
             <StatCard label="Dropdowns" value={records.filter((record) => record.type === "Dropdown").length} icon={ListChecks} change="Options" context="Selection records" tone="success" />
             <StatCard label="Numeric" value={records.filter((record) => record.type === "Number").length} icon={Hash} change="Ranges" context="Measured records" tone="warning" />
           </div> */}
-          <FilterBar search={search} onSearch={setSearch} placeholder="Search property, type, configuration..." />
           <AdminSection
             title={ldtId ? `Properties Configuration - ${ldtId}` : "Properties Configuration"}
-            description="Create reusable properties with type-specific configuration for the selected workflow."
           >
-            <DataTable data={filteredRecords} columns={columns} />
+            <div className="space-y-4">
+              <FilterBar search={search} onSearch={setSearch} placeholder="Search property, type, configuration...">
+                <Button disabled={readOnly} onClick={() => setDrawerState({ type: "add" })}>
+                  <Plus className="h-4 w-4" />
+                  Add Property
+                </Button>
+              </FilterBar>
+              <DataTable data={filteredRecords} columns={columns} />
+            </div>
           </AdminSection>
           <PropertyFormDrawer state={drawerState} records={records} onClose={() => setDrawerState(null)} onSave={handleSave} />
           {/* <StickyActionBar readOnly={readOnly} saveLabel="Save Properties Configuration" /> */}

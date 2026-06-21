@@ -4,6 +4,7 @@ import * as React from "react";
 import { Layers3 } from "lucide-react";
 import { toast } from "sonner";
 
+import { Button } from "@/components/ui/button";
 import { FilterBar, NativeSelect } from "@/features/admin/admin-shared";
 import { MasterDialog } from "@/features/pharmacy-master/components/master-dialog";
 import { MasterPageShell } from "@/features/pharmacy-master/components/master-page-shell";
@@ -61,13 +62,14 @@ export function SubCategoryMasterPage() {
   }
 
   return (
-    <MasterPageShell title="Sub Category Master" description="CRUD for pharmacy subcategories with Active/Inactive control and parent category mapping." icon={Layers3} actionLabel="New subcategory" onCreate={openCreate}>
+    <MasterPageShell title="Sub Category Master" description="CRUD for pharmacy subcategories with Active/Inactive control and parent category mapping." icon={Layers3} actionLabel="New subcategory" onCreate={openCreate} actions={<></>}>
       <FilterBar search={search} onSearch={setSearch} placeholder="Search category, subcategory, code, status, description...">
-        <NativeSelect label="Category" value={category} onChange={setCategory} options={["All categories", ...initialDrugCategories.map((item) => item.categoryName)]} />
-        <NativeSelect label="Status" value={status} onChange={setStatus} options={["All status", "Active", "Inactive"]} />
+        <NativeSelect label="" value={category} onChange={setCategory} options={["All categories", ...initialDrugCategories.map((item) => item.categoryName)]} />
+        <NativeSelect label="" value={status} onChange={setStatus} options={["All status", "Active", "Inactive"]} />
+        <Button onClick={openCreate}><Layers3 className="h-4 w-4" />New subcategory</Button>
       </FilterBar>
       <SubCategoryTable records={filtered} categories={initialDrugCategories} onEdit={openEdit} onToggle={(record) => setRecords((current) => current.map((item) => item.id === record.id ? { ...item, status: toggleStatus(item.status) } : item))} onDelete={remove} />
-      <MasterDialog open={open} onOpenChange={setOpen} title={mode === "edit" ? "Edit subcategory" : "New subcategory"} description="Category, Sub Category Name, Code, Status, and Description" submitLabel={mode === "edit" ? "Update subcategory" : "Create subcategory"} onSubmit={save} onDelete={mode === "edit" ? () => remove(draft) : undefined}>
+      <MasterDialog open={open} onOpenChange={setOpen} title={mode === "edit" ? "Edit subcategory" : "New subcategory"} description="" submitLabel={mode === "edit" ? "Update subcategory" : "Create subcategory"} onSubmit={save} onDelete={mode === "edit" ? () => remove(draft) : undefined}>
         <SubCategoryForm value={draft} categories={initialDrugCategories} errors={errors} onChange={setDraft} />
       </MasterDialog>
     </MasterPageShell>

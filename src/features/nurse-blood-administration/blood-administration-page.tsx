@@ -223,7 +223,6 @@ export function NurseBloodAdministrationPage() {
         <CardHeader className="flex-row items-center justify-between space-y-0">
           <div>
             <CardTitle>Reaction Symptoms</CardTitle>
-            <CardDescription>Tick if present during transfusion</CardDescription>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">

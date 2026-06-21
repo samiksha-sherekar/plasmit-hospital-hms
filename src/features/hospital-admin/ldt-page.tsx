@@ -119,10 +119,13 @@ function LdtFormDrawer({
 export function LdtPage() {
   const [records, setRecords] = React.useState<LdtRecord[]>(initialLdtRecords);
   const [search, setSearch] = React.useState("");
+  const [ldtType, setLdtType] = React.useState("All types");
   const [drawerState, setDrawerState] = React.useState<LdtDrawerState | null>(null);
-  const filteredRecords = records.filter((record) =>
-    `${record.name} ${record.type}`.toLowerCase().includes(search.trim().toLowerCase()),
-  );
+  const filteredRecords = records.filter((record) => {
+    const matchesSearch = `${record.name} ${record.type}`.toLowerCase().includes(search.trim().toLowerCase());
+    const matchesType = ldtType === "All types" || record.type === ldtType;
+    return matchesSearch && matchesType;
+  });
 
   const handleSave = React.useCallback((values: LdtFormValues, editingId?: string) => {
     if (editingId) {
@@ -164,11 +167,9 @@ export function LdtPage() {
               </Button>
               <Button size="sm" variant="outline" onClick={() => setDrawerState({ type: "edit", record })}>
                 <Pencil className="h-3.5 w-3.5" />
-                Edit
               </Button>
               <Button size="sm" variant="danger" onClick={() => handleDelete(record)}>
                 <Trash2 className="h-3.5 w-3.5" />
-                Delete
               </Button>
             </div>
           );
@@ -185,20 +186,36 @@ export function LdtPage() {
           <PageHeader
             title="LDT"
             className="static mx-0 border-b bg-transparent px-0 py-2"
-            actions={
-              <>
+            actions={null}
+          />
+
+
+          <AdminSection title="LDT">
+            <div className="space-y-4">
+              <FilterBar search={search} onSearch={setSearch} placeholder="Search LDT name or type...">
+                <label className="flex min-w-[160px] items-center gap-2 text-xs text-muted-foreground">
+                  <span className="sr-only">LDT Type</span>
+                  <select
+                    className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring/20"
+                    value={ldtType}
+                    onChange={(event) => setLdtType(event.target.value)}
+                  >
+                    <option value="All types">All types</option>
+                    {ldtTypeOptions.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 <Button disabled={readOnly} onClick={() => setDrawerState({ type: "add" })}>
                   <Plus className="h-4 w-4" />
                   Add LDT
                 </Button>
-              </>
-            }
-          />
+              </FilterBar>
 
-          <FilterBar search={search} onSearch={setSearch} placeholder="Search LDT name or type..." />
-
-          <AdminSection title="LDT">
-            <DataTable data={filteredRecords} columns={columns} />
+              <DataTable data={filteredRecords} columns={columns} />
+            </div>
           </AdminSection>
 
           <LdtFormDrawer
