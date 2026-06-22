@@ -504,11 +504,11 @@ export function LdtManagementPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      {/* <PageHeader
         title="LDT Management"
         className="static mx-0 border-b bg-transparent px-0 py-2"
       />
-      <PatientSummaryBanner />
+      <PatientSummaryBanner /> */}
 
       <LdtManagementWorkspace />
     </div>

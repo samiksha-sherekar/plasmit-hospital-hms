@@ -43,10 +43,10 @@ export function RackStoreLocationPage() {
   function remove(record: RackStoreLocationRecord) { setRecords((current) => current.filter((item) => item.id !== record.id)); toast.success("Location deleted"); setOpen(false); }
 
   return (
-    <MasterPageShell title="Rack / Store Location" icon={MapPinned} actionLabel="New location" onCreate={openCreate} actions={<></>}>
+    <div className="space-y-6 mt-4">      
       <FilterBar search={search} onSearch={setSearch} placeholder="Search location, store, rack, shelf..."><NativeSelect label="" value={status} onChange={setStatus} options={["All status", "Active", "Inactive"]} /><Button onClick={openCreate}><MapPinned className="h-4 w-4" />New location</Button></FilterBar>
       <DataTable data={filtered} columns={columns} />
       <MasterDialog open={open} onOpenChange={setOpen} title={mode === "edit" ? "Edit location" : "New location"} submitLabel={mode === "edit" ? "Update location" : "Create location"} onSubmit={save} onDelete={mode === "edit" ? () => remove(draft) : undefined}><RackStoreLocationForm value={draft} errors={errors} onChange={setDraft} /></MasterDialog>
-    </MasterPageShell>
+    </div>
   );
 }

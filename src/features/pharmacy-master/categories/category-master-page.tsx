@@ -60,7 +60,7 @@ export function CategoryMasterPage() {
   }
 
   return (
-    <MasterPageShell title="Category Master" description="CRUD for pharmacy medicine categories with Active/Inactive control." icon={Tags} actionLabel="New category" onCreate={openCreate} actions={<></>}>
+    <div className="space-y-6 mt-4">
       <FilterBar search={search} onSearch={setSearch} placeholder="Search category name, code, status, description...">
         <NativeSelect label="" value={status} onChange={setStatus} options={["All status", "Active", "Inactive"]} />
         <Button onClick={openCreate}><Tags className="h-4 w-4" />New category</Button>
@@ -69,6 +69,6 @@ export function CategoryMasterPage() {
       <MasterDialog open={open} onOpenChange={setOpen} title={mode === "edit" ? "Edit category" : "New category"} description="" submitLabel={mode === "edit" ? "Update category" : "Create category"} onSubmit={save} onDelete={mode === "edit" ? () => remove(draft) : undefined}>
         <CategoryForm value={draft} errors={errors} onChange={setDraft} />
       </MasterDialog>
-    </MasterPageShell>
+    </div>
   );
 }

@@ -85,7 +85,7 @@ export function PurchaseRequisitionPage() {
   }
 
   return (
-    <PurchaseShell title="Purchase Requisition" icon={ClipboardList} onCreate={() => openRecord(emptyRecord(), "create")}>
+    <div className="space-y-4 mt-4">
       <FilterBar search={search} onSearch={setSearch} placeholder="Search PR number, drug, requested by, priority...">
         <Button onClick={() => openRecord(emptyRecord(), "create")}>
           <ClipboardList className="h-4 w-4" />
@@ -97,6 +97,6 @@ export function PurchaseRequisitionPage() {
         <PurchaseRecordForm value={draft} fields={fields} readOnly={mode === "view"} onChange={setDraft} />
       </MasterDialog>
       <ConfirmDialog open={Boolean(deleteTarget)} onOpenChange={(nextOpen) => !nextOpen && setDeleteTarget(null)} description={`Delete ${deleteTarget?.prNumber ?? "this PR"}?`} onConfirm={() => { if (deleteTarget) setRecords((current) => current.filter((record) => record.id !== deleteTarget.id)); setOpen(false); toast.success("Purchase requisition deleted"); }} />
-    </PurchaseShell>
+    </div>
   );
 }

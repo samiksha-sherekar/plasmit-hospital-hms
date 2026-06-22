@@ -99,7 +99,7 @@ async function loadImageAsPngBase64(src: string): Promise<string | null> {
   }
 }
 
-function addHeader(doc: jsPDF, reportStatus: string, logoBase64?: string | null) {
+function addHeader(doc: jsPDF, reportStatus: string, logoBase64?: string | null, reportTitle = "LABORATORY REPORT") {
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 28;
   const contentWidth = pageWidth - margin * 2;
@@ -111,7 +111,7 @@ function addHeader(doc: jsPDF, reportStatus: string, logoBase64?: string | null)
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
   doc.setTextColor(37, 99, 235);
-  doc.text("LABORATORY REPORT", margin + 12, 48);
+  doc.text(reportTitle, margin + 12, 48);
 
   // doc.setFont("helvetica", "normal");
   // doc.setFontSize(8);
@@ -244,12 +244,12 @@ function addFooter(doc: jsPDF, pageNumber: number, totalPages: number) {
   doc.text(`Page ${pageNumber} of ${totalPages}`, pageWidth / 2 - 20, pageHeight - 8);
 }
 
-function addPageFrame(doc: jsPDF, patient: PdfPatient, reportStatus: string, logoBase64?: string | null) {
-  addHeader(doc, reportStatus, logoBase64);
+function addPageFrame(doc: jsPDF, patient: PdfPatient, reportStatus: string, logoBase64?: string | null, reportTitle?: string) {
+  addHeader(doc, reportStatus, logoBase64, reportTitle);
   addPatientSection(doc, patient);
 }
 
-export async function downloadLaboratoryPdf(blocks: PdfResultBlock[], filename: string) {
+export async function downloadLaboratoryPdf(blocks: PdfResultBlock[], filename: string, reportTitle?: string) {
   const patient = getPatientData();
   const logoBase64 = await loadImageAsPngBase64(LOGO_SRC);
 
@@ -257,25 +257,16 @@ export async function downloadLaboratoryPdf(blocks: PdfResultBlock[], filename: 
   console.log("[PDF] patient data", patient);
 
   if (!blocks?.length) {
-    console.warn("[PDF] download prevented: blocks array is empty");
-    window.alert("No result data available for PDF download.");
-    return;
-  }
-
-  const reportBlocks = blocks.filter((block) => block.rows?.length > 0);
-
-  if (!reportBlocks.length) {
-    console.warn("[PDF] download prevented: no rows found");
-    window.alert("No result data available for PDF download.");
+    console.warn("[PDF] download skipped: blocks array is empty");
     return;
   }
 
   const doc = new jsPDF({ unit: "pt", format: "a4" });
 
-  reportBlocks.forEach((block, index) => {
+  blocks.forEach((block, index) => {
     if (index > 0) doc.addPage();
 
-    addPageFrame(doc, patient, block.reportStatus || "Final", logoBase64);
+    addPageFrame(doc, patient, block.reportStatus || "Final", logoBase64, reportTitle);
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
@@ -289,6 +280,59 @@ export async function downloadLaboratoryPdf(blocks: PdfResultBlock[], filename: 
     doc.text(`Sample Type: ${block.sampleType || "-"}`, 330, 186);
     doc.text(`Report Date: ${block.reportDate || "-"}`, 450, 186);
 
+    autoTable(doc, {
+      startY: 198,
+      margin: { left: 28, right: 28, bottom: 80 },
+      head: [["Parameter", "Value", "Unit", "Reference Range", "Flag"]],
+      body: block.rows.map((row) => [
+        row.parameter || "-",
+        row.value || "-",
+        row.unit || "-",
+        row.referenceRange || "-",
+        row.flag === "H" ? "High" : row.flag === "L" ? "Low" : "Normal",
+      ]),
+      theme: "grid",
+      styles: {
+        fontSize: 8,
+        cellPadding: 4,
+        textColor: 20,
+        lineColor: 210,
+        lineWidth: 0.3,
+        overflow: "linebreak",
+        valign: "middle",
+      },
+      headStyles: {
+        fillColor: [235, 238, 242],
+        textColor: 20,
+        fontStyle: "bold",
+        halign: "center",
+      },
+      bodyStyles: {
+        fillColor: [255, 255, 255],
+      },
+      alternateRowStyles: {
+        fillColor: [250, 250, 250],
+      },
+      columnStyles: {
+        0: { cellWidth: 190 },
+        1: { cellWidth: 85, halign: "center" },
+        2: { cellWidth: 75, halign: "center" },
+        3: { cellWidth: 135, halign: "center" },
+        4: { cellWidth: 58, halign: "center" },
+      },
+      didParseCell: (data) => {
+        if (data.section === "body") {
+          const row = block.rows[data.row.index];
+          if (row && isAbnormal(row)) {
+            data.cell.styles.fontStyle = "bold";
+            data.cell.styles.textColor = row.flag === "H" ? [180, 40, 40] : [30, 90, 180];
+          }
+        }
+      },
+      pageBreak: "auto",
+      rowPageBreak: "auto",
+    });
+
     const grouped = new Map<string, PdfResultRow[]>();
 
     block.rows.forEach((row) => {
@@ -296,7 +340,7 @@ export async function downloadLaboratoryPdf(blocks: PdfResultBlock[], filename: 
       grouped.set(group, [...(grouped.get(group) ?? []), row]);
     });
 
-    let startY = 202;
+    let startY = ((doc as any).lastAutoTable?.finalY ?? 198) + 10;
 
     grouped.forEach((rows, groupName) => {
       autoTable(doc, {
@@ -371,7 +415,7 @@ export async function downloadLaboratoryPdf(blocks: PdfResultBlock[], filename: 
 
       if (y > pageHeight - 140) {
         doc.addPage();
-        addPageFrame(doc, patient, block.reportStatus || "Final", logoBase64);
+        addPageFrame(doc, patient, block.reportStatus || "Final", logoBase64, reportTitle);
         y = 172;
       }
 

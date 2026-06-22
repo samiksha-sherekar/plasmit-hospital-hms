@@ -64,7 +64,7 @@ export function PathologyOrderSummaryTab({
     { key: "name", label: "Test name" },
     { key: "loinc", label: "LOINC code" },
     { key: "cpt", label: "CPT code" },
-    { key: "department", label: "Department" },
+    // { key: "department", label: "Department" },
     { key: "specimen", label: "Specimen" },
     { key: "priority", label: "Priority" },
   ];
@@ -106,7 +106,7 @@ export function PathologyOrderSummaryTab({
                     <td className="px-4 py-3 font-medium text-foreground">{row.name}</td>
                     <td className="px-4 py-3 text-muted-foreground">{row.loinc}</td>
                     <td className="px-4 py-3 text-muted-foreground">{row.cpt}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{row.department}</td>
+                    {/* <td className="px-4 py-3 text-muted-foreground">{row.department}</td> */}
                     <td className="px-4 py-3">{row.specimen}</td>
                     <td className="px-4 py-3">
                       <Badge tone={row.priority === "Urgent" || row.priority === "STAT" ? "warning" : "default"}>{row.priority}</Badge>
@@ -120,9 +120,9 @@ export function PathologyOrderSummaryTab({
                     <td className="px-4 py-3 text-muted-foreground">{row.orderDateTime}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-2">
-                        <Button type="button" size="sm" variant="outline" onClick={() => onEdit(row.id)}>
+                        {/* <Button type="button" size="sm" variant="outline" onClick={() => onEdit(row.id)}>
                           <Pencil className="h-4 w-4" />
-                        </Button>
+                        </Button> */}
                         <Button type="button" size="sm" variant="outline" className="text-danger" onClick={() => onDelete(row.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>

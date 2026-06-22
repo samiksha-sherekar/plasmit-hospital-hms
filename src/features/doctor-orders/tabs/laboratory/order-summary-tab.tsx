@@ -121,10 +121,10 @@ export function LaboratoryOrderSummaryTab({
                     <td className="px-4 py-3 text-muted-foreground">{row.orderDateTime}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-2">
-                        <Button type="button" size="sm" variant="outline" onClick={() => onEdit(row.id)}>
+                        {/* <Button type="button" size="sm" variant="outline" onClick={() => onEdit(row.id)}>
                           <Pencil className="h-4 w-4" />
                           
-                        </Button>
+                        </Button> */}
                         <Button type="button" size="sm" variant="outline" className="text-danger" onClick={() => onDelete(row.id)}>
                           <Trash2 className="h-4 w-4" />
                           

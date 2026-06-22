@@ -62,8 +62,8 @@ export function SubCategoryMasterPage() {
   }
 
   return (
-    <MasterPageShell title="Sub Category Master" description="CRUD for pharmacy subcategories with Active/Inactive control and parent category mapping." icon={Layers3} actionLabel="New subcategory" onCreate={openCreate} actions={<></>}>
-      <FilterBar search={search} onSearch={setSearch} placeholder="Search category, subcategory, code, status, description...">
+    <div className="space-y-6 mt-4">
+        <FilterBar search={search} onSearch={setSearch} placeholder="Search category, subcategory, code, status, description...">
         <NativeSelect label="" value={category} onChange={setCategory} options={["All categories", ...initialDrugCategories.map((item) => item.categoryName)]} />
         <NativeSelect label="" value={status} onChange={setStatus} options={["All status", "Active", "Inactive"]} />
         <Button onClick={openCreate}><Layers3 className="h-4 w-4" />New subcategory</Button>
@@ -72,6 +72,6 @@ export function SubCategoryMasterPage() {
       <MasterDialog open={open} onOpenChange={setOpen} title={mode === "edit" ? "Edit subcategory" : "New subcategory"} description="" submitLabel={mode === "edit" ? "Update subcategory" : "Create subcategory"} onSubmit={save} onDelete={mode === "edit" ? () => remove(draft) : undefined}>
         <SubCategoryForm value={draft} categories={initialDrugCategories} errors={errors} onChange={setDraft} />
       </MasterDialog>
-    </MasterPageShell>
+    </div>
   );
 }

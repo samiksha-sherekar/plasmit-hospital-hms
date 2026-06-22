@@ -34,11 +34,11 @@ export function ExpiringStockReportPage() {
   ], []);
 
   return (
-    <ReportPageShell title="Expiring Stock" icon={Archive}>
+    <div className="space-y-4 mt-4">
       <FilterBar search={search} onSearch={setSearch} placeholder="Search drug, batch, expiry date, alert...">
         <NativeSelect label="" value={expiryWindow} onChange={setExpiryWindow} options={expiryWindows} />
       </FilterBar>
       <DataTable data={filtered} columns={columns} />
-    </ReportPageShell>
+    </div>
   );
 }

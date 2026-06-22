@@ -183,34 +183,10 @@ function PatientInformation({
   selectedPatientId: string;
   onPatientSelect: (patientId: string) => void;
 }) {
-  const details = [
-    { label: "MRN", value: values.mrn },
-    { label: "Date of Birth", value: formatDisplayDate(values.dateOfBirth) },
-    { label: "Age / Gender", value: values.ageGender },
-    { label: "Phone", value: values.phone },
-    { label: "Address", value: values.address },
-    { label: "Consultant Name", value: values.consultant },
-    { label: "Date", value: formatDisplayDate(values.date) },
-  ];
-
   return (
-    <div className="space-y-4">
-      {/* <Card>
-        <CardContent className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4">
-          <PatientSearchSelect patientId={selectedPatientId} onPatientChange={onPatientSelect} />
-          {details.map((detail) => (
-            <DetailItem key={detail.label} label={detail.label} value={detail.value || "-"} />
-          ))}
-        </CardContent>
-      </Card> */}
-      <PatientSummaryBanner />
+    <div className="space-y-4 mt-4">
+      
       <Card>
-        {/* <CardHeader>
-          <div>
-            <CardTitle>Clinical Details</CardTitle>
-            <CardDescription>Add the diagnosis for this prescription.</CardDescription>
-          </div>
-        </CardHeader> */}
         <CardContent>
           <label className="space-y-1">
             <span className="text-xs font-medium text-muted-foreground">
@@ -533,10 +509,10 @@ export function PrescriptionPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      {/* <PageHeader
         title="Prescription"
         className="static mx-0 border-b bg-transparent px-0 py-2"
-      />
+      /> */}
 
       <PatientInformation
         values={patientForm}

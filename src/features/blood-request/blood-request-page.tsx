@@ -136,7 +136,7 @@ function RequestDrawer({
       open={open}
       onOpenChange={(nextOpen) => !nextOpen && onClose()}
       title={isSend ? "Send Blood" : "Blood Request Details"}
-      description={request?.id}
+      
       footer={
         request ? (
           <div className="flex justify-end gap-2">
@@ -325,12 +325,12 @@ export function BloodRequestPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      {/* <PageHeader
         title="Blood Requests"
         className="static mx-0 border-b bg-transparent px-0 py-2"
-      />
+      /> */}
 
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid gap-3 md:grid-cols-3 mt-4">
      <Card>
         <CardContent className="flex items-center justify-between px-4 py-2">
           <div className="flex items-center gap-2">

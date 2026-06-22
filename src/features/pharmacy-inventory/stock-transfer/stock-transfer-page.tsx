@@ -53,8 +53,7 @@ export function StockTransferPage() {
   function save() { setRecords((current) => mode === "edit" ? current.map((record) => record.id === draft.id ? draft : record) : [draft, ...current]); toast.success(mode === "edit" ? "Stock transfer updated" : "Stock transfer created"); setOpen(false); }
 
   return (
-    <InventoryShell title="Stock Transfer" icon={Repeat} actionLabel="Create transfer" onCreate={() => openRecord(emptyRecord(), "create")}>
-      <FilterBar search={search} onSearch={setSearch} placeholder="Search transfer, store, drug, batch...">
+    <div className="space-y-6 mt-4">      <FilterBar search={search} onSearch={setSearch} placeholder="Search transfer, store, drug, batch...">
         <Button onClick={() => openRecord(emptyRecord(), "create")}>
           <Repeat className="h-4 w-4" />
           Create transfer
@@ -65,6 +64,6 @@ export function StockTransferPage() {
         <InventoryRecordForm value={draft} fields={fields} readOnly={mode === "view"} onChange={setDraft} />
       </MasterDialog>
       <ConfirmDialog open={Boolean(deleteTarget)} onOpenChange={(nextOpen) => !nextOpen && setDeleteTarget(null)} description={`Delete ${deleteTarget?.transferNumber ?? "this transfer"}?`} onConfirm={() => { if (deleteTarget) setRecords((current) => current.filter((record) => record.id !== deleteTarget.id)); setOpen(false); toast.success("Stock transfer deleted"); }} />
-    </InventoryShell>
+    </div>
   );
 }

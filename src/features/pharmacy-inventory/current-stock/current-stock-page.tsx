@@ -45,7 +45,7 @@ export function CurrentStockPage() {
     { header: "Actions", cell: ({ row }) => <InventoryActions canExport onView={() => setSelected(row.original)} onExport={() => toast.success(`Export queued for ${row.original.batchNumber}`)} /> },
   ], []);
   return (
-    <InventoryShell title="Current Stock" icon={Store}>
+    <div className="space-y-6 mt-4">
       <FilterBar search={search} onSearch={setSearch} placeholder="Search drug, batch, store, status...">
         <NativeSelect label="" value={status} onChange={setStatus} options={["All status", "Available", "Low Stock", "Expired"]} />
       </FilterBar>
@@ -54,6 +54,6 @@ export function CurrentStockPage() {
       <MasterDialog open={Boolean(selected)} onOpenChange={(open) => !open && setSelected(null)} title="View current stock" submitLabel="Close" onSubmit={() => setSelected(null)}>
         {selected ? <InventoryRecordForm value={selected} fields={fields} readOnly onChange={setSelected} /> : null}
       </MasterDialog>
-    </InventoryShell>
+    </div>
   );
 }

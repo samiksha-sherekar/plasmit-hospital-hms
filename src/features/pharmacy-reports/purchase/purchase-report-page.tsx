@@ -41,7 +41,7 @@ export function PurchaseReportPage() {
   ], []);
 
   return (
-    <ReportPageShell title="Purchase Report" icon={ReceiptText}>
+    <div className="space-y-4 mt-4">
       <FilterBar search={search} onSearch={setSearch} placeholder="Search PO no., supplier, drug, status...">
         <label className="flex min-w-[150px] items-center gap-2 text-xs text-muted-foreground">
           <span className="sr-only">From date</span>
@@ -55,6 +55,6 @@ export function PurchaseReportPage() {
       </FilterBar>
       {dateError ? <AlertBanner icon={ReceiptText} tone="danger" title="Invalid date range">{dateError}</AlertBanner> : null}
       <DataTable data={filtered} columns={columns} />
-    </ReportPageShell>
+    </div>
   );
 }

@@ -41,10 +41,9 @@ export function UnitMasterPage() {
   function remove(record: UnitRecord) { setRecords((current) => current.filter((item) => item.id !== record.id)); toast.success("Unit deleted"); setOpen(false); }
 
   return (
-    <MasterPageShell title="Unit Master" icon={Layers3} actionLabel="New unit" onCreate={openCreate} actions={<></>}>
-      <FilterBar search={search} onSearch={setSearch} placeholder="Search unit, code, description..."><NativeSelect label="" value={status} onChange={setStatus} options={["All status", "Active", "Inactive"]} /><Button onClick={openCreate}><Layers3 className="h-4 w-4" />New unit</Button></FilterBar>
+    <div className="space-y-6 mt-4">      <FilterBar search={search} onSearch={setSearch} placeholder="Search unit, code, description..."><NativeSelect label="" value={status} onChange={setStatus} options={["All status", "Active", "Inactive"]} /><Button onClick={openCreate}><Layers3 className="h-4 w-4" />New unit</Button></FilterBar>
       <DataTable data={filtered} columns={columns} />
       <MasterDialog open={open} onOpenChange={setOpen} title={mode === "edit" ? "Edit unit" : "New unit"} submitLabel={mode === "edit" ? "Update unit" : "Create unit"} onSubmit={save} onDelete={mode === "edit" ? () => remove(draft) : undefined}><UnitForm value={draft} errors={errors} onChange={setDraft} /></MasterDialog>
-    </MasterPageShell>
+    </div>
   );
 }

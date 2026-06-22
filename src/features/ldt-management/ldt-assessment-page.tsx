@@ -658,11 +658,11 @@ export function LdtAssessmentPage({ ldtId = defaultLdtId }: { ldtId?: string }) 
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      {/* <PageHeader
         title={`${ldtConfig.name} Assessment`}
         className="static mx-0 border-b bg-transparent px-0 py-2"       
       />
-      <PatientSummaryBanner />
+      <PatientSummaryBanner /> */}
       
       <AssessmentEntryForm
         fields={ldtConfig.assessments}

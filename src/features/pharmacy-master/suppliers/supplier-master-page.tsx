@@ -70,8 +70,8 @@ export function SupplierMasterPage() {
   }
 
   return (
-    <MasterPageShell title="Supplier Master" description="CRUD for supplier records with contact, GST, payment terms, and Active/Inactive control." icon={Truck} actionLabel="New supplier" onCreate={openCreate} actions={<></>}>
-      <FilterBar search={search} onSearch={setSearch} placeholder="Search supplier, contact, phone, email, GST, terms...">
+    <div className="space-y-6 mt-4">
+        <FilterBar search={search} onSearch={setSearch} placeholder="Search supplier, contact, phone, email, GST, terms...">
         <NativeSelect label="" value={status} onChange={setStatus} options={["All status", "Active", "Inactive"]} />
         <Button onClick={openCreate}><Truck className="h-4 w-4" />New supplier</Button>
       </FilterBar>
@@ -79,6 +79,6 @@ export function SupplierMasterPage() {
       <MasterDialog open={open} onOpenChange={setOpen} title={mode === "edit" ? "Edit supplier" : "New supplier"} description="" submitLabel={mode === "edit" ? "Update supplier" : "Create supplier"} onSubmit={save} onDelete={mode === "edit" ? () => remove(draft) : undefined}>
         <SupplierForm value={draft} errors={errors} onChange={setDraft} />
       </MasterDialog>
-    </MasterPageShell>
+    </div>
   );
 }

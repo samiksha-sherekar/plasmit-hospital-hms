@@ -144,8 +144,8 @@ export function NurseBloodAdministrationPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Blood Transfusion Monitoring" />
-      <PatientSummaryBanner />
+      {/* <PageHeader title="Blood Transfusion Monitoring" />
+      <PatientSummaryBanner /> */}
 
       <Card>
         <CardHeader>

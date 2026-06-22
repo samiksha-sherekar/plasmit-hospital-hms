@@ -227,15 +227,15 @@ export function PharmacistDrugDispensePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      {/* <PageHeader
         title="Drug Dispense"
         className="static mx-0 border-b bg-transparent px-0 py-2"
         // description="Doctor drug orders are dispensed here before nurse receipt and administration."
-      />
+      /> */}
 
       <Card>
         <CardContent className="space-y-4">
-          <PatientSummaryBanner />
+          {/* <PatientSummaryBanner /> */}
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <SearchInput
               className="sm:w-80"

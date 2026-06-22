@@ -30,7 +30,7 @@ function getSortValue(block: LaboratoryResultBlock, sortKey: SortKey) {
   if (sortKey === "loinc") return block.name.toLowerCase().includes("cbc") ? "11273-0" : "28515-7";
   if (sortKey === "test") return block.name.replace(" - complete blood count", "").replace(" - kidney function test", "");
   if (sortKey === "orderDate") return "12/05/2021";
-  return block.rows.some((row) => row.flag === "N") ? "Pending" : "14/05/2021";
+  return "14/05/2021";
 }
 
 export function LaboratoryResultReviewTab({
@@ -117,9 +117,7 @@ export function LaboratoryResultReviewTab({
   }, [currentPage, pageIndex]);
 
   const downloadReport = () => {
-    const reportBlocks = allBlocks
-      .filter((block) => block.rows.every((row) => row.flag !== "N"))
-      .map((block) => ({
+    const reportBlocks = allBlocks.map((block) => ({
         testName: block.name.replace(" - complete blood count", "").replace(" - kidney function test", ""),
         department: block.specialty,
         sampleCollectedOn: "12/05/2021",
@@ -248,7 +246,7 @@ export function LaboratoryResultReviewTab({
                     </td>
                     <td className="px-3 py-3 text-muted-foreground">{primaryRow?.referenceRange ?? "-"}</td> */}
                     <td className="px-3 py-3 text-muted-foreground">12/05/2021</td>
-                    <td className="px-3 py-3 text-muted-foreground">{hasPending ? "Pending" : "14/05/2021"}</td>
+                    <td className="px-3 py-3 text-muted-foreground">14/05/2021</td>
                     {/* <td className="px-3 py-3">
                       <StatusPill status={hasPending ? "Pending" : hasHigh ? "High" : "Low"} />
                     </td> */}
@@ -263,7 +261,6 @@ export function LaboratoryResultReviewTab({
                           {/* Reorder */}
                         </Button>
                         <Button type="button" variant="outline" size="sm" onClick={() => {
-                          if (block.rows.every((row) => row.flag === "N")) return;
                           downloadLaboratoryPdf([
                             {
                               testName: block.name.replace(" - complete blood count", "").replace(" - kidney function test", ""),

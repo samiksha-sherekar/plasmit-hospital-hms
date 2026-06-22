@@ -363,10 +363,10 @@ export function PharmacistDrugDispenseHistoryPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      {/* <PageHeader
         title="Drug Dispense History"
         className="static mx-0 border-b bg-transparent px-0 py-2"
-      />
+      /> */}
       <DrugDispenseHistory />
     </div>
   );

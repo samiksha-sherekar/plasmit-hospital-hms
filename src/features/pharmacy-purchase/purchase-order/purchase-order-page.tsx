@@ -59,7 +59,7 @@ export function PurchaseOrderPage() {
   function save() { const amount = draft.orderedQuantity * draft.unitPrice * (1 - draft.discount / 100) * (1 + draft.gst / 100); setRecords((current) => mode === "edit" ? current.map((record) => record.id === draft.id ? { ...draft, amount: Number(amount.toFixed(2)) } : record) : [{ ...draft, amount: Number(amount.toFixed(2)) }, ...current]); toast.success(mode === "edit" ? "Purchase order updated" : "Purchase order created"); setOpen(false); }
 
   return (
-    <PurchaseShell title="Purchase Order" icon={ShoppingCart} onCreate={() => openRecord(emptyRecord(), "create")}>
+    <div className="space-y-4 mt-4">
       <FilterBar search={search} onSearch={setSearch} placeholder="Search PO number, supplier, drug...">
         <Button onClick={() => openRecord(emptyRecord(), "create")}>
           <ShoppingCart className="h-4 w-4" />
@@ -71,6 +71,6 @@ export function PurchaseOrderPage() {
         <PurchaseRecordForm value={draft} fields={fields} readOnly={mode === "view"} onChange={setDraft} />
       </MasterDialog>
       <ConfirmDialog open={Boolean(deleteTarget)} onOpenChange={(nextOpen) => !nextOpen && setDeleteTarget(null)} description={`Delete ${deleteTarget?.poNumber ?? "this PO"}?`} onConfirm={() => { if (deleteTarget) setRecords((current) => current.filter((record) => record.id !== deleteTarget.id)); setOpen(false); toast.success("Purchase order deleted"); }} />
-    </PurchaseShell>
+    </div>
   );
 }

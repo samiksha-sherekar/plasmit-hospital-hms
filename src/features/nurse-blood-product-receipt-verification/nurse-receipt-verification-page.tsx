@@ -215,9 +215,9 @@ export function NurseReceiptVerificationPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      {/* <PageHeader
         title="Pre-Transfusion Bedside Verification"
-      />
+      /> */}
 
       {/* <AlertBanner icon={ShieldAlert} tone="warning" title="Safety gate">
         Consent refusal, blood group mismatch, expired bag, or unchecked crossmatch will block progression to transfusion.

@@ -25,10 +25,10 @@ export function ExpiryTrackingPage() {
     { header: "Status", cell: ({ row }) => <StatusBadge status={row.original.status} /> },
   ], []);
   return (
-    <InventoryShell title="Expiry Tracking" icon={Archive}>
+    <div className="space-y-6 mt-4">
       <AlertBanner icon={Archive} tone="warning" title="Expiry alerts">Near-expiry and expired batches are highlighted for pharmacy review before dispensing.</AlertBanner>
       <FilterBar search={search} onSearch={setSearch} placeholder="Search drug, batch, location..."><NativeSelect label="" value={status} onChange={setStatus} options={["All status", "Safe", "Near Expiry", "Expired"]} /></FilterBar>
       <DataTable data={filtered} columns={columns} />
-    </InventoryShell>
+    </div>
   );
 }

@@ -484,10 +484,10 @@ export function BloodProduct() {
 
   return (
     <div className="space-y-4">
-      <PageHeader
+      {/* <PageHeader
         title="Blood/ Blood Product"
         className="static mx-0 border-b bg-transparent px-0 py-2"
-      />
+      /> */}
       <Card>
         <CardContent className="space-y-6">
           <div className="grid gap-4 lg:grid-cols-2">

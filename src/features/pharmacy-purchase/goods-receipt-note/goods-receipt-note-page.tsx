@@ -65,7 +65,7 @@ export function GoodsReceiptNotePage() {
   function save() { setRecords((current) => [draft, ...current]); toast.success("GRN saved and inventory stock increased automatically"); setOpen(false); }
 
   return (
-    <PurchaseShell title="Goods Receipt Note (GRN)" icon={PackageCheck} onCreate={() => openRecord(emptyRecord(), "create")}>
+    <div className="space-y-4 mt-4">
       <AlertBanner icon={PackageCheck} tone="success" title="Inventory auto update">Saving GRN increases Current Stock and Batch Stock for the received batch.</AlertBanner>
       <FilterBar search={search} onSearch={setSearch} placeholder="Search GRN, PO, supplier, drug, batch...">
         <Button onClick={() => openRecord(emptyRecord(), "create")}>
@@ -77,6 +77,6 @@ export function GoodsReceiptNotePage() {
       <MasterDialog open={open} onOpenChange={setOpen} title={mode === "view" ? "View GRN" : "Create GRN"} submitLabel={mode === "view" ? "Close" : "Save GRN"} onSubmit={mode === "view" ? () => setOpen(false) : save}>
         <PurchaseRecordForm value={draft} fields={fields} readOnly={mode === "view"} onChange={setDraft} />
       </MasterDialog>
-    </PurchaseShell>
+    </div>
   );
 }

@@ -103,11 +103,11 @@ export function DoctorOrdersPage() {
 const defaultTab = "blood";
   return (
     <div className="space-y-4 px-2 py-2 sm:space-y-5 sm:px-0 sm:py-3">
-      <PageHeader
+      {/* <PageHeader
         title="Order Management"
         className="static mx-0 border-b bg-transparent px-0 py-1 sm:py-2"
       />
-      <PatientSummaryBanner />
+      <PatientSummaryBanner /> */}
       <Tabs defaultValue={defaultTab} className="w-full">
         <div className="space-y-3 sm:space-y-4">
           <div className="space-y-2">

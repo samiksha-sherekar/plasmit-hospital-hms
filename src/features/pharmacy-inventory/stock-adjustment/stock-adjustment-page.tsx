@@ -55,8 +55,7 @@ export function StockAdjustmentPage() {
   function save() { const nextDraft = { ...draft, difference: draft.adjustedQuantity - draft.currentQuantity }; setRecords((current) => mode === "edit" ? current.map((record) => record.id === draft.id ? nextDraft : record) : [nextDraft, ...current]); toast.success(mode === "edit" ? "Stock adjustment updated" : "Stock adjustment created"); setOpen(false); }
 
   return (
-    <InventoryShell title="Stock Adjustment" icon={PackageMinus} actionLabel="Create adjustment" onCreate={() => openRecord(emptyRecord(), "create")}>
-      <FilterBar search={search} onSearch={setSearch} placeholder="Search adjustment, drug, batch, reason...">
+    <div className="space-y-6 mt-4">      <FilterBar search={search} onSearch={setSearch} placeholder="Search adjustment, drug, batch, reason...">
         <Button onClick={() => openRecord(emptyRecord(), "create")}>
           <PackageMinus className="h-4 w-4" />
           Create adjustment
@@ -67,6 +66,6 @@ export function StockAdjustmentPage() {
         <InventoryRecordForm value={draft} fields={fields} readOnly={mode === "view"} onChange={setDraft} />
       </MasterDialog>
       <ConfirmDialog open={Boolean(deleteTarget)} onOpenChange={(nextOpen) => !nextOpen && setDeleteTarget(null)} description={`Delete ${deleteTarget?.adjustmentNumber ?? "this adjustment"}?`} onConfirm={() => { if (deleteTarget) setRecords((current) => current.filter((record) => record.id !== deleteTarget.id)); setOpen(false); toast.success("Stock adjustment deleted"); }} />
-    </InventoryShell>
+    </div>
   );
 }

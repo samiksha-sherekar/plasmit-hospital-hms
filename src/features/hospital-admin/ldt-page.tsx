@@ -183,11 +183,11 @@ export function LdtPage() {
     <ProtectedAdmin allowed={["Hospital Admin", "Super Admin"]}>
       {({ readOnly }) => (
         <>
-          <PageHeader
+          {/* <PageHeader
             title="LDT"
             className="static mx-0 border-b bg-transparent px-0 py-2"
             actions={null}
-          />
+          /> */}
 
 
           <AdminSection title="LDT">
