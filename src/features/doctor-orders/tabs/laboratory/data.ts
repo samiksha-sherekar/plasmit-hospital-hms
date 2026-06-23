@@ -112,10 +112,10 @@ const today = new Date();
 const orderDateTime = `${today.toISOString().slice(0, 10)} ${today.toTimeString().slice(0, 5)}`;
 
 export const summaryRows: LaboratorySummaryRow[] = [
-  { id: "sum-cbc", name: "CBC", loinc: "58410-2", cpt: "85025", department: "Hematology", specimen: "Blood", priority: "Routine", status: "Ordered", orderedBy: "Dr. Kavita Rao", orderDateTime },
-  { id: "sum-kft", name: "KFT", loinc: "24362-6", cpt: "80069", department: "Biochemistry", specimen: "Blood", priority: "Routine", status: "Sample Collected", orderedBy: "Dr. Kavita Rao", orderDateTime },
-  { id: "sum-renal", name: "Renal profile", loinc: "24362-6", cpt: "80069", department: "Biochemistry", specimen: "Blood", priority: "Urgent", status: "Received", orderedBy: "Dr. Kavita Rao", orderDateTime },
-  { id: "sum-lft", name: "LFT", loinc: "24323-8", cpt: "80076", department: "Biochemistry", specimen: "Blood", priority: "STAT", status: "Processing", orderedBy: "Dr. Kavita Rao", orderDateTime },
+  { id: "sum-cbc", name: "CBC", loinc: "58410-2", department: "Hematology", specimen: "Blood", priority: "Routine", status: "Ordered", orderedBy: "Dr. Kavita Rao", orderDateTime },
+  { id: "sum-kft", name: "KFT", loinc: "24362-6", department: "Biochemistry", specimen: "Blood", priority: "Routine", status: "Sample Collected", orderedBy: "Dr. Kavita Rao", orderDateTime },
+  { id: "sum-renal", name: "Renal profile", loinc: "24362-6", department: "Biochemistry", specimen: "Blood", priority: "Urgent", status: "Received", orderedBy: "Dr. Kavita Rao", orderDateTime },
+  { id: "sum-lft", name: "LFT", loinc: "24323-8", department: "Biochemistry", specimen: "Blood", priority: "STAT", status: "Processing", orderedBy: "Dr. Kavita Rao", orderDateTime },
 ];
 
 export const resultBlocks: LaboratoryResultBlock[] = [

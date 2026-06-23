@@ -25,13 +25,11 @@ export type PdfResultBlock = {
 
 type PdfPatient = {
   patientName: string;
-  dobAgeGender: string;
-  patientId: string;
-  referredBy: string;
-  sampleCollected: string;
+  ageGender: string;
+  mrn: string;
+  doctorName: string;
+  sampleCollectionDate: string;
   reportStatus: string;
-  barcodeNo: string;
-  sampleType: string;
   reportDate: string;
 };
 
@@ -59,16 +57,119 @@ function isAbnormal(row: PdfResultRow) {
   return row.flag === "H" || row.flag === "L";
 }
 
+function rowTone(row: PdfResultRow) {
+  if (row.flag === "H") return [180, 40, 40] as const;
+  if (row.flag === "L") return [30, 90, 180] as const;
+  return [28, 44, 74] as const;
+}
+
+function groupRows(rows: PdfResultRow[]) {
+  const grouped = new Map<string, PdfResultRow[]>();
+  rows.forEach((row) => {
+    const group = normalizeGroup(row.parameter);
+    grouped.set(group, [...(grouped.get(group) ?? []), row]);
+  });
+  return grouped;
+}
+
+function renderResultTable(doc: jsPDF, rows: PdfResultRow[], startY: number, contentWidth: number, groupName?: string) {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 28;
+  autoTable(doc, {
+    startY,
+    margin: { left: margin, right: margin, bottom: 118 },
+    tableWidth: pageWidth - margin * 2,
+    head: [[groupName ?? "Parameter", "Value", "Unit", "Reference Range"]],
+    body: rows.map((row) => [
+      row.parameter || "-",
+      row.value || "-",
+      row.unit || "-",
+      row.referenceRange || "-",
+    ]),
+    theme: "grid",
+    styles: {
+      fontSize: 8,
+      cellPadding: 4,
+      textColor: 20,
+      lineColor: 210,
+      lineWidth: 0.3,
+      overflow: "linebreak",
+      valign: "middle",
+    },
+    headStyles: {
+      fillColor: [235, 238, 242],
+      textColor: 20,
+      fontStyle: "bold",
+      halign: "center",
+    },
+    bodyStyles: {
+      fillColor: [255, 255, 255],
+    },
+    alternateRowStyles: {
+      fillColor: [250, 250, 250],
+    },
+    columnStyles: {
+       0: { cellWidth: 235 },
+      1: { cellWidth: 90, halign: "center" },
+      2: { cellWidth: 85, halign: "center" },
+      3: { cellWidth: 130, halign: "center" },
+    },
+    didParseCell: (data) => {
+      if (data.section === "body") {
+        const row = rows[data.row.index];
+        if (row && isAbnormal(row)) {
+          data.cell.styles.fontStyle = "bold";
+          data.cell.styles.textColor = rowTone(row);
+        }
+      }
+    },
+    pageBreak: "auto",
+    rowPageBreak: "auto",
+  });
+}
+
+function drawPseudoQr(doc: jsPDF, x: number, y: number, size: number, seed: string) {
+  const cells = 21;
+  const cellSize = size / cells;
+  let hash = 0;
+
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+
+  const isFinder = (row: number, col: number) =>
+    ((row < 7 && col < 7) || (row < 7 && col >= cells - 7) || (row >= cells - 7 && col < 7)) &&
+    (row === 0 || row === 6 || col === 0 || col === 6 || (row >= 2 && row <= 4 && col >= 2 && col <= 4));
+
+  doc.setFillColor(255, 255, 255);
+  doc.rect(x, y, size, size, "F");
+  doc.setDrawColor(20);
+  doc.rect(x, y, size, size);
+
+  for (let row = 0; row < cells; row += 1) {
+    for (let col = 0; col < cells; col += 1) {
+      const inFinder = isFinder(row, col);
+      const bit = ((hash >> ((row * cells + col) % 24)) ^ (row * 13 + col * 7)) & 1;
+      const shouldFill = inFinder || bit === 1;
+      if (!shouldFill) continue;
+
+      doc.setFillColor(inFinder ? 20 : 40, inFinder ? 20 : 40, inFinder ? 20 : 40);
+      doc.rect(x + col * cellSize, y + row * cellSize, cellSize + 0.01, cellSize + 0.01, "F");
+    }
+  }
+
+  doc.setFillColor(255, 255, 255);
+  doc.rect(x + cellSize * 8, y + cellSize * 8, cellSize * 5, cellSize * 5, "F");
+}
+
 function getPatientData(): PdfPatient {
   return {
     patientName: "Meera Joshi",
-    dobAgeGender: "42 Years / Female",
-    patientId: "UHID-45821",
-    referredBy: "Dr. Kavita Rao",
-    sampleCollected: "12/05/2021 09:30 AM",
+    ageGender: "42 Years / Female",
+    mrn: "UHID-45821",
+    doctorName: "Dr. Kavita Rao",
+    sampleCollectionDate: "12/05/2021 09:30 AM",
     reportStatus: "Final",
-    barcodeNo: "BAR-45821-01",
-    sampleType: "Blood",
     reportDate: "14/05/2021",
   };
 }
@@ -101,27 +202,37 @@ async function loadImageAsPngBase64(src: string): Promise<string | null> {
 
 function addHeader(doc: jsPDF, reportStatus: string, logoBase64?: string | null, reportTitle = "LABORATORY REPORT") {
   const pageWidth = doc.internal.pageSize.getWidth();
-  const margin = 28;
+  const margin = 18;
   const contentWidth = pageWidth - margin * 2;
+  const headerTop = 18;
+  const headerHeight = 46;
+  const headerBottom = headerTop + headerHeight;
 
-  doc.setDrawColor(210);
-  doc.setFillColor(248, 250, 252);
-  doc.roundedRect(margin, 18, contentWidth, 52, 4, 4, "FD");
+  // doc.setFillColor(245, 248, 252);
+  // doc.rect(0, 0, pageWidth, 20, "F");
+  // doc.setDrawColor(210);
+  // doc.setFillColor(248, 250, 252);
+  // doc.roundedRect(margin, headerTop, contentWidth, headerHeight, 4, 4, "FD");
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(18);
-  doc.setTextColor(37, 99, 235);
-  doc.text(reportTitle, margin + 12, 48);
+  doc.setFontSize(17);
+  doc.setTextColor(30, 64, 175);
+  doc.text(reportTitle, margin + 12, headerTop + 25);
+  if (reportTitle.toUpperCase().includes("PATHOLOGY")) {
+    doc.setFontSize(9);
+    doc.setTextColor(70, 85, 105);
+    // doc.text("Pathology section", margin + 12, headerTop + 35);
+  }
 
-  // doc.setFont("helvetica", "normal");
-  // doc.setFontSize(8);
-  // doc.setTextColor(100, 116, 139);
-  // doc.text(`Status : ${reportStatus}`, margin + 14, 62);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(100, 116, 139);
+  // doc.text(`Status : ${reportStatus}`, margin + 12, headerTop + 40);
 
   const logoWidth = 100;
   const logoHeight = 34;
   const logoX = pageWidth - margin - logoWidth - 8;
-  const logoY = 27;
+  const logoY = headerTop + Math.max(0, (headerHeight - logoHeight) / 2);
 
   if (logoBase64) {
     doc.addImage(logoBase64, "PNG", logoX, logoY, logoWidth, logoHeight);
@@ -138,7 +249,7 @@ function addHeader(doc: jsPDF, reportStatus: string, logoBase64?: string | null,
   }
 
   doc.setDrawColor(220);
-  doc.line(margin, 78, pageWidth - margin, 78);
+  // doc.line(margin, headerBottom + 4, pageWidth - margin, headerBottom + 4);
 
   doc.setTextColor(20);
 }
@@ -147,19 +258,19 @@ function addPatientSection(doc: jsPDF, patient: PdfPatient) {
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 28;
   const contentWidth = pageWidth - margin * 2;
-  const startY = 78;
+  const startY = 74;
 
   doc.setDrawColor(210);
   doc.setFillColor(255, 255, 255);
-  doc.roundedRect(margin, startY, contentWidth, 74, 3, 3, "FD");
+  doc.roundedRect(margin, startY, contentWidth, 78, 3, 3, "FD");
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
   doc.setTextColor(20);
-  doc.text("Patient Information", margin + 10, startY + 14);
+  doc.text("Patient Information", margin + 10, startY + 15);
 
   doc.setDrawColor(230);
-  doc.line(margin, startY + 20, pageWidth - margin, startY + 20);
+  doc.line(margin, startY + 22, pageWidth - margin, startY + 22);
 
   const leftX = margin + 10;
   const rightX = margin + contentWidth / 2 + 10;
@@ -167,22 +278,22 @@ function addPatientSection(doc: jsPDF, patient: PdfPatient) {
 
   const left: Array<[string, string]> = [
     ["Patient Name", patient.patientName],
-    ["DOB / Age / Gender", patient.dobAgeGender],
-    ["Patient ID / UHID", patient.patientId],
-    ["Referred By", patient.referredBy],
+    ["MRN", patient.mrn],
+    ["Age / Gender", patient.ageGender],
+    ["Doctor Name", patient.doctorName],
   ];
 
   const right: Array<[string, string]> = [
-    ["Sample Collected", patient.sampleCollected],
-    ["Sample Type", patient.sampleType],
-    ["Barcode No", patient.barcodeNo],
+    ["Sample Collection", patient.sampleCollectionDate],
     ["Report Date", patient.reportDate],
+    ["Report Status", patient.reportStatus],
+    ["", ""],
   ];
 
   doc.setFontSize(8);
 
   left.forEach(([label, value], index) => {
-    const y = startY + 34 + index * 10;
+    const y = startY + 35 + index * 10;
     doc.setFont("helvetica", "bold");
     doc.setTextColor(50);
     doc.text(`${label}:`, leftX, y);
@@ -192,7 +303,8 @@ function addPatientSection(doc: jsPDF, patient: PdfPatient) {
   });
 
   right.forEach(([label, value], index) => {
-    const y = startY + 34 + index * 10;
+    if (!label) return;
+    const y = startY + 35 + index * 10;
     doc.setFont("helvetica", "bold");
     doc.setTextColor(50);
     doc.text(`${label}:`, rightX, y);
@@ -206,52 +318,60 @@ function addFooter(doc: jsPDF, pageNumber: number, totalPages: number) {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 28;
+  const footerTop = pageHeight - 104;
+  const footerWidth = pageWidth - margin * 2;
+  const footerPadding = 18;
+  const footerRightPanelX = pageWidth - margin - 150 - footerPadding;
 
-  doc.setDrawColor(200);
-  doc.line(margin, pageHeight - 65, pageWidth - margin, pageHeight - 65);
+  doc.setFillColor(245, 249, 255);
+  doc.roundedRect(margin, footerTop - 8, footerWidth, 82, 4, 4, "F");
+  doc.setDrawColor(190, 205, 230);
+  doc.roundedRect(margin, footerTop - 8, footerWidth, 82, 4, 4);
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(7);
-  doc.setTextColor(20);
+  doc.setFontSize(7.5);
+  doc.setTextColor(28, 44, 74);
 
-  doc.text("Booking Centre : Plasmit Hospital", margin, pageHeight - 52);
-  doc.text("Processing Lab : Central Laboratory, Plasmit Hospital", margin, pageHeight - 42);
+  doc.text("Booking Centre : Plasmit Hospital", margin + footerPadding, footerTop + 14);
+  doc.text("Processing Lab : Central Laboratory, Plasmit Hospital", margin + footerPadding, footerTop + 24);
+  doc.text("Reporting Consultant : Dr. Kavita Rao", margin + footerPadding, footerTop + 34);
+  doc.text("Department : Pathology / Laboratory / Radiology", margin + footerPadding, footerTop + 44);
 
   doc.setFontSize(6.5);
-  doc.text(
-    "This report is for clinical interpretation only. Correlate with patient history and clinical findings.",
-    margin,
-    pageHeight - 30
-  );
+  doc.setTextColor(70, 87, 110);
+  
 
-  doc.setDrawColor(180);
-  doc.rect(pageWidth - 165, pageHeight - 60, 40, 40);
-
+  drawPseudoQr(doc, footerRightPanelX, footerTop + 6, 40, `PLASMIT-${pageNumber}-${totalPages}`);
   doc.setFontSize(6);
-  doc.text("QR Code", pageWidth - 155, pageHeight - 38);
+  doc.setTextColor(40, 60, 95);
+  doc.text("Scan to verify", footerRightPanelX, footerTop + 51);
 
   doc.setFontSize(7);
   doc.setFont("helvetica", "bold");
-  doc.text("Authorized Signatory", pageWidth - 105, pageHeight - 52);
+  doc.setTextColor(28, 44, 74);
+  doc.text("Authorized Signatory", pageWidth - margin - 105 - footerPadding, footerTop + 14);
 
   doc.setFont("helvetica", "normal");
-  doc.text("_____________________", pageWidth - 120, pageHeight - 40);
-  doc.text("Dr. Kavita Rao", pageWidth - 105, pageHeight - 28);
-  doc.text("MD Pathology", pageWidth - 105, pageHeight - 18);
-  doc.text("Reg. No: MMC12345", pageWidth - 105, pageHeight - 8);
+  doc.text("_____________________", pageWidth - margin - 120 - footerPadding, footerTop + 26);
+  doc.text("Dr. Kavita Rao", pageWidth - margin - 105 - footerPadding, footerTop + 38);
+  doc.text("MD Pathology", pageWidth - margin - 105 - footerPadding, footerTop + 48);
+  doc.text("Reg. No: MMC12345", pageWidth - margin - 105 - footerPadding, footerTop + 58);
 
   doc.setFontSize(7);
+  doc.setTextColor(90, 105, 130);
   doc.text(`Page ${pageNumber} of ${totalPages}`, pageWidth / 2 - 20, pageHeight - 8);
 }
 
 function addPageFrame(doc: jsPDF, patient: PdfPatient, reportStatus: string, logoBase64?: string | null, reportTitle?: string) {
-  addHeader(doc, reportStatus, logoBase64, reportTitle);
-  addPatientSection(doc, patient);
-}
+  addHeader(doc, reportStatus, logoBase64, reportTitle ?? "LABORATORY REPORT");
+    addPatientSection(doc, patient);
+  }
 
 export async function downloadLaboratoryPdf(blocks: PdfResultBlock[], filename: string, reportTitle?: string) {
   const patient = getPatientData();
   const logoBase64 = await loadImageAsPngBase64(LOGO_SRC);
+  const inferredTitle = filename.toLowerCase().includes("pathology") ? "PATHOLOGY REPORT" : reportTitle ?? "LABORATORY REPORT";
+  const isPathologyLike = inferredTitle.toUpperCase().includes("PATHOLOGY") || inferredTitle.toUpperCase().includes("LABORATORY");
 
   console.log("[PDF] blocks data received", blocks);
   console.log("[PDF] patient data", patient);
@@ -266,157 +386,43 @@ export async function downloadLaboratoryPdf(blocks: PdfResultBlock[], filename: 
   blocks.forEach((block, index) => {
     if (index > 0) doc.addPage();
 
-    addPageFrame(doc, patient, block.reportStatus || "Final", logoBase64, reportTitle);
+    addPageFrame(doc, patient, block.reportStatus || "Final", logoBase64, inferredTitle);
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
     doc.setTextColor(20);
-    doc.text(block.testName, 28, 172);
+    doc.text(block.testName, 28, 182);
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
-    doc.text(`Department: ${block.department || "-"}`, 28, 186);
-    doc.text(`Sample Collected: ${block.sampleCollectedOn || "-"}`, 170, 186);
-    doc.text(`Sample Type: ${block.sampleType || "-"}`, 330, 186);
-    doc.text(`Report Date: ${block.reportDate || "-"}`, 450, 186);
+    doc.text(`Department: ${block.department || "-"}`, 28, 196);
+    // doc.text(`Sample Collected: ${block.sampleCollectedOn || "-"}`, 170, 196);
+    doc.text(`Sample Type: ${block.sampleType || "-"}`, 330, 196);
+    // doc.text(`Report Date: ${block.reportDate || "-"}`, 450, 196);
 
-    autoTable(doc, {
-      startY: 198,
-      margin: { left: 28, right: 28, bottom: 80 },
-      head: [["Parameter", "Value", "Unit", "Reference Range", "Flag"]],
-      body: block.rows.map((row) => [
-        row.parameter || "-",
-        row.value || "-",
-        row.unit || "-",
-        row.referenceRange || "-",
-        row.flag === "H" ? "High" : row.flag === "L" ? "Low" : "Normal",
-      ]),
-      theme: "grid",
-      styles: {
-        fontSize: 8,
-        cellPadding: 4,
-        textColor: 20,
-        lineColor: 210,
-        lineWidth: 0.3,
-        overflow: "linebreak",
-        valign: "middle",
-      },
-      headStyles: {
-        fillColor: [235, 238, 242],
-        textColor: 20,
-        fontStyle: "bold",
-        halign: "center",
-      },
-      bodyStyles: {
-        fillColor: [255, 255, 255],
-      },
-      alternateRowStyles: {
-        fillColor: [250, 250, 250],
-      },
-      columnStyles: {
-        0: { cellWidth: 190 },
-        1: { cellWidth: 85, halign: "center" },
-        2: { cellWidth: 75, halign: "center" },
-        3: { cellWidth: 135, halign: "center" },
-        4: { cellWidth: 58, halign: "center" },
-      },
-      didParseCell: (data) => {
-        if (data.section === "body") {
-          const row = block.rows[data.row.index];
-          if (row && isAbnormal(row)) {
-            data.cell.styles.fontStyle = "bold";
-            data.cell.styles.textColor = row.flag === "H" ? [180, 40, 40] : [30, 90, 180];
-          }
-        }
-      },
-      pageBreak: "auto",
-      rowPageBreak: "auto",
-    });
+    if (isPathologyLike && block.rows.some((row) => normalizeGroup(row.parameter) !== "Other Parameters")) {
+      const grouped = groupRows(block.rows);
+      let startY = 208;
+      const contentWidth = doc.internal.pageSize.getWidth() - 56;
 
-    const grouped = new Map<string, PdfResultRow[]>();
-
-    block.rows.forEach((row) => {
-      const group = normalizeGroup(row.parameter);
-      grouped.set(group, [...(grouped.get(group) ?? []), row]);
-    });
-
-    let startY = ((doc as any).lastAutoTable?.finalY ?? 198) + 10;
-
-    grouped.forEach((rows, groupName) => {
-      autoTable(doc, {
-        startY,
-        margin: { left: 28, right: 28, bottom: 80 },
-        head: [[groupName, "Value", "Unit", "Reference Range", "Flag"]],
-        body: rows.map((row) => [
-          row.parameter || "-",
-          row.value || "-",
-          row.unit || "-",
-          row.referenceRange || "-",
-          row.flag === "H" ? "High" : row.flag === "L" ? "Low" : "Normal",
-        ]),
-        theme: "grid",
-        styles: {
-          fontSize: 8,
-          cellPadding: 4,
-          textColor: 20,
-          lineColor: 210,
-          lineWidth: 0.3,
-          overflow: "linebreak",
-          valign: "middle",
-        },
-        headStyles: {
-          fillColor: [235, 238, 242],
-          textColor: 20,
-          fontStyle: "bold",
-          halign: "center",
-        },
-        bodyStyles: {
-          fillColor: [255, 255, 255],
-        },
-        alternateRowStyles: {
-          fillColor: [250, 250, 250],
-        },
-        columnStyles: {
-          0: { cellWidth: 210 },
-          1: { cellWidth: 75, halign: "center" },
-          2: { cellWidth: 75, halign: "center" },
-          3: { cellWidth: 120, halign: "center" },
-          4: { cellWidth: 58, halign: "center" },
-        },
-        didParseCell: (data) => {
-          if (data.section === "body") {
-            const row = rows[data.row.index];
-
-            if (row && isAbnormal(row)) {
-              data.cell.styles.fontStyle = "bold";
-              data.cell.styles.textColor =
-                row.flag === "H" ? [180, 40, 40] : [30, 90, 180];
-            }
-          }
-        },
-        didDrawPage: () => {
-          const pageNo = doc.getNumberOfPages();
-          addHeader(doc, block.reportStatus || "Final", logoBase64);
-          addPatientSection(doc, patient);
-          addFooter(doc, pageNo, pageNo);
-        },
-        pageBreak: "auto",
-        rowPageBreak: "auto",
+      grouped.forEach((rows, groupName) => {
+        renderResultTable(doc, rows, startY, contentWidth, groupName);
+        startY = (doc as any).lastAutoTable.finalY + 10;
       });
-
-      startY = (doc as any).lastAutoTable.finalY + 10;
-    });
+    } else {
+      renderResultTable(doc, block.rows, 208, doc.internal.pageSize.getWidth() - 56);
+    }
 
     const interpretation = block.interpretation?.trim();
 
     if (interpretation) {
       const pageHeight = doc.internal.pageSize.getHeight();
-      let y = Math.max(((doc as any).lastAutoTable?.finalY ?? 202) + 10, 202);
+      let y = Math.max(((doc as any).lastAutoTable?.finalY ?? 212) + 10, 212);
 
       if (y > pageHeight - 140) {
         doc.addPage();
-        addPageFrame(doc, patient, block.reportStatus || "Final", logoBase64, reportTitle);
-        y = 172;
+        addPageFrame(doc, patient, block.reportStatus || "Final", logoBase64, inferredTitle);
+        y = 182;
       }
 
       const lines = doc.splitTextToSize(interpretation, 520);
@@ -424,7 +430,7 @@ export async function downloadLaboratoryPdf(blocks: PdfResultBlock[], filename: 
 
       doc.setDrawColor(215);
       doc.setFillColor(248, 248, 248);
-      doc.roundedRect(28, y, 539, boxHeight, 3, 3, "FD");
+      doc.roundedRect(28, y, doc.internal.pageSize.getWidth() - 56, boxHeight, 3, 3, "FD");
 
       doc.setFont("helvetica", "bold");
       doc.setFontSize(8.5);

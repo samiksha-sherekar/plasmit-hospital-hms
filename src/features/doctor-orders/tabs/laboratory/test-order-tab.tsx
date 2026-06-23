@@ -50,7 +50,6 @@ function SelectField({ value, onChange, options }: { value: LaboratoryPriority; 
 type SelectedTestRow = {
   id: string;
   selectedTests: string;
-  loincCode: string;
   department: string;
   specimenSource: string;
   fastingStatus: boolean;
@@ -299,7 +298,12 @@ export function LaboratoryTestOrderTab({
   ];
   const doctorSuggestions = ["Dr. Kavita Rao", "Dr. Aman Verma", "Dr. Priya Singh", "Dr. Rohit Mehta", "Dr. Neha Sharma", "Dr. Sandeep Yadav"];
   const safeProblems = problems ?? [];
-  const selectedTests = testList.filter((test) => selectedTestIds.includes(test.id));
+  const filteredProblems = React.useMemo(() => {
+    const query = (newProblem ?? "").trim().toLowerCase();
+    if (!query) return safeProblems;
+    return safeProblems.filter((problem) => problem.toLowerCase().includes(query));
+  }, [newProblem, safeProblems]);
+  const selectedTests = filteredTests.filter((test) => selectedTestIds.includes(test.id));
   const selectedGroups = groupedTests.filter((group) => selectedGroupIds.includes(group.id));
   const getSpecimenSource = (id: string) => specimenSourceById?.[id] ?? "Blood";
   const selectedTestRows = React.useMemo<SelectedTestRow[]>(
@@ -307,7 +311,6 @@ export function LaboratoryTestOrderTab({
       ...selectedTests.map((test) => ({
         id: test.id,
         selectedTests: test.name,
-        loincCode: test.code || "-",
         department: test.department,
         specimenSource: getSpecimenSource(test.id),
         fastingStatus: Boolean(fasting),
@@ -316,7 +319,6 @@ export function LaboratoryTestOrderTab({
       ...selectedGroups.map((group) => ({
         id: group.id,
         selectedTests: group.name,
-        loincCode: "-",
         department: group.department,
         specimenSource: getSpecimenSource(group.id),
         fastingStatus: Boolean(fasting),
@@ -325,10 +327,14 @@ export function LaboratoryTestOrderTab({
     ],
     [fasting, getSpecimenSource, priority, selectedGroups, selectedTests],
   );
+  const filteredGroupedTests = React.useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return groupedTests;
+    return groupedTests.filter((group) => `${group.name} ${group.description ?? ""}`.toLowerCase().includes(query));
+  }, [search]);
   const selectedTestColumns = React.useMemo<ColumnDef<SelectedTestRow>[]>(
     () => [
       { accessorKey: "selectedTests", header: "Selected Tests" },
-      { accessorKey: "loincCode", header: "LOINC Code" },
       { accessorKey: "department", header: "Department" },
       {
         accessorKey: "specimenSource",
@@ -351,15 +357,26 @@ export function LaboratoryTestOrderTab({
         accessorKey: "fastingStatus",
         header: "Choose Fasting Status",
         cell: ({ row }) => (
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              className="h-4 w-4 accent-primary"
-              checked={row.original.fastingStatus}
-              onChange={(event) => onFastingChange?.(event.target.checked)}
-            />
-            <span className="text-sm">{row.original.fastingStatus ? "No" : "Yes"}</span>
-          </label>
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-primary"
+                checked={!row.original.fastingStatus}
+                onChange={() => onFastingChange?.(false)}
+              />
+              <span className="text-sm">Yes</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-primary"
+                checked={row.original.fastingStatus}
+                onChange={() => onFastingChange?.(true)}
+              />
+              <span className="text-sm">No</span>
+            </label>
+          </div>
         ),
       },
       {
@@ -452,14 +469,14 @@ export function LaboratoryTestOrderTab({
                     </tr>
                   </thead>
                   <tbody>
-                    {(problemListVisible ? safeProblems : []).slice(0, 4).map((problem, index) => (
+                    {(problemListVisible ? filteredProblems : []).slice(0, 4).map((problem, index) => (
                       <tr key={problem} className={index % 2 === 0 ? "bg-background" : "bg-surface-muted/40"}>
                         <td className="border-t border-r border-border px-2 py-2 text-muted-foreground">12 May 2026</td>
                         <td className="border-t border-r border-border px-2 py-2 text-foreground">{problem}</td>
                         <td className="border-t border-border px-2 py-2 text-muted-foreground">-</td>
                       </tr>
                     ))}
-                    {problemListVisible && !safeProblems.length ? (
+                    {problemListVisible && !filteredProblems.length ? (
                       <tr>
                         <td colSpan={3} className="border-t border-border px-2 py-4 text-center text-muted-foreground">
                           No problems reported
@@ -529,7 +546,7 @@ export function LaboratoryTestOrderTab({
               <div className="min-w-0 overflow-hidden rounded-md border border-border bg-surface-muted">
                 <div className="border-b border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Select grouped tests</div>
                 <div className="max-h-[360px] overflow-auto px-3">
-                  {groupedTests.map((group) => (
+                  {filteredGroupedTests.map((group) => (
                     <CheckboxRow key={group.id} label={group.name} checked={selectedGroupIds.includes(group.id)} onToggle={() => onToggleGroup?.(group.id)} />
                   ))}
                 </div>
@@ -568,7 +585,11 @@ export function LaboratoryTestOrderTab({
 
 
           <div className="flex min-w-0 flex-wrap items-center gap-2 rounded-xl border border-border bg-white p-4">
-            <div className="text-sm text-muted-foreground">{selectedTestIds.length + selectedGroupIds.length} tests selected</div>
+            <div className="text-sm text-muted-foreground">
+              {selectedTestIds.length + selectedGroupIds.length} tests selected
+              {selectedTestIds.length ? `, ${selectedTestIds.length} test(s)` : ""}
+              {selectedGroupIds.length ? `, ${selectedGroupIds.length} group(s)` : ""}
+            </div>
             
             <div className="ml-auto flex flex-wrap gap-2">
               {/* <Button type="button" variant="outline" onClick={() => onDownloadAllReports?.()}>

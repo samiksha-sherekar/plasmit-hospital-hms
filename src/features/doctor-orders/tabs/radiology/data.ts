@@ -35,6 +35,10 @@ export const radiologyResultBlocks: RadiologyResultBlock[] = [
     category: "X-Ray",
     specification: "PA View",
     priority: "Routine",
+    reportDate: "14/05/2021",
+    radiologist: "Dr. Kavita Rao",
+    findings: "Lungs are clear. No focal consolidation or pleural effusion.",
+    impression: "Normal chest radiograph.",
     rows: [
       { parameter: "Lungs", result: "Clear", unit: "-", referenceRange: "Clear" },
       { parameter: "Cardiomediastinal silhouette", result: "Normal", unit: "-", referenceRange: "Normal" },
@@ -47,6 +51,10 @@ export const radiologyResultBlocks: RadiologyResultBlock[] = [
     category: "CT Scan",
     specification: "Without Contrast",
     priority: "Urgent",
+    reportDate: "14/05/2021",
+    radiologist: "Dr. Kavita Rao",
+    findings: "No acute intracranial hemorrhage or midline shift.",
+    impression: "No acute CT brain abnormality.",
     rows: [
       { parameter: "Hemorrhage", result: "Absent", unit: "-", referenceRange: "Absent" },
       { parameter: "Midline shift", result: "Absent", unit: "mm", referenceRange: "0" },

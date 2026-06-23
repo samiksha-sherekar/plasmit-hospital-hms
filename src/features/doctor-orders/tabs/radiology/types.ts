@@ -50,5 +50,9 @@ export type RadiologyResultBlock = {
   category: string;
   specification: string;
   priority: RadiologyPriority;
+  reportDate?: string;
+  radiologist?: string;
+  findings?: string;
+  impression?: string;
   rows: RadiologyResultRow[];
 };

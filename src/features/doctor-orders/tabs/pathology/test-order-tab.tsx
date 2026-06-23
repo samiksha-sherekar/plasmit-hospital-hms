@@ -50,7 +50,6 @@ function SelectField({ value, onChange, options }: { value: PathologyPriority; o
 type SelectedTestRow = {
   id: string;
   selectedTests: string;
-  loincCode: string;
   // department: string;
   specimenSource: string;
   fastingStatus: boolean;
@@ -295,15 +294,24 @@ export function PathologyTestOrderTab({
   ];
   const doctorSuggestions = ["Dr. Kavita Rao", "Dr. Aman Verma", "Dr. Priya Singh", "Dr. Rohit Mehta", "Dr. Neha Sharma", "Dr. Sandeep Yadav"];
   const safeProblems = problems ?? [];
+  const filteredProblems = React.useMemo(() => {
+    const query = (newProblem ?? "").trim().toLowerCase();
+    if (!query) return safeProblems;
+    return safeProblems.filter((problem) => problem.toLowerCase().includes(query));
+  }, [newProblem, safeProblems]);
   const selectedTests = filteredTests.filter((test) => selectedTestIds.includes(test.id));
   const selectedGroups = groupedTests.filter((group) => selectedGroupIds.includes(group.id));
   const getSpecimenSource = (id: string) => specimenSourceById?.[id] ?? "Blood";
+  const filteredGroupedTests = React.useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return groupedTests;
+    return groupedTests.filter((group) => `${group.name} ${group.description ?? ""}`.toLowerCase().includes(query));
+  }, [search]);
   const selectedTestRows = React.useMemo<SelectedTestRow[]>(
     () => [
       ...selectedTests.map((test) => ({
         id: test.id,
         selectedTests: test.name,
-        loincCode: test.code || "-",
         specimenSource: getSpecimenSource(test.id),
         fastingStatus: Boolean(fasting),
         priority: priority ?? "Routine",
@@ -311,7 +319,6 @@ export function PathologyTestOrderTab({
       ...selectedGroups.map((group) => ({
         id: group.id,
         selectedTests: group.name,
-        loincCode: "-",
         specimenSource: getSpecimenSource(group.id),
         fastingStatus: Boolean(fasting),
         priority: priority ?? "Routine",
@@ -322,7 +329,6 @@ export function PathologyTestOrderTab({
   const selectedTestColumns = React.useMemo<ColumnDef<SelectedTestRow>[]>(
     () => [
       { accessorKey: "selectedTests", header: "Selected Tests" },
-      { accessorKey: "loincCode", header: "LOINC Code" },
       {
         accessorKey: "specimenSource",
         header: "Choose Specimen Source",
@@ -344,15 +350,26 @@ export function PathologyTestOrderTab({
         accessorKey: "fastingStatus",
         header: "Choose Fasting Status",
         cell: ({ row }) => (
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              className="h-4 w-4 accent-primary"
-              checked={row.original.fastingStatus}
-              onChange={(event) => onFastingChange?.(event.target.checked)}
-            />
-            <span className="text-sm">{row.original.fastingStatus ? "No" : "Yes"}</span>
-          </label>
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-primary"
+                checked={!row.original.fastingStatus}
+                onChange={() => onFastingChange?.(false)}
+              />
+              <span className="text-sm">Yes</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-primary"
+                checked={row.original.fastingStatus}
+                onChange={() => onFastingChange?.(true)}
+              />
+              <span className="text-sm">No</span>
+            </label>
+          </div>
         ),
       },
       {
@@ -447,17 +464,17 @@ export function PathologyTestOrderTab({
                           </tr>
                         </thead>
                         <tbody>
-                          {(problemListVisible ? safeProblems : []).slice(0, 4).map((problem, index) => (
-                            <tr key={problem} className={index % 2 === 0 ? "bg-background" : "bg-surface-muted/40"}>
-                              <td className="border-t border-r border-border px-2 py-2 text-muted-foreground">12 May 2026</td>
-                              <td className="border-t border-r border-border px-2 py-2 text-foreground">{problem}</td>
-                              <td className="border-t border-border px-2 py-2 text-muted-foreground">-</td>
-                            </tr>
-                          ))}
-                          {problemListVisible && !safeProblems.length ? (
-                            <tr>
-                              <td colSpan={3} className="border-t border-border px-2 py-4 text-center text-muted-foreground">
-                                No problems reported
+                    {(problemListVisible ? filteredProblems : []).slice(0, 4).map((problem, index) => (
+                      <tr key={problem} className={index % 2 === 0 ? "bg-background" : "bg-surface-muted/40"}>
+                        <td className="border-t border-r border-border px-2 py-2 text-muted-foreground">12 May 2026</td>
+                        <td className="border-t border-r border-border px-2 py-2 text-foreground">{problem}</td>
+                        <td className="border-t border-border px-2 py-2 text-muted-foreground">-</td>
+                      </tr>
+                    ))}
+                    {problemListVisible && !filteredProblems.length ? (
+                      <tr>
+                        <td colSpan={3} className="border-t border-border px-2 py-4 text-center text-muted-foreground">
+                          No problems reported
                               </td>
                             </tr>
                           ) : null}
@@ -519,7 +536,7 @@ export function PathologyTestOrderTab({
                     <div className="min-w-0 overflow-hidden rounded-md border border-border bg-surface-muted">
                       <div className="border-b border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Select grouped tests</div>
                       <div className="max-h-[360px] overflow-auto px-3">
-                        {groupedTests.map((group) => (
+                        {filteredGroupedTests.map((group) => (
                           <CheckboxRow key={group.id} label={group.name} checked={selectedGroupIds.includes(group.id)} onToggle={() => onToggleGroup?.(group.id)} />
                         ))}
                       </div>

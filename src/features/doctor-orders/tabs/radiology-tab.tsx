@@ -16,16 +16,91 @@ type MainTab = "test-order" | "order-summary" | "result-review";
 type SummarySortKey = keyof Pick<RadiologySummaryRow, "selectedTests" | "loincCode" | "category" | "specification" | "priority" | "status" | "orderDateTime">;
 
 const selectedByDefault = ["xray-chest"];
+const selectedGroupDefault: string[] = [];
+
+function buildRadiologySnapshotRows(testIds: string[], groupIds: string[]) {
+  const rows: RadiologySummaryRow[] = [];
+
+  for (const id of testIds) {
+    const test = radiologyTestList.find((item) => item.id === id);
+    if (!test) continue;
+    rows.push({
+      id: `saved-${test.id}`,
+      selectedTests: test.name,
+      loincCode: test.code ?? "-",
+      category: test.category ?? "-",
+      specification: test.specifications?.[0] ?? "-",
+      priority: "Routine",
+      status: "Ordered",
+      orderDateTime: new Date().toISOString().slice(0, 16).replace("T", " "),
+    });
+  }
+
+  for (const id of groupIds) {
+    const group = radiologyTestGroups.find((item) => item.id === id);
+    if (!group) continue;
+    rows.push({
+      id: `saved-${group.id}`,
+      selectedTests: group.name,
+      loincCode: "-",
+      category: group.modality,
+      specification: "Grouped request",
+      priority: "Routine",
+      status: "Ordered",
+      orderDateTime: new Date().toISOString().slice(0, 16).replace("T", " "),
+    });
+  }
+
+  return rows.length ? rows : radiologySummaryRows;
+}
+
+function buildRadiologySnapshotBlocks(testIds: string[], groupIds: string[]) {
+  const blocks: RadiologyResultBlock[] = [];
+
+  for (const id of testIds) {
+    const test = radiologyTestList.find((item) => item.id === id);
+    if (!test) continue;
+    blocks.push({
+      id: `saved-${test.id}`,
+      selectedTests: test.name,
+      loincCode: test.code ?? "-",
+      category: test.category ?? "-",
+      specification: test.specifications?.[0] ?? "-",
+      priority: "Routine",
+      rows: [
+        { parameter: test.name, result: "Pending", unit: "-", referenceRange: "-" },
+      ],
+    });
+  }
+
+  for (const id of groupIds) {
+    const group = radiologyTestGroups.find((item) => item.id === id);
+    if (!group) continue;
+    blocks.push({
+      id: `saved-${group.id}`,
+      selectedTests: group.name,
+      loincCode: "-",
+      category: group.modality,
+      specification: "Grouped request",
+      priority: "Routine",
+      rows: [
+        { parameter: group.name, result: "Pending", unit: "-", referenceRange: "-" },
+      ],
+    });
+  }
+
+  return blocks.length ? blocks : radiologyResultBlocks;
+}
 
 export function RadiologyTab() {
   const [activeTab, setActiveTab] = React.useState<MainTab>("test-order");
   const [search, setSearch] = React.useState("");
   const [selectedTestIds, setSelectedTestIds] = React.useState<string[]>(selectedByDefault);
-  const [selectedGroupIds, setSelectedGroupIds] = React.useState<string[]>(["general-imaging"]);
+  const [selectedGroupIds, setSelectedGroupIds] = React.useState<string[]>(selectedGroupDefault);
   const [priority, setPriority] = React.useState<RadiologyPriority>("Routine");
   const [notes, setNotes] = React.useState("");
-  const [summaryRows, setSummaryRows] = React.useState(radiologySummaryRows);
-  const [resultList, setResultList] = React.useState<RadiologyResultBlock[]>(radiologyResultBlocks);
+  const [savedSummaryRows, setSavedSummaryRows] = React.useState<RadiologySummaryRow[]>(() => buildRadiologySnapshotRows(selectedByDefault, selectedGroupDefault));
+  const [savedResultList, setSavedResultList] = React.useState<RadiologyResultBlock[]>(() => buildRadiologySnapshotBlocks(selectedByDefault, selectedGroupDefault));
   const [summarySort, setSummarySort] = React.useState<{ key: SummarySortKey; direction: "asc" | "desc" }>({ key: "selectedTests", direction: "asc" });
   const [billingNote, setBillingNote] = React.useState("Radiology order ready.");
 
@@ -35,13 +110,13 @@ export function RadiologyTab() {
   }, [search]);
 
   const sortedSummaryRows = React.useMemo(() => {
-    return [...summaryRows].sort((left, right) => {
+    return [...savedSummaryRows].sort((left, right) => {
       const leftValue = String(left[summarySort.key]);
       const rightValue = String(right[summarySort.key]);
       const comparison = leftValue.localeCompare(rightValue);
       return summarySort.direction === "asc" ? comparison : -comparison;
     });
-  }, [summaryRows, summarySort]);
+  }, [savedSummaryRows, summarySort]);
 
   const toggleTest = (id: string) => {
     setSelectedTestIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
@@ -55,13 +130,22 @@ export function RadiologyTab() {
     setSummarySort((current) => ({ key, direction: current.key === key && current.direction === "asc" ? "desc" : "asc" }));
   };
 
+  const commitSavedSelection = () => {
+    setSavedSummaryRows(buildRadiologySnapshotRows(selectedTestIds, selectedGroupIds));
+    setSavedResultList(buildRadiologySnapshotBlocks(selectedTestIds, selectedGroupIds));
+  };
+
   const saveOrder = () => {
+    commitSavedSelection();
     setBillingNote("Radiology order saved successfully.");
+    setActiveTab("order-summary");
     toast.success("Radiology order saved");
   };
 
   const saveAndBill = () => {
+    commitSavedSelection();
     setBillingNote("Radiology order saved and sent to billing.");
+    setActiveTab("order-summary");
     toast.success("Order saved and added to bill");
   };
 
@@ -71,7 +155,7 @@ export function RadiologyTab() {
   };
 
   const editSummaryRow = (id: string) => {
-    const row = summaryRows.find((item) => item.id === id);
+    const row = savedSummaryRows.find((item) => item.id === id);
     if (!row) return;
     setSearch(row.selectedTests);
     const matchedTest = radiologyTestList.find((test) => test.name.toLowerCase() === row.selectedTests.toLowerCase());
@@ -81,7 +165,7 @@ export function RadiologyTab() {
   };
 
   const deleteSummaryRow = (id: string) => {
-    setSummaryRows((current) => current.filter((row) => row.id !== id));
+    setSavedSummaryRows((current) => current.filter((row) => row.id !== id));
     toast.success("Summary row deleted");
   };
 
@@ -140,7 +224,7 @@ export function RadiologyTab() {
             </TabsContent>
 
             <TabsContent value="result-review" className="mt-0">
-              <RadiologyResultReviewTab resultBlocks={resultList} onReorderResult={reorderResult} />
+              <RadiologyResultReviewTab resultBlocks={savedResultList} onReorderResult={reorderResult} />
             </TabsContent>
           </CardContent>
         </Card>

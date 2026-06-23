@@ -37,6 +37,7 @@ export function LaboratoryOrderSummaryTab({
   rows,
   selectedCount,
   billingNote,
+  instructionsForLab,
   sort,
   onSort,
   onSave,
@@ -50,6 +51,7 @@ export function LaboratoryOrderSummaryTab({
   rows: LaboratorySummaryRow[];
   selectedCount: number;
   billingNote: string;
+  instructionsForLab: string;
   sort: { key: SummarySortKey; direction: "asc" | "desc" };
   onSort: (key: SummarySortKey) => void;
   onSave: () => void;
@@ -60,7 +62,8 @@ export function LaboratoryOrderSummaryTab({
   onViewAll: () => void;
   onBackToTestOrder: () => void;
 }) {
-  const headers: Array<{ key: SummarySortKey; label: string }> = [
+  const headers: Array<{ key?: SummarySortKey; label: string }> = [
+    { label: "Order ID" },
     { key: "name", label: "Test name" },
     { key: "loinc", label: "LOINC code" },
     { key: "cpt", label: "CPT code" },
@@ -80,6 +83,9 @@ export function LaboratoryOrderSummaryTab({
 
   return (
     <div className="space-y-4">
+      {/* <div className="rounded-md border border-border bg-surface-muted/40 px-3 py-2 text-sm text-muted-foreground">
+        Saved instructions: {instructionsForLab || "None"}
+      </div> */}
       {/* <Card>
         <CardContent className="space-y-4 p-4"> */}
           
@@ -91,8 +97,8 @@ export function LaboratoryOrderSummaryTab({
               <thead className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 <tr>
                   {headers.map((header) => (
-                    <th key={header.key} className="px-4 py-3">
-                      <SortButton label={header.label} column={header.key} sort={sort} onSort={onSort} />
+                    <th key={header.key ?? header.label} className="px-4 py-3">
+                      {header.key ? <SortButton label={header.label} column={header.key} sort={sort} onSort={onSort} /> : header.label}
                     </th>
                   ))}
                   <th className="px-4 py-3">Status</th>
@@ -104,6 +110,7 @@ export function LaboratoryOrderSummaryTab({
               <tbody>
                 {pagedRows.length ? pagedRows.map((row) => (
                   <tr key={row.id} className="border-t border-border">
+                    <td className="px-4 py-3 text-muted-foreground">{row.id}</td>
                     <td className="px-4 py-3 font-medium text-foreground">{row.name}</td>
                     <td className="px-4 py-3 text-muted-foreground">{row.loinc}</td>
                     <td className="px-4 py-3 text-muted-foreground">{row.cpt}</td>
@@ -134,7 +141,7 @@ export function LaboratoryOrderSummaryTab({
                   </tr>
                 )) : (
                   <tr>
-                    <td className="px-4 py-6 text-center text-muted-foreground" colSpan={9}>
+                    <td className="px-4 py-6 text-center text-muted-foreground" colSpan={10}>
                       No summary records found.
                     </td>
                   </tr>
@@ -190,10 +197,10 @@ export function LaboratoryOrderSummaryTab({
               View all summary
             </Button> */}
             <div className="ml-auto flex flex-wrap gap-2">
-              <Button type="button" onClick={onSave}>
+              {/* <Button type="button" onClick={onSave}>
                 <Save className="h-4 w-4" />
                 Save
-              </Button>
+              </Button> */}
               <Button type="button" variant="outline" onClick={onAddToBill}>
                 Add to bill
               </Button>

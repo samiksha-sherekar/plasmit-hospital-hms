@@ -33,12 +33,78 @@ function getSortValue(block: LaboratoryResultBlock, sortKey: SortKey) {
   return "14/05/2021";
 }
 
+type SelectedReportRow = {
+  group: string;
+  parameter: string;
+  result: string;
+  unit: string;
+  referenceRange: string;
+  flag: "N" | "H" | "L";
+};
+
+function getSelectedReportRows(block: LaboratoryResultBlock): SelectedReportRow[] {
+  const name = block.name.toLowerCase();
+  if (name.includes("cbc")) {
+    return [
+      { group: "RBC Parameters", parameter: "Hemoglobin", result: "13.6", unit: "g/dL", referenceRange: "13.0 - 17.0", flag: "N" },
+      { group: "RBC Parameters", parameter: "RBC Count", result: "4.6", unit: "10^6/µl", referenceRange: "4.5 - 5.5", flag: "N" },
+      { group: "RBC Parameters", parameter: "PCV", result: "40.1", unit: "%", referenceRange: "40 - 50", flag: "N" },
+      { group: "RBC Parameters", parameter: "MCV", result: "86.8", unit: "fL", referenceRange: "83 - 101", flag: "N" },
+      { group: "RBC Parameters", parameter: "MCH", result: "29.5", unit: "pg", referenceRange: "27 - 32", flag: "N" },
+      { group: "RBC Parameters", parameter: "MCHC", result: "34", unit: "g/dL", referenceRange: "31.5 - 34.5", flag: "N" },
+      { group: "RBC Parameters", parameter: "RDW (CV)", result: "13.1", unit: "%", referenceRange: "11.6 - 14.0", flag: "N" },
+      { group: "RBC Parameters", parameter: "RDW-SD", result: "28.5", unit: "fL", referenceRange: "35.1 - 43.9", flag: "L" },
+      { group: "WBC Parameters", parameter: "TLC", result: "6.8", unit: "10^3/µl", referenceRange: "4 - 10", flag: "N" },
+      { group: "WBC Parameters", parameter: "Neutrophils", result: "64", unit: "%", referenceRange: "40 - 80", flag: "N" },
+      { group: "WBC Parameters", parameter: "Lymphocytes", result: "25", unit: "%", referenceRange: "20 - 40", flag: "N" },
+      { group: "WBC Parameters", parameter: "Monocytes", result: "9", unit: "%", referenceRange: "2 - 10", flag: "N" },
+      { group: "WBC Parameters", parameter: "Eosinophils", result: "2", unit: "%", referenceRange: "0 - 6", flag: "N" },
+      { group: "WBC Parameters", parameter: "Basophils", result: "0", unit: "%", referenceRange: "0 - 1", flag: "N" },
+      { group: "WBC Parameters", parameter: "Neutrophils, absolute", result: "4.35", unit: "10^3/µl", referenceRange: "2 - 7", flag: "N" },
+      { group: "WBC Parameters", parameter: "Lymphocytes, absolute", result: "1.7", unit: "10^3/µl", referenceRange: "1 - 3", flag: "N" },
+      { group: "WBC Parameters", parameter: "Monocytes, absolute", result: "0.61", unit: "10^3/µl", referenceRange: "0.2 - 1.0", flag: "N" },
+      { group: "WBC Parameters", parameter: "Eosinophils, absolute", result: "0.14", unit: "10^3/µl", referenceRange: "0.02 - 0.5", flag: "N" },
+      { group: "WBC Parameters", parameter: "Basophils, absolute", result: "0", unit: "10^3/µl", referenceRange: "0.02 - 0.5", flag: "L" },
+      { group: "Platelet Parameters", parameter: "Platelet Count", result: "211", unit: "10^3/µl", referenceRange: "150 - 410", flag: "N" },
+      { group: "Platelet Parameters", parameter: "MPV", result: "8.7", unit: "fL", referenceRange: "9.3 - 12.1", flag: "L" },
+      { group: "Platelet Parameters", parameter: "PCT", result: "0.2", unit: "%", referenceRange: "0.17 - 0.32", flag: "N" },
+      { group: "Platelet Parameters", parameter: "PDW", result: "14.6", unit: "fL", referenceRange: "8.3 - 25.0", flag: "N" },
+      { group: "Platelet Parameters", parameter: "P-LCR", result: "25.5", unit: "%", referenceRange: "18 - 50", flag: "N" },
+      { group: "Platelet Parameters", parameter: "P-LCC", result: "54", unit: "10^9/L", referenceRange: "44 - 140", flag: "N" },
+      { group: "Platelet Parameters", parameter: "Mentzer Index", result: "18.87", unit: "", referenceRange: "> 13", flag: "N" },
+    ];
+  }
+  if (name.includes("kft") || name.includes("kidney function")) {
+    return [
+      { group: "Main Parameters", parameter: "Serum Creatinine", result: "1.9", unit: "mg/dL", referenceRange: "0.6 - 1.2", flag: "H" },
+      { group: "Main Parameters", parameter: "Blood Urea Nitrogen", result: "22", unit: "mg/dL", referenceRange: "7 - 20", flag: "H" },
+      { group: "Main Parameters", parameter: "Uric Acid", result: "6.3", unit: "mg/dL", referenceRange: "2.6 - 6.0", flag: "H" },
+      { group: "Main Parameters", parameter: "eGFR", result: "58", unit: "mL/min/1.73m2", referenceRange: ">= 90", flag: "L" },
+    ];
+  }
+  return block.rows.map((row) => ({
+    group: "Main Parameters",
+    parameter: row.parameter,
+    result: row.result,
+    unit: row.unit,
+    referenceRange: row.referenceRange,
+    flag: row.flag,
+  }));
+}
+
+function resultTone(flag: "N" | "H" | "L") {
+  if (flag === "H") return "text-danger font-semibold";
+  if (flag === "L") return "text-warning font-semibold";
+  return "text-success font-medium";
+}
+
 export function LaboratoryResultReviewTab({
   resultBlocks: allBlocks,
   diagnosisSearch,
   diagnosisType,
   diagnosisOpen,
   selectedDiagnosisLabel,
+  instructionsForLab,
   onDiagnosisSearchChange,
   onDiagnosisTypeChange,
   onDiagnosisOpenChange,
@@ -50,6 +116,7 @@ export function LaboratoryResultReviewTab({
   diagnosisType: string;
   diagnosisOpen: boolean;
   selectedDiagnosisLabel: string;
+  instructionsForLab: string;
   onDiagnosisSearchChange: (value: string) => void;
   onDiagnosisTypeChange: (value: string) => void;
   onDiagnosisOpenChange: (value: boolean) => void;
@@ -58,7 +125,6 @@ export function LaboratoryResultReviewTab({
   onDeleteResult: (id: string) => void;
   onReorderResult: (name: string) => void;
 }) {
-  const [expandedBlocks, setExpandedBlocks] = React.useState<Record<string, boolean>>({});
   const diagnosisOptions = React.useMemo(
     () => [
       { conclusion: "Thrombocytopenic disorder", code: "302215000", type: "Primary" },
@@ -76,12 +142,14 @@ export function LaboratoryResultReviewTab({
   const [sortDirection, setSortDirection] = React.useState<SortDirection>("desc");
   const [pageSize, setPageSize] = React.useState(5);
   const [pageIndex, setPageIndex] = React.useState(0);
+  const [selectedBlock, setSelectedBlock] = React.useState<LaboratoryResultBlock | null>(null);
+  const [rowSearch, setRowSearch] = React.useState("");
 
   const visibleBlocks = React.useMemo(() => {
-    const query = diagnosisSearch.trim().toLowerCase();
+    const query = rowSearch.trim().toLowerCase();
     if (!query) return allBlocks;
     return allBlocks.filter((block) => `${block.name} ${block.specialty}`.toLowerCase().includes(query));
-  }, [allBlocks, diagnosisSearch]);
+  }, [allBlocks, rowSearch]);
 
   const sortedBlocks = React.useMemo(() => {
     const items = [...visibleBlocks];
@@ -110,7 +178,7 @@ export function LaboratoryResultReviewTab({
 
   React.useEffect(() => {
     setPageIndex(0);
-  }, [diagnosisSearch]);
+  }, [rowSearch]);
 
   React.useEffect(() => {
     if (currentPage !== pageIndex) setPageIndex(currentPage);
@@ -127,7 +195,7 @@ export function LaboratoryResultReviewTab({
         sampleType: "Blood",
         reportDate: "14/05/2021",
         interpretation: block.name.includes("CBC") ? "CBC pattern suggests anemia and low hematocrit." : "KFT indicates renal function abnormality.",
-        rows: block.rows.map((row) => ({
+        rows: getSelectedReportRows(block).map((row) => ({
           testName: block.name,
           parameter: row.parameter,
           value: row.result,
@@ -165,7 +233,6 @@ export function LaboratoryResultReviewTab({
   const openDiagnosisDialog = () => {
     setSelectedDiagnosis(null);
     setCommentDraft("");
-    onDiagnosisSearchChange("");
     onDiagnosisTypeChange("");
     onDiagnosisOpenChange(true);
   };
@@ -176,8 +243,39 @@ export function LaboratoryResultReviewTab({
     setCommentDraft("");
   };
 
+  const openBlockView = (block: LaboratoryResultBlock) => setSelectedBlock(block);
+  const closeBlockView = () => setSelectedBlock(null);
+
+  const selectedReportName = selectedBlock ? selectedBlock.name.replace(" - complete blood count", "").replace(" - kidney function test", "") : "";
+  const selectedReportStatus = "Final";
+  const isCbc = Boolean(selectedBlock?.name.toLowerCase().includes("cbc"));
+  const groupedRows = React.useMemo(() => {
+    if (!selectedBlock || !isCbc) return [];
+    return getSelectedReportRows(selectedBlock).reduce<Record<string, SelectedReportRow[]>>((acc, row) => {
+      acc[row.group] = [...(acc[row.group] ?? []), row];
+      return acc;
+    }, {});
+  }, [isCbc, selectedBlock]);
+
   return (
     <div className="space-y-4">
+      <div className="rounded-md border border-border bg-surface-muted/40 px-3 py-2 text-sm text-muted-foreground">
+        Saved instructions: {instructionsForLab || "None"}
+      </div>
+      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
+        <Input
+          value={rowSearch}
+          onChange={(event) => setRowSearch(event.target.value)}
+          placeholder="Search test, code, or department"
+        />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setRowSearch("")}
+        >
+          Clear search
+        </Button>
+      </div>
       {/* <div className="flex flex-wrap items-center justify-end gap-2">
         <Button type="button" variant="outline" size="sm" onClick={downloadReport}>
           <Download className="h-4 w-4" />
@@ -228,8 +326,6 @@ export function LaboratoryResultReviewTab({
           </thead>
           <tbody>
             {pagedBlocks.length ? pagedBlocks.map((block) => {
-              const expanded = Boolean(expandedBlocks[block.id]);
-              const hasPending = block.rows.some((item) => item.flag === "N");
               return (
                 <React.Fragment key={block.id}>
                   <tr className="border-t border-border align-top">
@@ -252,10 +348,6 @@ export function LaboratoryResultReviewTab({
                     </td> */}
                     <td className="px-3 py-3">
                       <div className="flex items-center gap-2">
-                        {/* <Button type="button" variant="outline" size="sm" onClick={() => setExpandedBlocks((current) => ({ ...current, [block.id]: !expanded }))}>
-                          {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                          {expanded ? "Close" : "Open"}
-                        </Button> */}
                         <Button type="button" variant="outline" size="sm" onClick={() => onReorderResult(block.name)}>
                           <ArrowUpDown className="h-4 w-4" />
                           {/* Reorder */}
@@ -285,57 +377,12 @@ export function LaboratoryResultReviewTab({
                         }}>
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setExpandedBlocks((current) => ({ ...current, [block.id]: !expanded }))}
-                        >
+                        <Button type="button" variant="outline" size="sm" onClick={() => openBlockView(block)}>
                           <Eye className="h-4 w-4"/>
                         </Button>
                       </div>
                     </td>
                   </tr>
-                  {expanded ? (
-                    <tr className="border-t border-border bg-surface-muted/20">
-                      <td colSpan={9} className="px-3 py-3">
-                        <div className="rounded-md border border-border bg-white p-3">
-                          <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                            <span className="font-semibold text-foreground">{block.name.replace(" - complete blood count", "").replace(" - kidney function test", "")}</span>
-                            <span className="text-muted-foreground">{block.specialty}</span>
-                            <span className="text-muted-foreground">Sample: Blood</span>
-                            <span className="text-muted-foreground">Collected On: 12/05/2021</span>
-                            <span className="text-muted-foreground">Completed On: 14/05/2021</span>
-                            <span className="text-muted-foreground">LOINC Code: {block.name.toLowerCase().includes("cbc") ? "11273-0" : "28515-7"}</span>
-                          </div>
-                          <div className="overflow-hidden rounded-md border border-border">
-                            <table className="w-full border-collapse text-left text-sm">
-                              <thead className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                <tr>
-                                  <th className="px-3 py-2">Parameter</th>
-                                  <th className="px-3 py-2">Result</th>
-                                  <th className="px-3 py-2">Unit</th>
-                                  <th className="px-3 py-2">Range</th>
-                                  <th className="px-3 py-2">Flag</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {block.rows.map((row) => (
-                                  <tr key={row.parameter} className="border-t border-border">
-                                    <td className="px-3 py-2 font-medium text-foreground">{row.parameter}</td>
-                                    <td className="px-3 py-2 text-foreground">{row.result}</td>
-                                    <td className="px-3 py-2 text-muted-foreground">{row.unit}</td>
-                                    <td className="px-3 py-2 text-muted-foreground">{row.referenceRange}</td>
-                                    <td className="px-3 py-2 text-muted-foreground">{row.flag}</td>                                    
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : null}
                 </React.Fragment>
               );
             }) : (
@@ -424,6 +471,72 @@ export function LaboratoryResultReviewTab({
           <div className="text-sm text-muted-foreground">No diagnosis selected yet.</div>
         )}
       </div>
+
+      <Drawer
+        open={Boolean(selectedBlock)}
+        onOpenChange={(open) => {
+          if (!open) closeBlockView();
+        }}
+        title={selectedBlock ? selectedReportName : "Result preview"}
+        description={selectedBlock ? `${selectedBlock.specialty} • Report status: ${selectedReportStatus}` : "Static result preview"}
+      >
+        {selectedBlock ? (
+          <div className="space-y-4">
+            {isCbc ? (
+              <div className="space-y-4">
+                {Object.entries(groupedRows).map(([groupName, rows]) => (
+                  <div key={groupName} className="overflow-hidden rounded-md border border-border">
+                    <div className="border-b border-border bg-surface-muted px-3 py-2 text-sm font-semibold text-foreground">{groupName}</div>
+                    <table className="w-full border-collapse text-left text-sm">
+                      <thead className="bg-surface-muted/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        <tr>
+                          <th className="px-3 py-2">Test Parameter</th>
+                          <th className="px-3 py-2">Result</th>
+                          <th className="px-3 py-2">Unit</th>
+                          <th className="px-3 py-2">Range</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.map((row) => (
+                          <tr key={row.parameter} className="border-t border-border">
+                            <td className="px-3 py-2 font-medium text-foreground">{row.parameter}</td>
+                            <td className={`px-3 py-2 ${resultTone(row.flag)}`}>{row.result}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{row.unit}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{row.referenceRange}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-md border border-border">
+                <table className="w-full border-collapse text-left text-sm">
+                  <thead className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <tr>
+                      <th className="px-3 py-2">Parameter</th>
+                      <th className="px-3 py-2">Result</th>
+                      <th className="px-3 py-2">Unit</th>
+                      <th className="px-3 py-2">Range</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getSelectedReportRows(selectedBlock).map((row) => (
+                      <tr key={row.parameter} className="border-t border-border">
+                        <td className="px-3 py-2 font-medium text-foreground">{row.parameter}</td>
+                        <td className={`px-3 py-2 ${resultTone(row.flag)}`}>{row.result}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{row.unit}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{row.referenceRange}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        ) : null}
+      </Drawer>
 
       <Drawer
         open={diagnosisOpen}
