@@ -124,6 +124,7 @@ export function PathologyResultReviewTab({
   diagnosisOpen,
   selectedDiagnosisLabel,
   instructionsForLab,
+  savedSummaryRows = [],
   onDiagnosisSearchChange,
   onDiagnosisTypeChange,
   onDiagnosisOpenChange,
@@ -273,6 +274,12 @@ export function PathologyResultReviewTab({
   const selectedReportName = selectedBlock ? selectedBlock.name.replace(" - complete blood count", "").replace(" - kidney function test", "") : "";
   const selectedReportStatus = "Final";
   const isCbc = Boolean(selectedBlock?.name.toLowerCase().includes("cbc"));
+  const selectedSpecimen = React.useMemo(() => {
+    const normalized = selectedBlock ? selectedBlock.name.toLowerCase() : "";
+    const matched = savedSummaryRows.find((row) => row.name.toLowerCase().includes(normalized) || normalized.includes(row.name.toLowerCase()));
+    return matched?.specimen ?? "Blood";
+  }, [savedSummaryRows, selectedBlock]);
+
   const groupedRows = React.useMemo(() => {
     if (!selectedBlock || !isCbc) return {};
     return getSelectedReportRows(selectedBlock).reduce<Record<string, SelectedReportRow[]>>((acc, row) => {
@@ -284,9 +291,9 @@ export function PathologyResultReviewTab({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border border-border bg-surface-muted/40 px-3 py-2 text-sm text-muted-foreground">
+      {/* <div className="rounded-md border border-border bg-surface-muted/40 px-3 py-2 text-sm text-muted-foreground">
         Saved instructions: {instructionsForLab || "None"}
-      </div>
+      </div> */}
       {/* <div className="flex flex-wrap items-center justify-end gap-2">
         <Button type="button" variant="outline" size="sm" onClick={downloadReport}>
           <Download className="h-4 w-4" />
@@ -298,39 +305,35 @@ export function PathologyResultReviewTab({
         <table className="w-full min-w-[980px] border-collapse text-left text-sm">
           <thead className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             <tr>
-              <th className="px-3 py-3">
+              <th className="w-[180px] px-3 py-3">
                 <button className="inline-flex items-center gap-1.5" type="button" onClick={() => requestSort("loinc")}>
                   LOINC Code
                   {sortKey === "loinc" ? sortDirection === "asc" ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" /> : <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />}
                 </button>
               </th>
-              <th className="px-3 py-3">
+              <th className="w-[220px] px-3 py-3">
                 <button className="inline-flex items-center gap-1.5" type="button" onClick={() => requestSort("test")}>
                   Test
                   {sortKey === "test" ? sortDirection === "asc" ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" /> : <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />}
                 </button>
               </th>
-              {/* <th className="px-3 py-3">Units</th>
-              <th className="px-3 py-3">Results</th>
-              <th className="px-3 py-3">Range</th> */}
-              <th className="px-3 py-3">
+              <th className="w-[160px] px-3 py-3">
                 <button className="inline-flex items-center gap-1.5" type="button" onClick={() => requestSort("orderDate")}>
                   Order Date
                   {sortKey === "orderDate" ? sortDirection === "asc" ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" /> : <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />}
                 </button>
               </th>
-              <th className="px-3 py-3">
+              <th className="w-[160px] px-3 py-3">
                 <button className="inline-flex items-center gap-1.5" type="button" onClick={() => requestSort("completionDate")}>
                   Order completion Date
                   {sortKey === "completionDate" ? sortDirection === "asc" ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" /> : <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />}
                 </button>
               </th>
-              {/* <th className="px-3 py-3">Result Status</th> */}
-              <th className="px-3 py-3">Action</th>
-              <th>
+              <th className="w-[180px] px-3 py-3">Action</th>
+              <th className="w-[120px] px-3 py-3">
                 <Button type="button" variant="outline" size="sm" onClick={downloadReport}>
                   <Download className="h-4 w-4" />
-                    Download All Reports
+                  Download All Reports
                 </Button>
               </th>
             </tr>
@@ -340,8 +343,8 @@ export function PathologyResultReviewTab({
               return (
                 <React.Fragment key={block.id}>
                   <tr className="border-t border-border align-top">
-                    <td className="px-3 py-3 text-xs text-muted-foreground">{block.name.toLowerCase().includes("cbc") ? "11273-0" : "28515-7"}</td>
-                    <td className="px-3 py-3">
+                    <td className="w-[180px] px-3 py-3 text-xs text-muted-foreground">{block.name.toLowerCase().includes("cbc") ? "11273-0" : "28515-7"}</td>
+                    <td className="w-[220px] px-3 py-3">
                       <div className="font-medium text-foreground">{block.name.replace(" - complete blood count", "").replace(" - kidney function test", "")}</div>
                       <div className="text-xs text-muted-foreground">{block.specialty}</div>
                     </td>
@@ -352,12 +355,12 @@ export function PathologyResultReviewTab({
                       </div>
                     </td>
                     <td className="px-3 py-3 text-muted-foreground">{primaryRow?.referenceRange ?? "-"}</td> */}
-                    <td className="px-3 py-3 text-muted-foreground">12/05/2021</td>
-                    <td className="px-3 py-3 text-muted-foreground">14/05/2021</td>
+                    <td className="w-[160px] px-3 py-3 text-muted-foreground">12/05/2021</td>
+                    <td className="w-[160px] px-3 py-3 text-muted-foreground">14/05/2021</td>
                     {/* <td className="px-3 py-3">
                       <StatusPill status={hasPending ? "Pending" : hasHigh ? "High" : "Low"} />
                     </td> */}
-                    <td className="px-3 py-3">
+                    <td className="w-[180px] px-3 py-3">
               <div className="flex items-center gap-2 overflow-x-auto">
                         <Button type="button" variant="outline" size="sm" onClick={() => onReorderResult(block.name)}>
                           <ArrowUpDown className="h-4 w-4" />
@@ -487,22 +490,29 @@ export function PathologyResultReviewTab({
           if (!open) closeBlockView();
         }}
         title={selectedBlock ? selectedReportName : "Result preview"}
-        description={selectedBlock ? `${selectedBlock.specialty} • Report status: ${selectedReportStatus}` : "Static result preview"}
+        description={selectedBlock ? `${selectedBlock.specialty} • Report status: ${selectedReportStatus} • Sample Name: ${selectedSpecimen}` : "Static result preview"}
       >
         {selectedBlock ? (
           <div className="space-y-4">
+            {/* <PatientSummaryBanner /> */}
+            {/* <div className="grid gap-2 rounded-md border border-border bg-surface-muted/30 p-3 text-sm">
+              <div><span className="font-medium text-foreground">Patient Name:</span> <span className="text-muted-foreground">Meera Joshi</span></div>
+              <div><span className="font-medium text-foreground">Specimen:</span> <span className="text-muted-foreground">{selectedSpecimen}</span></div>
+              <div><span className="font-medium text-foreground">Test Name:</span> <span className="text-muted-foreground">{selectedReportName}</span></div>
+              <div><span className="font-medium text-foreground">Report Status:</span> <span className="text-muted-foreground">{selectedReportStatus}</span></div>
+            </div> */}
             {isCbc ? (
               <div className="space-y-4">
                 {Object.entries(groupedRows).map(([groupName, rows]) => (
                   <div key={groupName} className="overflow-hidden rounded-md border border-border">
                     <div className="border-b border-border bg-surface-muted px-3 py-2 text-sm font-semibold text-foreground">{groupName}</div>
-                    <table className="w-full border-collapse text-left text-sm">
+                    <table className="w-full table-fixed border-collapse text-left text-sm">
                       <thead className="bg-surface-muted/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                         <tr>
-                          <th className="px-3 py-2">Test Parameter</th>
-                          <th className="px-3 py-2">Result</th>
-                          <th className="px-3 py-2">Unit</th>
-                          <th className="px-3 py-2">Range</th>
+                          <th className="w-[240px] px-3 py-2">Test Parameter</th>
+                          <th className="w-[160px] px-3 py-2">Result</th>
+                          <th className="w-[140px] px-3 py-2">Unit</th>
+                          <th className="w-[180px] px-3 py-2">Range</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -521,13 +531,13 @@ export function PathologyResultReviewTab({
               </div>
             ) : (
               <div className="overflow-hidden rounded-md border border-border">
-                <table className="w-full border-collapse text-left text-sm">
+                <table className="w-full table-fixed border-collapse text-left text-sm">
                   <thead className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     <tr>
-                      <th className="px-3 py-2">Parameter</th>
-                      <th className="px-3 py-2">Result</th>
-                      <th className="px-3 py-2">Unit</th>
-                      <th className="px-3 py-2">Range</th>
+                      <th className="w-[240px] px-3 py-2">Parameter</th>
+                      <th className="w-[160px] px-3 py-2">Result</th>
+                      <th className="w-[140px] px-3 py-2">Unit</th>
+                      <th className="w-[180px] px-3 py-2">Range</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -654,3 +664,8 @@ export function PathologyResultReviewTab({
     </div>
   );
 }
+
+
+
+
+

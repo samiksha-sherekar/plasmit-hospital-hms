@@ -102,7 +102,7 @@ export function RadiologyTab() {
   const [savedSummaryRows, setSavedSummaryRows] = React.useState<RadiologySummaryRow[]>(() => buildRadiologySnapshotRows(selectedByDefault, selectedGroupDefault));
   const [savedResultList, setSavedResultList] = React.useState<RadiologyResultBlock[]>(() => buildRadiologySnapshotBlocks(selectedByDefault, selectedGroupDefault));
   const [summarySort, setSummarySort] = React.useState<{ key: SummarySortKey; direction: "asc" | "desc" }>({ key: "selectedTests", direction: "asc" });
-  const [billingNote, setBillingNote] = React.useState("Radiology order ready.");
+  // const [billingNote, setBillingNote] = React.useState("Radiology order ready.");
 
   const filteredTests = React.useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -212,7 +212,6 @@ export function RadiologyTab() {
             <TabsContent value="order-summary" className="mt-0">
               <RadiologyOrderSummaryTab
                 rows={sortedSummaryRows}
-                billingNote={billingNote}
                 sort={summarySort}
                 onSort={updateSummarySort}
                 onSave={saveOrder}

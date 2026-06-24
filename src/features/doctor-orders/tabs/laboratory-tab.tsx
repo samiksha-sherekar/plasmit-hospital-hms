@@ -378,6 +378,7 @@ export function LaboratoryTab() {
               diagnosisOpen={diagnosisOpen}
               selectedDiagnosisLabel={selectedDiagnosisLabel}
               instructionsForLab={savedInstructionsForLab}
+              savedSummaryRows={selectedSummaryRows}
               onDiagnosisSearchChange={setDiagnosisSearch}
               onDiagnosisTypeChange={setDiagnosisType}
               onDiagnosisOpenChange={setDiagnosisOpen}
@@ -404,3 +405,4 @@ export function LaboratoryTab() {
     );
   }
   
+

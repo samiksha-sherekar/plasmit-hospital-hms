@@ -72,7 +72,7 @@ export function RadiologyOrderSummaryTab({
     <div className="space-y-4">
       <DataTable data={rows} columns={columns} />
       <div className="flex flex-wrap items-center gap-2">
-        <div className="text-sm text-muted-foreground">{billingNote}</div>
+        {/* <div className="text-sm text-muted-foreground">{billingNote}</div> */}
         <div className="ml-auto flex flex-wrap gap-2">
           <Button type="button" onClick={onSave}>
             <Save className="h-4 w-4" />

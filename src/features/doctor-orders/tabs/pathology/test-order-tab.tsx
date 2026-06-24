@@ -50,7 +50,8 @@ function SelectField({ value, onChange, options }: { value: PathologyPriority; o
 type SelectedTestRow = {
   id: string;
   selectedTests: string;
-  // department: string;
+  type: string;
+  department: string;
   specimenSource: string;
   fastingStatus: boolean;
   priority: PathologyPriority;
@@ -312,6 +313,8 @@ export function PathologyTestOrderTab({
       ...selectedTests.map((test) => ({
         id: test.id,
         selectedTests: test.name,
+        type: "Individual Test",
+        department: test.department,
         specimenSource: getSpecimenSource(test.id),
         fastingStatus: Boolean(fasting),
         priority: priority ?? "Routine",
@@ -319,6 +322,8 @@ export function PathologyTestOrderTab({
       ...selectedGroups.map((group) => ({
         id: group.id,
         selectedTests: group.name,
+        type: "Profile",
+        department: group.department,
         specimenSource: getSpecimenSource(group.id),
         fastingStatus: Boolean(fasting),
         priority: priority ?? "Routine",
@@ -329,6 +334,8 @@ export function PathologyTestOrderTab({
   const selectedTestColumns = React.useMemo<ColumnDef<SelectedTestRow>[]>(
     () => [
       { accessorKey: "selectedTests", header: "Selected Tests" },
+      { accessorKey: "type", header: "Type" },
+      { accessorKey: "department", header: "Department" },
       {
         accessorKey: "specimenSource",
         header: "Choose Specimen Source",
@@ -422,7 +429,7 @@ export function PathologyTestOrderTab({
       ) : null}
       {/* <Card>
         <CardContent className="space-y-4 p-4"> */}
-          <div className="grid min-w-0 gap-4 overflow-x-hidden lg:grid-cols-[360px_minmax(0,1fr)]">
+        <div className="grid min-w-0 gap-4 overflow-x-hidden lg:grid-cols-[360px_minmax(0,1fr)]">
             {/* <Card className="min-w-0 overflow-hidden border-border">
               <CardContent className="space-y-4 p-4"> */}
                 <div className="grid gap-3 ">
@@ -562,40 +569,33 @@ export function PathologyTestOrderTab({
             </div>
           </div>
 
-          <div className="grid min-w-0 gap-4 ">
-                  <DataTable data={selectedTestRows} columns={selectedTestColumns} />
-            <label className="space-y-2">
-              <SectionTitle>Instructions</SectionTitle>
-              <textarea
-                className="min-h-[92px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-border focus:ring-0"
-                placeholder="Free text instructions for the lab"
-                value={instructionsForLab}
-                onChange={(event) => onInstructionsForLabChange?.(event.target.value)}
-              />
-            </label>
-          </div>
+        <div className="grid min-w-0 gap-4 ">
+          <DataTable data={selectedTestRows} columns={selectedTestColumns} />
+          <label className="space-y-2">
+            <SectionTitle>Instructions</SectionTitle>
+            <textarea
+              className="min-h-[92px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-border focus:ring-0"
+              placeholder="Free text instructions for the lab"
+              value={instructionsForLab}
+              onChange={(event) => onInstructionsForLabChange?.(event.target.value)}
+            />
+          </label>
+        </div>
 
-
-          <div className="flex min-w-0 flex-wrap items-center gap-2 rounded-xl border border-border bg-white p-4">
-            <div className="text-sm text-muted-foreground">{selectedTestIds.length + selectedGroupIds.length} tests selected</div>
-            
-            <div className="ml-auto flex flex-wrap gap-2">
-              <Button type="button" variant="outline" onClick={() => onOpenSummary?.()}>
-                View order summary
-              </Button>
-              <Button type="button"  onClick={() => onSave?.()}>
-                Save
-              </Button>
-              {/* <Button type="button" variant="outline" onClick={onAddToBill}>
-                Add to bill
-              </Button>
-              <Button type="button" onClick={onSaveAndBill}>
-                Save & add to bill
-              </Button> */}
-            </div>
+        <div className="flex min-w-0 flex-wrap items-center gap-2 rounded-xl border border-border bg-white p-4">
+          <div className="text-sm text-muted-foreground">{selectedTestIds.length + selectedGroupIds.length} tests selected</div>
+          <div className="ml-auto flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={() => onOpenSummary?.()}>
+              View order summary
+            </Button>
+            <Button type="button" onClick={() => onSave?.()}>
+              Save
+            </Button>
           </div>
-        {/* </CardContent>
-      </Card> */}
-    </div>
+        </div>
+      </div>
   );
 }
+
+
+

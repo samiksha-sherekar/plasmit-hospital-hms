@@ -50,6 +50,7 @@ function SelectField({ value, onChange, options }: { value: LaboratoryPriority; 
 type SelectedTestRow = {
   id: string;
   selectedTests: string;
+  type: string;
   department: string;
   specimenSource: string;
   fastingStatus: boolean;
@@ -311,6 +312,7 @@ export function LaboratoryTestOrderTab({
       ...selectedTests.map((test) => ({
         id: test.id,
         selectedTests: test.name,
+        type: "Individual Test",
         department: test.department,
         specimenSource: getSpecimenSource(test.id),
         fastingStatus: Boolean(fasting),
@@ -319,6 +321,7 @@ export function LaboratoryTestOrderTab({
       ...selectedGroups.map((group) => ({
         id: group.id,
         selectedTests: group.name,
+        type: "Profile",
         department: group.department,
         specimenSource: getSpecimenSource(group.id),
         fastingStatus: Boolean(fasting),
@@ -335,6 +338,7 @@ export function LaboratoryTestOrderTab({
   const selectedTestColumns = React.useMemo<ColumnDef<SelectedTestRow>[]>(
     () => [
       { accessorKey: "selectedTests", header: "Selected Tests" },
+      { accessorKey: "type", header: "Type" },
       { accessorKey: "department", header: "Department" },
       {
         accessorKey: "specimenSource",
