@@ -4,7 +4,36 @@ import { cn } from "@/lib/utils";
 
 export type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
 
-const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type, ...props }, ref) => {
+function isSearchLike(type: string | undefined, placeholder?: string, ariaLabel?: string) {
+  const text = `${placeholder ?? ""} ${ariaLabel ?? ""}`.toLowerCase();
+  return type === "search" || text.includes("search");
+}
+
+const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type, value, onChange, placeholder, "aria-label": ariaLabel, ...props }, ref) => {
+  const searchLike = isSearchLike(type, placeholder, typeof ariaLabel === "string" ? ariaLabel : undefined);
+  const [draftValue, setDraftValue] = React.useState(typeof value === "string" || typeof value === "number" ? String(value) : "");
+
+  React.useEffect(() => {
+    if (!searchLike) return;
+    setDraftValue(typeof value === "string" || typeof value === "number" ? String(value) : "");
+  }, [searchLike, value]);
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!searchLike) {
+      onChange?.(event);
+      return;
+    }
+
+    const nextValue = event.target.value;
+    setDraftValue(nextValue);
+    if (nextValue.length === 0 || nextValue.length >= 3) {
+      onChange?.(event);
+      return;
+    }
+
+    onChange?.({ ...event, target: { ...event.target, value: "" }, currentTarget: { ...event.currentTarget, value: "" } } as React.ChangeEvent<HTMLInputElement>);
+  };
+
   return (
     <input
       type={type}
@@ -13,6 +42,10 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type,
         className,
       )}
       ref={ref}
+      value={searchLike ? draftValue : value}
+      onChange={handleChange}
+      placeholder={placeholder}
+      aria-label={ariaLabel}
       {...props}
     />
   );

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { CircleCheckBig, ClipboardCheck } from "lucide-react";
+import { CircleCheckBig, ClipboardCheck, Eye, Pencil, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,15 +11,12 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
 import { Drawer } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { LdtResultReviewTab } from "./ldt/result-review-tab";
-import { DEFAULT_LDT_TYPE_ID, getLdtTypeConfig } from "./ldt/config";
 import { LdtTestOrderTab, type LdtDraft } from "./ldt/test-order-tab";
-import { LdtOrderSummaryTab } from "./ldt/order-summary-tab";
+import { DEFAULT_LDT_TYPE_ID, getLdtTypeConfig } from "./ldt/config";
 import type { LdtOrderPriority, LdtOrderStatus, LdtSummaryRow } from "./ldt/types";
 
-type MainTab = "test-order" | "order-summary" | "review";
 type DraftErrors = Partial<Record<keyof LdtDraft, string>>;
+type MainTab = "test-order";
 type TestOrderRow = LdtSummaryRow & {
   nurseLocked?: boolean;
   dynamicValues: Record<string, string | string[]>;
@@ -58,6 +55,7 @@ function formatValue(value: string | string[]) {
 function buildAssessmentRows(row: TestOrderRow) {
   const config = getLdtTypeConfig(row.ldtTypeId);
   const assessmentFields = config?.fields.filter((field) => field.group === "assessment") ?? [];
+
   return assessmentFields
     .filter((field) => row.dynamicValues[field.id] !== undefined && row.dynamicValues[field.id] !== "" && !(Array.isArray(row.dynamicValues[field.id]) && row.dynamicValues[field.id].length === 0))
     .map((field) => ({
@@ -71,6 +69,7 @@ function buildAssessmentRows(row: TestOrderRow) {
 function buildRemovalInfo(row: TestOrderRow) {
   const config = getLdtTypeConfig(row.ldtTypeId);
   const propertyFields = config?.fields.filter((field) => field.group === "property") ?? [];
+
   return [
     { field: "Order No", value: row.orderNo },
     { field: "LDT Type", value: row.ldtType },
@@ -84,7 +83,7 @@ function buildRemovalInfo(row: TestOrderRow) {
 }
 
 export function LdtTab() {
-  const [activeTab, setActiveTab] = React.useState<MainTab>("test-order");
+  const [activeTab] = React.useState<MainTab>("test-order");
   const [summaryRows, setSummaryRows] = React.useState<TestOrderRow[]>(initialRows);
   const [draft, setDraft] = React.useState<LdtDraft>({
     ldtTypeId: DEFAULT_LDT_TYPE_ID,
@@ -108,7 +107,7 @@ export function LdtTab() {
   const [draftErrors, setDraftErrors] = React.useState<DraftErrors>({});
   const [submitMessage, setSubmitMessage] = React.useState<string | null>(null);
 
-  const filteredSummaryRows = React.useMemo(() => {
+  const filteredRows = React.useMemo(() => {
     const query = search.trim().toLowerCase();
     return summaryRows.filter((row) => {
       const matchesSearch = `${row.orderNo} ${row.ldtType} ${row.indication} ${row.priority} ${row.status}`.toLowerCase().includes(query);
@@ -184,7 +183,6 @@ export function LdtTab() {
     resetForm(null);
     setDraftErrors({});
     setOrderDrawerOpen(false);
-    setActiveTab("order-summary");
   }, [draft, editingRow, resetForm, summaryRows.length, validateDraft]);
 
   const openAddOrder = () => {
@@ -206,7 +204,6 @@ export function LdtTab() {
     resetForm(row);
     setDraftErrors({});
     setSubmitMessage(null);
-    setActiveTab("test-order");
     setOrderDrawerOpen(true);
   };
 
@@ -222,15 +219,10 @@ export function LdtTab() {
     setSubmitMessage(`LDT order ${deleteTarget.orderNo} deleted successfully.`);
   };
 
-  const closeViewDrawer = (open: boolean) => {
-    setViewDrawerOpen(open);
-    if (!open) setViewingRow(null);
-  };
-
   const columns = React.useMemo<ColumnDef<TestOrderRow>[]>(
     () => [
       { header: "Order No", accessorKey: "orderNo" },
-      { header: "LDT Type", accessorKey: "ldtType" },
+      { header: "LDT Type", cell: ({ row }) => getLdtTypeConfig(row.original.ldtTypeId)?.label ?? row.original.ldtType },
       { header: "LDT Name", accessorKey: "ldtName" },
       { header: "Priority", accessorKey: "priority" },
       { header: "Order Date", accessorKey: "orderDate" },
@@ -240,13 +232,13 @@ export function LdtTab() {
         cell: ({ row }) => (
           <div className="flex flex-wrap gap-2">
             <Button type="button" size="sm" variant="outline" onClick={() => openViewDrawer(row.original)}>
-              View
+              <Eye className="h-4 w-4" />
             </Button>
             <Button type="button" size="sm" variant="outline" disabled={!isEditableStatus(row.original.status)} onClick={() => handleEdit(row.original)}>
-              Edit
+              <Pencil className="h-4 w-4" />
             </Button>
             <Button type="button" size="sm" variant="outline" className="text-danger" disabled={row.original.status !== "Pending"} onClick={() => handleDelete(row.original)}>
-              Delete
+              <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         ),
@@ -257,60 +249,37 @@ export function LdtTab() {
 
   return (
     <div className="space-y-4">
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as MainTab)} className="w-full">
-        <Card>
-          <CardContent className="space-y-4">
-            <div className="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:pb-0">
-              <Button type="button" size="sm" variant={activeTab === "test-order" ? "default" : "outline"} onClick={() => setActiveTab("test-order")} className="min-w-[132px] shrink-0">
-                <ClipboardCheck className="h-4 w-4" />
-                Test Order
-              </Button>
-              <Button type="button" size="sm" variant={activeTab === "order-summary" ? "default" : "outline"} onClick={() => setActiveTab("order-summary")} className="min-w-[132px] shrink-0">
-                <ClipboardCheck className="h-4 w-4" />
-                Order Summary
-              </Button>
-              <Button type="button" size="sm" variant={activeTab === "review" ? "default" : "outline"} onClick={() => setActiveTab("review")} className="min-w-[132px] shrink-0">
-                <ClipboardCheck className="h-4 w-4" />
-                Review
-              </Button>
+      <Card>
+        <CardContent className="space-y-4">
+          
+          {submitMessage ? (
+            <div className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+              <CircleCheckBig className="h-4 w-4" />
+              {submitMessage}
             </div>
+          ) : null}
 
-            {submitMessage ? (
-              <div className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-                <CircleCheckBig className="h-4 w-4" />
-                {submitMessage}
-              </div>
-            ) : null}
+          <div className="grid gap-3 lg:grid-cols-5">
+            <label className="mt-1 space-y-1 text-xs font-medium text-muted-foreground">
+              <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search LDT orders..." aria-label="Search LDT orders" />
+            </label>
+            <SelectFilter label="" value={priorityFilter} onChange={setPriorityFilter} options={["All Priority", "Routine", "Urgent", "STAT"]} />
+            <SelectFilter label="" value={statusFilter} onChange={setStatusFilter} options={["All Status", "Pending", "Active", "Completed", "Cancelled"]} />
+            <label className="mt-1 space-y-1 text-xs font-medium text-muted-foreground">
+              <Input type="date" value={dateRange} onChange={(event) => setDateRange(event.target.value)} aria-label="Filter order date" className="pr-10" />
+            </label>
+            <div className="flex items-center justify-end gap-3">
+           
+            <Button type="button" onClick={openAddOrder}>
+              <ClipboardCheck className="h-4 w-4" />
+              Add Order
+            </Button>
+          </div>
+          </div>
 
-            <TabsContent value="test-order" className="mt-0 space-y-4">
-              <div className="flex justify-end">
-                <Button type="button" onClick={openAddOrder}>
-                  Add Order
-                </Button>
-              </div>
-              <DataTable data={summaryRows} columns={columns} />
-            </TabsContent>
-
-            <TabsContent value="order-summary" className="mt-0 space-y-4">
-              <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_repeat(3,minmax(160px,1fr))]">
-                <label className="mt-1 space-y-1 text-xs font-medium text-muted-foreground">
-                  <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search LDT orders..." aria-label="Search LDT orders" />
-                </label>
-                <SelectFilter label="" value={priorityFilter} onChange={setPriorityFilter} options={["All Priority", "Routine", "Urgent", "STAT"]} />
-                <SelectFilter label="" value={statusFilter} onChange={setStatusFilter} options={["All Status", "Pending", "Active", "Completed", "Cancelled"]} />
-                <label className="mt-1 space-y-1 text-xs font-medium text-muted-foreground">
-                  <Input type="date" value={dateRange} onChange={(event) => setDateRange(event.target.value)} aria-label="Filter order date" className="pr-10" />
-                </label>
-              </div>
-              <LdtOrderSummaryTab rows={filteredSummaryRows} onView={openViewDrawer as never} onEdit={handleEdit as never} onDelete={handleDelete as never} canEditRow={isEditableStatus as never} canDeleteRow={((row: TestOrderRow) => row.status === "Pending") as never} />
-            </TabsContent>
-
-            <TabsContent value="review" className="mt-0">
-              <LdtResultReviewTab />
-            </TabsContent>
-          </CardContent>
-        </Card>
-      </Tabs>
+          <DataTable data={filteredRows} columns={columns} />
+        </CardContent>
+      </Card>
 
       <Drawer
         open={orderDrawerOpen}
@@ -347,9 +316,11 @@ export function LdtTab() {
 
       <Drawer
         open={viewDrawerOpen && Boolean(viewingRow)}
-        onOpenChange={closeViewDrawer}
+        onOpenChange={(open) => {
+          setViewDrawerOpen(open);
+          if (!open) setViewingRow(null);
+        }}
         title={viewingRow ? `View ${viewingRow.orderNo}` : "View LDT Order"}
-        description={viewingRow ? "LDT order details" : undefined}
         footer={
           <div className="flex justify-end">
             <Button type="button" variant="outline" onClick={() => setViewDrawerOpen(false)}>
@@ -358,113 +329,122 @@ export function LdtTab() {
           </div>
         }
       >
-        {viewingRow ? (
-          <div className="space-y-5">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <DetailItem label="Order No" value={viewingRow.orderNo} />
-              <DetailItem label="LDT Type" value={viewingRow.ldtType} />
-              <DetailItem label="LDT Name" value={viewingRow.ldtName} />
-              <DetailItem label="Priority" value={viewingRow.priority} />
-              <DetailItem label="Indication" value={viewingRow.indication} />
-              <DetailItem label="Order Date" value={viewingRow.orderDate} />
-              <DetailItem label="Status" value={viewingRow.status} />
-              <DetailItem label="Clinical Notes" value={viewingRow.clinicalNotes || "-"} />
-            </div>
-
-            <section className="space-y-3 rounded-lg border border-border bg-surface-muted/30 p-4">
-              <h4 className="text-sm font-semibold text-foreground">Dynamic Values</h4>
-              <div className="overflow-hidden rounded-md border border-border bg-background">
-                <table className="w-full text-left text-sm">
-                  <thead className="border-b border-border bg-surface-muted/60 text-xs uppercase text-muted-foreground">
-                    <tr>
-                      <th className="px-3 py-2">Field</th>
-                      <th className="px-3 py-2">Value</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {getLdtTypeConfig(viewingRow.ldtTypeId)?.fields.length ? (
-                      getLdtTypeConfig(viewingRow.ldtTypeId)!.fields.map((field) => {
-                        const value = viewingRow.dynamicValues[field.id];
-                        if (value === undefined || value === "" || (Array.isArray(value) && value.length === 0)) return null;
-                        return (
-                          <tr key={field.id} className="border-b border-border last:border-b-0">
-                            <td className="px-3 py-2 font-medium text-foreground">{field.label}</td>
-                            <td className="px-3 py-2 text-muted-foreground">{formatValue(value)}</td>
-                          </tr>
-                        );
-                      })
-                    ) : (
-                      <tr>
-                        <td className="px-3 py-3 text-muted-foreground" colSpan={2}>
-                          No dynamic values saved.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            <section className="space-y-3 rounded-lg border border-border bg-surface-muted/30 p-4">
-              <h4 className="text-sm font-semibold text-foreground">Assessment History</h4>
-              <div className="overflow-hidden rounded-md border border-border bg-background">
-                <table className="w-full text-left text-sm">
-                  <thead className="border-b border-border bg-surface-muted/60 text-xs uppercase text-muted-foreground">
-                    <tr>
-                      <th className="px-3 py-2">Date &amp; Time</th>
-                      <th className="px-3 py-2">Assessment</th>
-                      <th className="px-3 py-2">Value</th>
-                      <th className="px-3 py-2">By</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {buildAssessmentRows(viewingRow).length ? (
-                      buildAssessmentRows(viewingRow).map((item, index) => (
-                        <tr key={`${item.assessment}-${index}`} className="border-b border-border last:border-b-0">
-                          <td className="px-3 py-2 text-muted-foreground">{item.dateTime}</td>
-                          <td className="px-3 py-2 font-medium text-foreground">{item.assessment}</td>
-                          <td className="px-3 py-2 text-muted-foreground">{item.value}</td>
-                          <td className="px-3 py-2 text-muted-foreground">{item.by}</td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td className="px-3 py-3 text-muted-foreground" colSpan={4}>
-                          No assessment history available.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            {viewingRow.status === "Completed" || viewingRow.status === "Cancelled" ? (
-              <section className="space-y-3 rounded-lg border border-border bg-surface-muted/30 p-4">
-                <h4 className="text-sm font-semibold text-foreground">Removal Information</h4>
-                <div className="overflow-hidden rounded-md border border-border bg-background">
-                  <table className="w-full text-left text-sm">
-                    <thead className="border-b border-border bg-surface-muted/60 text-xs uppercase text-muted-foreground">
-                      <tr>
-                        <th className="px-3 py-2">Field</th>
-                        <th className="px-3 py-2">Value</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {buildRemovalInfo(viewingRow).map((item) => (
-                        <tr key={item.field} className="border-b border-border last:border-b-0">
-                          <td className="px-3 py-2 font-medium text-foreground">{item.field}</td>
-                          <td className="px-3 py-2 text-muted-foreground">{item.value}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-            ) : null}
-          </div>
-        ) : null}
+        {viewingRow ? <ViewContent row={viewingRow} /> : null}
       </Drawer>
+    </div>
+  );
+}
+
+function ViewContent({ row }: { row: TestOrderRow }) {
+  const config = getLdtTypeConfig(row.ldtTypeId);
+  const dynamicFields = config?.fields ?? [];
+  const removalInfo = buildRemovalInfo(row);
+  const assessmentRows = buildAssessmentRows(row);
+
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <DetailItem label="Order No" value={row.orderNo} />
+        <DetailItem label="LDT Type" value={row.ldtType} />
+        <DetailItem label="LDT Name" value={row.ldtName} />
+        <DetailItem label="Priority" value={row.priority} />
+        <DetailItem label="Indication" value={row.indication} />
+        <DetailItem label="Order Date" value={row.orderDate} />
+        <DetailItem label="Status" value={row.status} />
+        <DetailItem label="Clinical Notes" value={row.clinicalNotes || "-"} />
+      </div>
+
+      <section className="space-y-3 rounded-lg border border-border bg-surface-muted/30 p-4">
+        <h4 className="text-sm font-semibold text-foreground">Dynamic Values</h4>
+        <div className="overflow-hidden rounded-md border border-border bg-background">
+          <table className="w-full text-left text-sm">
+            <thead className="border-b border-border bg-surface-muted/60 text-xs uppercase text-muted-foreground">
+              <tr>
+                <th className="px-3 py-2">Field</th>
+                <th className="px-3 py-2">Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dynamicFields.length ? (
+                dynamicFields.map((field) => {
+                  const value = row.dynamicValues[field.id];
+                  if (value === undefined || value === "" || (Array.isArray(value) && value.length === 0)) return null;
+                  return (
+                    <tr key={field.id} className="border-b border-border last:border-b-0">
+                      <td className="px-3 py-2 font-medium text-foreground">{field.label}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{formatValue(value)}</td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td className="px-3 py-3 text-muted-foreground" colSpan={2}>
+                    No dynamic values saved.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="space-y-3 rounded-lg border border-border bg-surface-muted/30 p-4">
+        <h4 className="text-sm font-semibold text-foreground">Assessment History</h4>
+        <div className="overflow-hidden rounded-md border border-border bg-background">
+          <table className="w-full text-left text-sm">
+            <thead className="border-b border-border bg-surface-muted/60 text-xs uppercase text-muted-foreground">
+              <tr>
+                <th className="px-3 py-2">Date &amp; Time</th>
+                <th className="px-3 py-2">Assessment</th>
+                <th className="px-3 py-2">Value</th>
+                <th className="px-3 py-2">By</th>
+              </tr>
+            </thead>
+            <tbody>
+              {assessmentRows.length ? (
+                assessmentRows.map((item, index) => (
+                  <tr key={`${item.assessment}-${index}`} className="border-b border-border last:border-b-0">
+                    <td className="px-3 py-2 text-muted-foreground">{item.dateTime}</td>
+                    <td className="px-3 py-2 font-medium text-foreground">{item.assessment}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{item.value}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{item.by}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td className="px-3 py-3 text-muted-foreground" colSpan={4}>
+                    No assessment history available.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {row.status === "Completed" || row.status === "Cancelled" ? (
+        <section className="space-y-3 rounded-lg border border-border bg-surface-muted/30 p-4">
+          <h4 className="text-sm font-semibold text-foreground">Removal Information</h4>
+          <div className="overflow-hidden rounded-md border border-border bg-background">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-border bg-surface-muted/60 text-xs uppercase text-muted-foreground">
+                <tr>
+                  <th className="px-3 py-2">Field</th>
+                  <th className="px-3 py-2">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {removalInfo.map((item) => (
+                  <tr key={item.field} className="border-b border-border last:border-b-0">
+                    <td className="px-3 py-2 font-medium text-foreground">{item.field}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{item.value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

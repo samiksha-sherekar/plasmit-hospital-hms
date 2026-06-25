@@ -83,7 +83,6 @@ function LdtFormDrawer({
       open={Boolean(state)}
       onOpenChange={(open) => !open && onClose()}
       title={editingRecord ? "Edit LDT" : "Add LDT"}
-      description="LDT master"
       submitLabel="Save LDT"
       onSubmit={() => {
         const form = document.getElementById("ldt-form") as HTMLFormElement | null;
