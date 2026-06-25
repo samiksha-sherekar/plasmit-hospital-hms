@@ -1,41 +1,98 @@
 "use client";
 
 import * as React from "react";
-import { ClipboardCheck, CircleCheckBig } from "lucide-react";
+import type { ColumnDef } from "@tanstack/react-table";
+import { CircleCheckBig, ClipboardCheck } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTable } from "@/components/ui/data-table";
 import { Drawer } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { LdtResultReviewTab } from "./ldt/result-review-tab";
+import { DEFAULT_LDT_TYPE_ID, getLdtTypeConfig } from "./ldt/config";
 import { LdtTestOrderTab, type LdtDraft } from "./ldt/test-order-tab";
-import type { LdtOrderPriority, LdtOrderStatus, LdtSummaryRow } from "./ldt/types";
 import { LdtOrderSummaryTab } from "./ldt/order-summary-tab";
+import type { LdtOrderPriority, LdtOrderStatus, LdtSummaryRow } from "./ldt/types";
 
 type MainTab = "test-order" | "order-summary" | "review";
-
 type DraftErrors = Partial<Record<keyof LdtDraft, string>>;
+type TestOrderRow = LdtSummaryRow & {
+  nurseLocked?: boolean;
+  dynamicValues: Record<string, string | string[]>;
+  ldtTypeId: string;
+  ldtName: string;
+  clinicalNotes: string;
+  createdAt: string;
+  createdBy: string;
+};
 
 const today = new Date().toISOString().slice(0, 10);
+const nowIso = () => new Date().toISOString();
+const currentUser = "Dr. Admin";
 
-const initialRows: LdtSummaryRow[] = [
-  { id: "ldt-001", orderNo: "LDT-001", ldtType: "PICC Single Lumen", priority: "Routine", indication: "Blood", status: "Pending", orderDate: today },
-  { id: "ldt-002", orderNo: "LDT-002", ldtType: "PICC Double Lumen", priority: "Urgent", indication: "Urine", status: "Active", orderDate: today },
-  { id: "ldt-003", orderNo: "LDT-003", ldtType: "Central Venous Catheter", priority: "STAT", indication: "Saline", status: "Completed", orderDate: today },
+const initialRows: TestOrderRow[] = [
+  { id: "ldt-001", orderNo: "LDT-001", ldtType: "PICC Single Lumen", ldtTypeId: "line", ldtName: "PICC Single Lumen", clinicalNotes: "Initial placement request", createdAt: nowIso(), createdBy: currentUser, priority: "Routine", indication: "Blood", status: "Pending", orderDate: today, nurseLocked: false, dynamicValues: {} },
+  { id: "ldt-002", orderNo: "LDT-002", ldtType: "Intercoastal Drain", ldtTypeId: "drain", ldtName: "Intercoastal Drain", clinicalNotes: "Nurse inserted", createdAt: nowIso(), createdBy: currentUser, priority: "Urgent", indication: "Urine", status: "Active", orderDate: today, nurseLocked: true, dynamicValues: {} },
+  { id: "ldt-003", orderNo: "LDT-003", ldtType: "Nasogastric Tube", ldtTypeId: "tube", ldtName: "Nasogastric Tube", clinicalNotes: "Reviewed", createdAt: nowIso(), createdBy: currentUser, priority: "STAT", indication: "Saline", status: "Completed", orderDate: today, nurseLocked: false, dynamicValues: {} },
 ];
+
+function statusTone(status: LdtOrderStatus) {
+  if (status === "Completed") return "success";
+  if (status === "Active") return "info";
+  if (status === "Cancelled") return "danger";
+  return "warning";
+}
+
+function isEditableStatus(status: LdtOrderStatus) {
+  return status === "Pending";
+}
+
+function formatValue(value: string | string[]) {
+  return Array.isArray(value) ? value.join(", ") : value;
+}
+
+function buildAssessmentRows(row: TestOrderRow) {
+  const config = getLdtTypeConfig(row.ldtTypeId);
+  const assessmentFields = config?.fields.filter((field) => field.group === "assessment") ?? [];
+  return assessmentFields
+    .filter((field) => row.dynamicValues[field.id] !== undefined && row.dynamicValues[field.id] !== "" && !(Array.isArray(row.dynamicValues[field.id]) && row.dynamicValues[field.id].length === 0))
+    .map((field) => ({
+      dateTime: row.createdAt,
+      assessment: field.label,
+      value: formatValue(row.dynamicValues[field.id]),
+      by: row.createdBy,
+    }));
+}
+
+function buildRemovalInfo(row: TestOrderRow) {
+  const config = getLdtTypeConfig(row.ldtTypeId);
+  const propertyFields = config?.fields.filter((field) => field.group === "property") ?? [];
+  return [
+    { field: "Order No", value: row.orderNo },
+    { field: "LDT Type", value: row.ldtType },
+    { field: "LDT Name", value: row.ldtName },
+    { field: "Order Date", value: row.orderDate },
+    { field: "Status", value: row.status },
+    ...propertyFields
+      .filter((field) => row.dynamicValues[field.id] !== undefined && row.dynamicValues[field.id] !== "" && !(Array.isArray(row.dynamicValues[field.id]) && row.dynamicValues[field.id].length === 0))
+      .map((field) => ({ field: field.label, value: formatValue(row.dynamicValues[field.id]) })),
+  ];
+}
 
 export function LdtTab() {
   const [activeTab, setActiveTab] = React.useState<MainTab>("test-order");
-  const [summaryRows, setSummaryRows] = React.useState<LdtSummaryRow[]>(initialRows);
+  const [summaryRows, setSummaryRows] = React.useState<TestOrderRow[]>(initialRows);
   const [draft, setDraft] = React.useState<LdtDraft>({
-    ldtType: "",
-    priority: "",
+    ldtTypeId: DEFAULT_LDT_TYPE_ID,
+    priority: "Routine",
     reason: "",
     clinicalNotes: "",
-    ldtName: "",
-    orderDate: "",
+    ldtName: getLdtTypeConfig(DEFAULT_LDT_TYPE_ID)?.ldtName ?? "",
+    orderDate: today,
     status: "Pending",
     dynamicValues: {},
   });
@@ -43,10 +100,11 @@ export function LdtTab() {
   const [priorityFilter, setPriorityFilter] = React.useState<LdtOrderPriority | "All Priority">("All Priority");
   const [statusFilter, setStatusFilter] = React.useState<LdtOrderStatus | "All Status">("All Status");
   const [dateRange, setDateRange] = React.useState("");
-  const [editingRow, setEditingRow] = React.useState<LdtSummaryRow | null>(null);
-  const [viewingRow, setViewingRow] = React.useState<LdtSummaryRow | null>(null);
+  const [editingRow, setEditingRow] = React.useState<TestOrderRow | null>(null);
+  const [viewingRow, setViewingRow] = React.useState<TestOrderRow | null>(null);
   const [viewDrawerOpen, setViewDrawerOpen] = React.useState(false);
-  const [deleteTarget, setDeleteTarget] = React.useState<LdtSummaryRow | null>(null);
+  const [orderDrawerOpen, setOrderDrawerOpen] = React.useState(false);
+  const [deleteTarget, setDeleteTarget] = React.useState<TestOrderRow | null>(null);
   const [draftErrors, setDraftErrors] = React.useState<DraftErrors>({});
   const [submitMessage, setSubmitMessage] = React.useState<string | null>(null);
 
@@ -61,15 +119,15 @@ export function LdtTab() {
     });
   }, [dateRange, priorityFilter, search, statusFilter, summaryRows]);
 
-  const resetForm = React.useCallback((row?: LdtSummaryRow | null) => {
+  const resetForm = React.useCallback((row?: TestOrderRow | null) => {
     if (!row) {
       setDraft({
-        ldtType: "",
-        priority: "",
+        ldtTypeId: DEFAULT_LDT_TYPE_ID,
+        priority: "Routine",
         reason: "",
         clinicalNotes: "",
-        ldtName: "",
-        orderDate: "",
+        ldtName: getLdtTypeConfig(DEFAULT_LDT_TYPE_ID)?.ldtName ?? "",
+        orderDate: today,
         status: "Pending",
         dynamicValues: {},
       });
@@ -77,122 +135,89 @@ export function LdtTab() {
     }
 
     setDraft({
-      ldtType: row.ldtType,
+      ldtTypeId: row.ldtTypeId,
       priority: row.priority,
       reason: row.indication,
-      clinicalNotes: "",
-      ldtName: row.ldtType,
+      clinicalNotes: row.clinicalNotes,
+      ldtName: row.ldtName,
       orderDate: row.orderDate,
       status: row.status,
-      dynamicValues: {},
+      dynamicValues: row.dynamicValues ?? {},
     });
   }, []);
 
   const validateDraft = React.useCallback((value: LdtDraft) => {
     const nextErrors: DraftErrors = {};
-
-    if (!value.ldtType.trim()) nextErrors.ldtType = "LDT Type is required.";
+    if (!value.ldtTypeId.trim()) nextErrors.ldtTypeId = "LDT Type is required.";
+    if (!value.ldtName.trim()) nextErrors.ldtName = "LDT Name is required.";
     if (!value.priority) nextErrors.priority = "Priority is required.";
-    if (!value.orderDate.trim()) nextErrors.orderDate = "Order Date is required.";
     if (!value.reason.trim()) nextErrors.reason = "Reason / Indication is required.";
-
     return nextErrors;
   }, []);
 
-  const saveLdtOrder = () => {
+  const saveLdtOrder = React.useCallback(() => {
     const nextErrors = validateDraft(draft);
     setDraftErrors(nextErrors);
-
     if (Object.keys(nextErrors).length > 0) {
       setSubmitMessage(null);
       return;
     }
 
-    const ldtType = draft.ldtName.trim() || draft.ldtType;
+    const ldtType = getLdtTypeConfig(draft.ldtTypeId)?.label || draft.ldtName;
     const indication = draft.reason.trim() || "-";
     const priority = draft.priority || "Routine";
     const orderDate = draft.orderDate || today;
 
     if (editingRow) {
-      setSummaryRows((current) =>
-        current.map((row) =>
-          row.id === editingRow.id
-            ? {
-                ...row,
-                ldtType,
-                priority,
-                indication,
-                status: draft.status,
-                orderDate,
-              }
-            : row,
-        ),
-      );
-      setEditingRow(null);
+      setSummaryRows((current) => current.map((row) => (row.id === editingRow.id ? { ...row, ldtType, ldtTypeId: draft.ldtTypeId, ldtName: draft.ldtName, clinicalNotes: draft.clinicalNotes, priority, indication, status: draft.status, orderDate, dynamicValues: draft.dynamicValues } : row)));
       setSubmitMessage(`LDT order ${editingRow.orderNo} updated successfully.`);
+      setEditingRow(null);
     } else {
       const nextOrderNo = `LDT-${String(summaryRows.length + 1).padStart(3, "0")}`;
       setSummaryRows((current) => [
-        {
-          id: `ldt-${String(current.length + 1).padStart(3, "0")}`,
-          orderNo: nextOrderNo,
-          ldtType,
-          indication,
-          priority,
-          status: draft.status,
-          orderDate,
-        },
+        { id: `ldt-${String(current.length + 1).padStart(3, "0")}`, orderNo: nextOrderNo, ldtType, ldtTypeId: draft.ldtTypeId, ldtName: draft.ldtName, clinicalNotes: draft.clinicalNotes, createdAt: nowIso(), createdBy: currentUser, indication, priority, status: draft.status, orderDate, nurseLocked: false, dynamicValues: draft.dynamicValues },
         ...current,
       ]);
       setSubmitMessage(`LDT order ${nextOrderNo} saved successfully.`);
     }
 
-    setDraft({
-      ldtType: "",
-      priority: "",
-      reason: "",
-      clinicalNotes: "",
-      ldtName: "",
-      orderDate: "",
-      status: "Pending",
-      dynamicValues: {},
-    });
-    setActiveTab("order-summary");
-    setViewingRow(null);
+    resetForm(null);
     setDraftErrors({});
-  };
+    setOrderDrawerOpen(false);
+    setActiveTab("order-summary");
+  }, [draft, editingRow, resetForm, summaryRows.length, validateDraft]);
 
-  const handleView = (row: LdtSummaryRow) => {
-    setViewingRow(row);
+  const openAddOrder = () => {
     setEditingRow(null);
-    resetForm(row);
+    resetForm(null);
     setDraftErrors({});
     setSubmitMessage(null);
-    setViewDrawerOpen(true);
+    setOrderDrawerOpen(true);
   };
 
-  const handleEdit = (row: LdtSummaryRow) => {
+  const openViewDrawer = React.useCallback((row: TestOrderRow) => {
+    setViewingRow(row);
+    setViewDrawerOpen(true);
+  }, []);
+
+  const handleEdit = (row: TestOrderRow) => {
+    if (!isEditableStatus(row.status)) return;
     setEditingRow(row);
-    setViewingRow(null);
     resetForm(row);
     setDraftErrors({});
     setSubmitMessage(null);
     setActiveTab("test-order");
+    setOrderDrawerOpen(true);
   };
 
-  const handleDelete = (row: LdtSummaryRow) => {
+  const handleDelete = (row: TestOrderRow) => {
+    if (row.status !== "Pending") return;
     setDeleteTarget(row);
   };
 
   const confirmDelete = () => {
     if (!deleteTarget) return;
-
     setSummaryRows((current) => current.filter((item) => item.id !== deleteTarget.id));
-    if (editingRow?.id === deleteTarget.id) setEditingRow(null);
-    if (viewingRow?.id === deleteTarget.id) {
-      setViewingRow(null);
-      setViewDrawerOpen(false);
-    }
     setDeleteTarget(null);
     setSubmitMessage(`LDT order ${deleteTarget.orderNo} deleted successfully.`);
   };
@@ -201,6 +226,34 @@ export function LdtTab() {
     setViewDrawerOpen(open);
     if (!open) setViewingRow(null);
   };
+
+  const columns = React.useMemo<ColumnDef<TestOrderRow>[]>(
+    () => [
+      { header: "Order No", accessorKey: "orderNo" },
+      { header: "LDT Type", accessorKey: "ldtType" },
+      { header: "LDT Name", accessorKey: "ldtName" },
+      { header: "Priority", accessorKey: "priority" },
+      { header: "Order Date", accessorKey: "orderDate" },
+      { header: "Status", cell: ({ row }) => <Badge tone={statusTone(row.original.status)}>{row.original.status}</Badge> },
+      {
+        header: "Actions",
+        cell: ({ row }) => (
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" size="sm" variant="outline" onClick={() => openViewDrawer(row.original)}>
+              View
+            </Button>
+            <Button type="button" size="sm" variant="outline" disabled={!isEditableStatus(row.original.status)} onClick={() => handleEdit(row.original)}>
+              Edit
+            </Button>
+            <Button type="button" size="sm" variant="outline" className="text-danger" disabled={row.original.status !== "Pending"} onClick={() => handleDelete(row.original)}>
+              Delete
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [openViewDrawer],
+  );
 
   return (
     <div className="space-y-4">
@@ -229,30 +282,68 @@ export function LdtTab() {
               </div>
             ) : null}
 
-            <TabsContent value="test-order" className="mt-0">
-              <LdtTestOrderTab draft={draft} onDraftChange={setDraft} onSave={saveLdtOrder} readOnly={Boolean(viewingRow) && !editingRow} errors={draftErrors} />
+            <TabsContent value="test-order" className="mt-0 space-y-4">
+              <div className="flex justify-end">
+                <Button type="button" onClick={openAddOrder}>
+                  Add Order
+                </Button>
+              </div>
+              <DataTable data={summaryRows} columns={columns} />
             </TabsContent>
+
             <TabsContent value="order-summary" className="mt-0 space-y-4">
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_repeat(3,minmax(160px,1fr))]">
-                <label className="space-y-1 text-xs font-medium text-muted-foreground mt-1">
+                <label className="mt-1 space-y-1 text-xs font-medium text-muted-foreground">
                   <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search LDT orders..." aria-label="Search LDT orders" />
                 </label>
                 <SelectFilter label="" value={priorityFilter} onChange={setPriorityFilter} options={["All Priority", "Routine", "Urgent", "STAT"]} />
                 <SelectFilter label="" value={statusFilter} onChange={setStatusFilter} options={["All Status", "Pending", "Active", "Completed", "Cancelled"]} />
-                <label className="space-y-1 text-xs font-medium text-muted-foreground mt-1">
-                  <div className="relative">
-                    <Input type="date" value={dateRange} onChange={(event) => setDateRange(event.target.value)} aria-label="Filter order date" className="pr-10" />
-                  </div>
+                <label className="mt-1 space-y-1 text-xs font-medium text-muted-foreground">
+                  <Input type="date" value={dateRange} onChange={(event) => setDateRange(event.target.value)} aria-label="Filter order date" className="pr-10" />
                 </label>
               </div>
-              <LdtOrderSummaryTab rows={filteredSummaryRows} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} />
+              <LdtOrderSummaryTab rows={filteredSummaryRows} onView={openViewDrawer as never} onEdit={handleEdit as never} onDelete={handleDelete as never} canEditRow={isEditableStatus as never} canDeleteRow={((row: TestOrderRow) => row.status === "Pending") as never} />
             </TabsContent>
+
             <TabsContent value="review" className="mt-0">
               <LdtResultReviewTab />
             </TabsContent>
           </CardContent>
         </Card>
       </Tabs>
+
+      <Drawer
+        open={orderDrawerOpen}
+        onOpenChange={(open) => {
+          setOrderDrawerOpen(open);
+          if (!open) setEditingRow(null);
+        }}
+        title={editingRow ? `Edit ${editingRow.orderNo}` : "Add Order"}
+        description="Doctor LDT order"
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setOrderDrawerOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={saveLdtOrder}>
+              Save Order
+            </Button>
+          </div>
+        }
+      >
+        <LdtTestOrderTab draft={draft} onDraftChange={setDraft} onSave={saveLdtOrder} readOnly={false} errors={draftErrors} />
+      </Drawer>
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title="Delete LDT order"
+        description={deleteTarget?.nurseLocked ? "This order was inserted from Nurse side, so it cannot be deleted." : `Are you sure you want to delete ${deleteTarget?.orderNo ?? "this LDT order"}?`}
+        confirmLabel="Delete"
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        onConfirm={confirmDelete}
+      />
 
       <Drawer
         open={viewDrawerOpen && Boolean(viewingRow)}
@@ -268,27 +359,112 @@ export function LdtTab() {
         }
       >
         {viewingRow ? (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <DetailItem label="Order No" value={viewingRow.orderNo} />
-            <DetailItem label="LDT Type" value={viewingRow.ldtType} />
-            <DetailItem label="Priority" value={viewingRow.priority} />
-            <DetailItem label="Indication" value={viewingRow.indication} />
-            <DetailItem label="Order Date" value={viewingRow.orderDate} />
-            <DetailItem label="Status" value={viewingRow.status} />
+          <div className="space-y-5">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <DetailItem label="Order No" value={viewingRow.orderNo} />
+              <DetailItem label="LDT Type" value={viewingRow.ldtType} />
+              <DetailItem label="LDT Name" value={viewingRow.ldtName} />
+              <DetailItem label="Priority" value={viewingRow.priority} />
+              <DetailItem label="Indication" value={viewingRow.indication} />
+              <DetailItem label="Order Date" value={viewingRow.orderDate} />
+              <DetailItem label="Status" value={viewingRow.status} />
+              <DetailItem label="Clinical Notes" value={viewingRow.clinicalNotes || "-"} />
+            </div>
+
+            <section className="space-y-3 rounded-lg border border-border bg-surface-muted/30 p-4">
+              <h4 className="text-sm font-semibold text-foreground">Dynamic Values</h4>
+              <div className="overflow-hidden rounded-md border border-border bg-background">
+                <table className="w-full text-left text-sm">
+                  <thead className="border-b border-border bg-surface-muted/60 text-xs uppercase text-muted-foreground">
+                    <tr>
+                      <th className="px-3 py-2">Field</th>
+                      <th className="px-3 py-2">Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getLdtTypeConfig(viewingRow.ldtTypeId)?.fields.length ? (
+                      getLdtTypeConfig(viewingRow.ldtTypeId)!.fields.map((field) => {
+                        const value = viewingRow.dynamicValues[field.id];
+                        if (value === undefined || value === "" || (Array.isArray(value) && value.length === 0)) return null;
+                        return (
+                          <tr key={field.id} className="border-b border-border last:border-b-0">
+                            <td className="px-3 py-2 font-medium text-foreground">{field.label}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{formatValue(value)}</td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td className="px-3 py-3 text-muted-foreground" colSpan={2}>
+                          No dynamic values saved.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section className="space-y-3 rounded-lg border border-border bg-surface-muted/30 p-4">
+              <h4 className="text-sm font-semibold text-foreground">Assessment History</h4>
+              <div className="overflow-hidden rounded-md border border-border bg-background">
+                <table className="w-full text-left text-sm">
+                  <thead className="border-b border-border bg-surface-muted/60 text-xs uppercase text-muted-foreground">
+                    <tr>
+                      <th className="px-3 py-2">Date &amp; Time</th>
+                      <th className="px-3 py-2">Assessment</th>
+                      <th className="px-3 py-2">Value</th>
+                      <th className="px-3 py-2">By</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {buildAssessmentRows(viewingRow).length ? (
+                      buildAssessmentRows(viewingRow).map((item, index) => (
+                        <tr key={`${item.assessment}-${index}`} className="border-b border-border last:border-b-0">
+                          <td className="px-3 py-2 text-muted-foreground">{item.dateTime}</td>
+                          <td className="px-3 py-2 font-medium text-foreground">{item.assessment}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{item.value}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{item.by}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td className="px-3 py-3 text-muted-foreground" colSpan={4}>
+                          No assessment history available.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            {viewingRow.status === "Completed" || viewingRow.status === "Cancelled" ? (
+              <section className="space-y-3 rounded-lg border border-border bg-surface-muted/30 p-4">
+                <h4 className="text-sm font-semibold text-foreground">Removal Information</h4>
+                <div className="overflow-hidden rounded-md border border-border bg-background">
+                  <table className="w-full text-left text-sm">
+                    <thead className="border-b border-border bg-surface-muted/60 text-xs uppercase text-muted-foreground">
+                      <tr>
+                        <th className="px-3 py-2">Field</th>
+                        <th className="px-3 py-2">Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {buildRemovalInfo(viewingRow).map((item) => (
+                        <tr key={item.field} className="border-b border-border last:border-b-0">
+                          <td className="px-3 py-2 font-medium text-foreground">{item.field}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{item.value}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            ) : null}
           </div>
         ) : null}
       </Drawer>
-
-      <ConfirmDialog
-        open={Boolean(deleteTarget)}
-        title="Delete LDT order"
-        description={`Are you sure you want to delete ${deleteTarget?.orderNo ?? "this LDT order"}?`}
-        confirmLabel="Delete"
-        onOpenChange={(open) => {
-          if (!open) setDeleteTarget(null);
-        }}
-        onConfirm={confirmDelete}
-      />
     </div>
   );
 }
@@ -316,3 +492,4 @@ function SelectFilter<T extends string>({ label, value, onChange, options }: { l
     </label>
   );
 }
+
