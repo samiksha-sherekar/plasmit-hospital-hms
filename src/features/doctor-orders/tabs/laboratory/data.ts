@@ -123,6 +123,7 @@ export const resultBlocks: LaboratoryResultBlock[] = [
     id: "result-cbc",
     name: "CBC - complete blood count",
     specialty: "Hematology",
+    specimen: "Blood",
     rows: [
       { parameter: "Hemoglobin", result: "9.8", unit: "g/dL", referenceRange: "12.0 - 16.0", flag: "L" },
       { parameter: "WBC", result: "7.2", unit: "x10^3/uL", referenceRange: "4.5 - 11.0", flag: "H" },
@@ -135,6 +136,7 @@ export const resultBlocks: LaboratoryResultBlock[] = [
     id: "result-kft",
     name: "KFT - kidney function test",
     specialty: "Biochemistry",
+    specimen: "Blood",
     rows: [
       { parameter: "Serum creatinine", result: "2.1", unit: "mg/dL", referenceRange: "0.6 - 1.2", flag: "H" },
       { parameter: "Blood urea nitrogen", result: "38", unit: "mg/dL", referenceRange: "7 - 25", flag: "H" },
