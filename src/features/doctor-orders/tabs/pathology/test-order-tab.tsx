@@ -306,7 +306,7 @@ export function PathologyTestOrderTab({
   const filteredGroupedTests = React.useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) return groupedTests;
-    return groupedTests.filter((group) => `${group.name} ${group.description ?? ""}`.toLowerCase().includes(query));
+    return groupedTests.filter((group) => `${group.name}`.toLowerCase().includes(query));
   }, [search]);
   const selectedTestRows = React.useMemo<SelectedTestRow[]>(
     () => [
