@@ -16,6 +16,7 @@ import type { LdtOrder, LdtOrderPriority, LdtOrderStatus } from "./types";
 const LDT_TYPE_OPTIONS = [
   "PICC Single Lumen",
   "PICC Double Lumen",
+  "Foley Catheter",
   "Central Venous Catheter",
   "Peripheral IV Cannula",
   "Urinary Catheter",

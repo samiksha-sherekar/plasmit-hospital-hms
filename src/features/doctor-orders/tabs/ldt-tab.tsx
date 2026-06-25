@@ -37,6 +37,7 @@ export function LdtTab() {
     ldtName: "",
     orderDate: "",
     status: "Pending",
+    dynamicValues: {},
   });
   const [search, setSearch] = React.useState("");
   const [priorityFilter, setPriorityFilter] = React.useState<LdtOrderPriority | "All Priority">("All Priority");
@@ -70,6 +71,7 @@ export function LdtTab() {
         ldtName: "",
         orderDate: "",
         status: "Pending",
+        dynamicValues: {},
       });
       return;
     }
@@ -82,6 +84,7 @@ export function LdtTab() {
       ldtName: row.ldtType,
       orderDate: row.orderDate,
       status: row.status,
+      dynamicValues: {},
     });
   }, []);
 
@@ -152,6 +155,7 @@ export function LdtTab() {
       ldtName: "",
       orderDate: "",
       status: "Pending",
+      dynamicValues: {},
     });
     setActiveTab("order-summary");
     setViewingRow(null);

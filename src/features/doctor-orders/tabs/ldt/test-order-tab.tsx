@@ -4,11 +4,13 @@ import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 
+import { getLdtTypeConfig, type LdtDynamicField } from "./config";
 import type { LdtOrderPriority, LdtOrderStatus } from "./types";
 
 const LDT_TYPE_OPTIONS = [
   "PICC Single Lumen",
   "PICC Double Lumen",
+  "Foley Catheter",
   "Central Venous Catheter",
   "Peripheral IV Cannula",
   "Urinary Catheter",
@@ -28,6 +30,7 @@ export type LdtDraft = {
   ldtName: string;
   orderDate: string;
   status: LdtOrderStatus;
+  dynamicValues: Record<string, string | string[]>;
 };
 
 type Props = {
@@ -39,6 +42,78 @@ type Props = {
 };
 
 export function LdtTestOrderTab({ draft, onDraftChange, onSave, readOnly = false, errors = {} }: Props) {
+  const selectedConfig = draft.ldtType ? getLdtTypeConfig(draft.ldtType) : null;
+  const propertyFields = selectedConfig?.fields.filter((field) => field.group === "property") ?? [];
+  const assessmentFields = selectedConfig?.fields.filter((field) => field.group === "assessment") ?? [];
+
+  const updateDraft = (next: Partial<LdtDraft>) => {
+    onDraftChange({ ...draft, ...next });
+  };
+
+  const handleLdtTypeChange = (ldtType: string) => {
+    onDraftChange({
+      ...draft,
+      ldtType,
+      dynamicValues: {},
+    });
+  };
+
+  const renderField = (field: LdtDynamicField) => {
+    const value = draft.dynamicValues[field.id] ?? (field.type === "multiselect" ? [] : "");
+
+    if (field.type === "select") {
+      return (
+        <select
+          className="h-10 w-full rounded-md border border-input px-3 text-sm outline-none"
+          value={typeof value === "string" ? value : ""}
+          disabled={readOnly}
+          onChange={(event) => updateDraft({ dynamicValues: { ...draft.dynamicValues, [field.id]: event.target.value } })}
+        >
+          <option value="">Select {field.label}</option>
+          {(field.options ?? []).map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      );
+    }
+
+    if (field.type === "multiselect") {
+      const selected = new Set(Array.isArray(value) ? value : []);
+      return (
+        <div className="grid gap-2 sm:grid-cols-2">
+          {(field.options ?? []).map((option) => (
+            <label key={option} className="flex items-center gap-2 rounded-md border border-input px-3 py-2 text-sm">
+              <input
+                type="checkbox"
+                checked={selected.has(option)}
+                disabled={readOnly}
+                onChange={(event) => {
+                  const next = new Set(selected);
+                  if (event.target.checked) next.add(option);
+                  else next.delete(option);
+                  updateDraft({ dynamicValues: { ...draft.dynamicValues, [field.id]: Array.from(next) } });
+                }}
+              />
+              {option}
+            </label>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <input
+        type={field.type}
+        className="h-10 w-full rounded-md border border-input px-3 text-sm outline-none"
+        value={typeof value === "string" ? value : ""}
+        disabled={readOnly}
+        onChange={(event) => updateDraft({ dynamicValues: { ...draft.dynamicValues, [field.id]: event.target.value } })}
+      />
+    );
+  };
+
   return (
     <div className="space-y-4">
       <div className="space-y-4 p-4">
@@ -49,7 +124,7 @@ export function LdtTestOrderTab({ draft, onDraftChange, onSave, readOnly = false
               className="h-10 w-full rounded-md border border-input  px-3 text-sm"
               value={draft.ldtType}
               disabled={readOnly}
-              onChange={(event) => onDraftChange({ ...draft, ldtType: event.target.value })}
+              onChange={(event) => handleLdtTypeChange(event.target.value)}
             >
               <option value="" disabled>
                 Select LDT Type
@@ -108,6 +183,35 @@ export function LdtTestOrderTab({ draft, onDraftChange, onSave, readOnly = false
           </label>
         </div>
 
+        {draft.ldtType ? (
+          <div className="grid gap-4 lg:grid-cols-2">
+            <section className="space-y-3 rounded-md border border-border bg-surface-muted/30 p-4">
+              <h4 className="text-sm font-semibold text-foreground">Properties</h4>
+              <div className="grid gap-4">
+                {propertyFields.map((field) => (
+                  <label key={field.id} className="space-y-1 text-xs font-medium text-muted-foreground">
+                    <span>{field.label}</span>
+                    {renderField(field)}
+                  </label>
+                ))}
+                {propertyFields.length === 0 ? <p className="text-sm text-muted-foreground">No properties configured for this LDT Type.</p> : null}
+              </div>
+            </section>
+            <section className="space-y-3 rounded-md border border-border bg-surface-muted/30 p-4">
+              <h4 className="text-sm font-semibold text-foreground">Assessment</h4>
+              <div className="grid gap-4">
+                {assessmentFields.map((field) => (
+                  <label key={field.id} className="space-y-1 text-xs font-medium text-muted-foreground">
+                    <span>{field.label}</span>
+                    {renderField(field)}
+                  </label>
+                ))}
+                {assessmentFields.length === 0 ? <p className="text-sm text-muted-foreground">No assessments configured for this LDT Type.</p> : null}
+              </div>
+            </section>
+          </div>
+        ) : null}
+
         {!readOnly ? (
           <div className="flex justify-end">
             <Button type="button" onClick={onSave}>
@@ -119,3 +223,4 @@ export function LdtTestOrderTab({ draft, onDraftChange, onSave, readOnly = false
     </div>
   );
 }
+
