@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { previousTestOrders, resultBlocks as initialResultBlocks, groupedTests, summaryRows as initialSummaryRows, testList } from "./pathology/data";
 
 import type { PathologyPriority, PathologyResultBlock, PathologySummaryRow } from "./pathology/types";
+import type { LaboratoryResultBlock } from "./laboratory/types";
 import { LaboratoryCriticalFindingsTab } from "./laboratory/critical-findings-tab";
 import { LaboratoryTestOrderTab } from "./laboratory/test-order-tab";
 import { LaboratoryOrderSummaryTab } from "./laboratory/order-summary-tab";
@@ -155,7 +156,17 @@ export function LaboratoryTab() {
   }, [savedSummaryRows, summarySort]);
 
   const selectedSummaryRows = React.useMemo(() => sortedSummaryRows, [sortedSummaryRows]);
-  const selectedResultBlocks = React.useMemo(() => savedResultBlocks, [savedResultBlocks]);
+  const selectedResultBlocks = React.useMemo<LaboratoryResultBlock[]>(
+    () =>
+      savedResultBlocks.map((block) => ({
+        id: block.id,
+        name: block.name,
+        specimen: savedSummaryRows.find((row) => normalizeSelectionLabel(row.name) === normalizeSelectionLabel(block.name))?.specimen ?? "Blood",
+        specialty: block.specialty,
+        rows: block.rows,
+      })),
+    [savedResultBlocks, savedSummaryRows],
+  );
 
   const addProblem = () => {
     const value = newProblem.trim();
