@@ -264,27 +264,7 @@ export async function downloadLaboratoryPdf(blocks: PdfResultBlock[], filename: 
     doc.text(`Department: ${block.department || "-"}`, 28, 196);
     doc.text(`Sample Type: ${block.sampleType || "-"}`, 550, 196, { align: "right" });
 
-    if (isPathologyLike) {
-      const grouped = groupRows(block.rows);
-      const specialGroups = ["RBC Parameters", "WBC Parameters", "Platelet Parameters"];
-      const groupedRows = new Set<PdfResultRow>();
-      let startY = 208;
-
-      specialGroups.forEach((groupName) => {
-        const rows = grouped.get(groupName);
-        if (!rows?.length) return;
-        rows.forEach((row) => groupedRows.add(row));
-        renderResultTable(doc, rows, startY, groupName);
-        startY = (doc as any).lastAutoTable.finalY + 2;
-      });
-
-      const remainingRows = block.rows.filter((row) => !groupedRows.has(row));
-      if (remainingRows.length) {
-        renderResultTable(doc, remainingRows, startY);
-      }
-    } else {
-      renderResultTable(doc, block.rows, 208);
-    }
+    renderResultTable(doc, block.rows, 208);
 
     const interpretation = block.interpretation?.trim();
     if (interpretation) {
