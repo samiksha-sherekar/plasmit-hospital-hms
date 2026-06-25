@@ -34,7 +34,7 @@ function CheckboxRow({ label, checked, indent = false, onToggle }: { label: stri
 function SelectField({ value, onChange, options }: { value: PathologyPriority; onChange: (value: PathologyPriority) => void; options: PathologyPriority[] }) {
   return (
     <select
-      className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground outline-none transition focus:border-border focus:ring-0"
+      className="h-9 w-full rounded-md border border-input px-3 text-sm text-foreground outline-none transition focus:border-border focus:ring-0"
       value={value}
       onChange={(event) => onChange(event.target.value as PathologyPriority)}
     >
@@ -341,7 +341,7 @@ export function PathologyTestOrderTab({
         header: "Choose Specimen Source",
         cell: ({ row }) => (
           <select
-            className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+            className="h-9 w-full rounded-md border border-input px-3 text-sm"
             value={row.original.specimenSource}
             onChange={(event) => onSpecimenSourceChange?.(row.original.id, event.target.value)}
           >
@@ -384,7 +384,7 @@ export function PathologyTestOrderTab({
         header: "Choose Priority",
         cell: ({ row }) => (
           <select
-            className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+            className="h-9 w-full rounded-md border border-input px-3 text-sm"
             value={row.original.priority}
             onChange={(event) => onPriorityChange?.(event.target.value as PathologyPriority)}
           >
@@ -433,7 +433,7 @@ export function PathologyTestOrderTab({
             {/* <Card className="min-w-0 overflow-hidden border-border">
               <CardContent className="space-y-4 p-4"> */}
                 <div className="grid gap-3 ">
-                  <div className="max-w-full overflow-hidden rounded-md border border-border bg-background p-3">
+                  <div className="max-w-full overflow-hidden rounded-md border border-border p-3">
                     <div className="flex items-center gap-2">
                       <SectionTitle>Clinical Diagnosis</SectionTitle>
                       {/* <Button type="button" size="sm" variant="outline" onClick={onAddProblem}>
@@ -491,7 +491,7 @@ export function PathologyTestOrderTab({
                     
                   </div>
 
-                  <div className="max-w-full overflow-hidden rounded-md border border-border bg-background p-3">
+                  <div className="max-w-full overflow-hidden rounded-md border border-border p-3">
                     <div className="flex items-center justify-between">
                       <SectionTitle>Reorder from previous tests</SectionTitle>
                       {/* <Button type="button" size="sm" variant="outline" onClick={() => onProblemListVisibleChange(!problemListVisible)}>
@@ -574,7 +574,7 @@ export function PathologyTestOrderTab({
           <label className="space-y-2">
             <SectionTitle>Instructions</SectionTitle>
             <textarea
-              className="min-h-[92px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-border focus:ring-0"
+              className="min-h-[92px] w-full rounded-md border border-input px-3 py-2 text-sm outline-none focus:border-border focus:ring-0"
               placeholder="Free text instructions for the lab"
               value={instructionsForLab}
               onChange={(event) => onInstructionsForLabChange?.(event.target.value)}

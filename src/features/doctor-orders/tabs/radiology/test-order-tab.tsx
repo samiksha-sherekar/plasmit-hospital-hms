@@ -136,7 +136,7 @@ export function RadiologyTestOrderTab({
           const options = getSpecificationOptions(row.original.selectedTests);
           return (
             <select
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              className="h-9 w-full rounded-md border border-input px-3 text-sm"
               value={row.original.specification}
               onChange={(event) => setSpecificationById((current) => ({ ...current, [row.original.id]: event.target.value }))}
             >
@@ -154,7 +154,7 @@ export function RadiologyTestOrderTab({
         header: "Choose Priority",
         cell: ({ row }) => (
           <select
-            className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+            className="h-9 w-full rounded-md border border-input px-3 text-sm"
             value={row.original.priority}
             onChange={(event) => onPriorityChange(event.target.value as RadiologyPriority)}
           >
@@ -182,7 +182,7 @@ export function RadiologyTestOrderTab({
     <div className="space-y-4">
       <div className="grid min-w-0 gap-4 overflow-x-hidden lg:grid-cols-[360px_minmax(0,1fr)]">
         <div className="grid gap-3">
-          <div className="max-w-full overflow-hidden rounded-md border border-border bg-background p-3">
+          <div className="max-w-full overflow-hidden rounded-md border border-border p-3">
             <div className="flex items-center gap-2">
               <SectionTitle>Modality / Category</SectionTitle>
               <Button type="button" size="sm" className="ml-auto">
@@ -214,7 +214,7 @@ export function RadiologyTestOrderTab({
             </div>
           </div>
 
-          <div className="max-w-full overflow-hidden rounded-md border border-border bg-background p-3">
+          <div className="max-w-full overflow-hidden rounded-md border border-border p-3">
             <div className="flex items-center justify-between">
               <SectionTitle>Reorder from previous tests</SectionTitle>
             </div>
@@ -279,7 +279,7 @@ export function RadiologyTestOrderTab({
             <label className="space-y-2">
               <SectionTitle>Instructions</SectionTitle>
               <textarea
-                className="min-h-[92px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-border focus:ring-0"
+                className="min-h-[92px] w-full rounded-md border border-input px-3 py-2 text-sm outline-none focus:border-border focus:ring-0"
                 placeholder="Instructions for radiology"
                 value={notes}
                 onChange={(event) => onNotesChange(event.target.value)}

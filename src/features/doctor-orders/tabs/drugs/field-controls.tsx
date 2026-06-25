@@ -27,7 +27,7 @@ export function FieldLabel({ children }: { children: React.ReactNode }) {
 export function SelectField<T extends string>({ value, options, onChange, disabled }: { value: T; options: T[]; onChange: (value: T) => void; disabled?: boolean }) {
   return (
     <select
-      className="h-9 w-full appearance-none rounded-md border border-input bg-background px-3 text-sm text-foreground outline-none transition focus:border-border focus:ring-0 disabled:bg-surface-muted disabled:text-muted-foreground"
+      className="h-9 w-full appearance-none rounded-md border border-input px-3 text-sm text-foreground outline-none transition focus:border-border focus:ring-0 disabled:bg-surface-muted disabled:text-muted-foreground"
       value={value}
       disabled={disabled}
       onChange={(event) => onChange(event.target.value as T)}

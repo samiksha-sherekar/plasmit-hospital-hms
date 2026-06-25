@@ -2,79 +2,170 @@
 
 import * as React from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Eye, Pencil, Plus, SearchX, XCircle } from "lucide-react";
+import { Eye, Pencil, Plus, SearchX, Trash2, XCircle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
 import { Drawer } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 
-import { LdtSummaryCards } from "./ldt-summary-cards";
-import type { LdtOrder, LdtOrderPriority, LdtOrderStatus, LdtOrderType } from "./types";
+import type { LdtOrder, LdtOrderPriority, LdtOrderStatus } from "./types";
 
-const initialOrders: LdtOrder[] = [
-  { id: "ldt-001", orderNo: "LDT-9001", orderType: "Insert", ldtName: "PICC line", priority: "Routine", orderDate: "2026-06-23", status: "Pending" },
-  { id: "ldt-002", orderNo: "LDT-9002", orderType: "Remove", ldtName: "Foley catheter", priority: "Urgent", orderDate: "2026-06-23", status: "Active" },
-  { id: "ldt-003", orderNo: "LDT-9003", orderType: "Replace", ldtName: "Peripheral IV cannula", priority: "STAT", orderDate: "2026-06-23", status: "Completed" },
-];
+const LDT_TYPE_OPTIONS = [
+  "PICC Single Lumen",
+  "PICC Double Lumen",
+  "Central Venous Catheter",
+  "Peripheral IV Cannula",
+  "Urinary Catheter",
+  "Nasogastric Tube",
+  "Chest Tube",
+  "Arterial Line",
+] as const;
 
-const orderTypeOptions: LdtOrderType[] = ["Insert", "Remove", "Replace"];
 const priorityOptions: LdtOrderPriority[] = ["Routine", "Urgent", "STAT"];
 const statusOptions: LdtOrderStatus[] = ["Pending", "Active", "Completed", "Cancelled"];
 
-type DrawerMode = "create" | "edit";
+const today = new Date().toISOString().slice(0, 10);
+
+const initialOrders: LdtOrder[] = [
+  { id: "ldt-001", orderNo: "LDT-9001", orderType: "Insert", ldtName: "PICC line", priority: "Routine", orderDate: today, status: "Pending" },
+  { id: "ldt-002", orderNo: "LDT-9002", orderType: "Remove", ldtName: "Foley catheter", priority: "Urgent", orderDate: today, status: "Active" },
+  { id: "ldt-003", orderNo: "LDT-9003", orderType: "Replace", ldtName: "Peripheral IV cannula", priority: "STAT", orderDate: today, status: "Completed" },
+];
+
+type DrawerMode = "create" | "edit" | "view";
+type Draft = {
+  ldtType: string;
+  priority: LdtOrderPriority;
+  reason: string;
+  clinicalNotes: string;
+  ldtName: string;
+  orderDate: string;
+  status: LdtOrderStatus;
+};
 
 export function LdtListPage() {
   const [search, setSearch] = React.useState("");
-  const [orderType, setOrderType] = React.useState<LdtOrderType | "All Types">("All Types");
   const [priority, setPriority] = React.useState<LdtOrderPriority | "All Priority">("All Priority");
   const [status, setStatus] = React.useState<LdtOrderStatus | "All Status">("All Status");
-  const [dateRange, setDateRange] = React.useState("");
+  const [dateRange, setDateRange] = React.useState(today);
+  const [orders, setOrders] = React.useState<LdtOrder[]>(initialOrders);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
   const [drawerMode, setDrawerMode] = React.useState<DrawerMode>("create");
   const [editingOrder, setEditingOrder] = React.useState<LdtOrder | null>(null);
   const [deleteTarget, setDeleteTarget] = React.useState<LdtOrder | null>(null);
-  const [draft, setDraft] = React.useState({
-    orderType: "Insert" as LdtOrderType,
-    priority: "Routine" as LdtOrderPriority,
+  const [draft, setDraft] = React.useState<Draft>({
+    ldtType: "PICC Single Lumen",
+    priority: "Routine",
+    reason: "",
+    clinicalNotes: "",
     ldtName: "",
-    orderDate: "",
-    status: "Pending" as LdtOrderStatus,
+    orderDate: today,
+    status: "Pending",
   });
 
   const filteredOrders = React.useMemo(() => {
     const query = search.trim().toLowerCase();
-    return initialOrders.filter((order) => {
+    return orders.filter((order) => {
       const matchesSearch = `${order.orderNo} ${order.orderType} ${order.ldtName} ${order.priority} ${order.orderDate} ${order.status}`.toLowerCase().includes(query);
-      const matchesType = orderType === "All Types" || order.orderType === orderType;
       const matchesPriority = priority === "All Priority" || order.priority === priority;
       const matchesStatus = status === "All Status" || order.status === status;
-      const matchesDate = !dateRange || order.orderDate === dateRange;
-      return matchesSearch && matchesType && matchesPriority && matchesStatus && matchesDate;
+      const matchesDate = !dateRange || order.orderDate >= dateRange;
+      return matchesSearch && matchesPriority && matchesStatus && matchesDate;
     });
-  }, [dateRange, orderType, priority, search, status]);
+  }, [dateRange, orders, priority, search, status]);
+
+  const resetDraft = React.useCallback((order?: LdtOrder | null) => {
+    if (order) {
+      setDraft({
+        ldtType: order.ldtName,
+        priority: order.priority,
+        reason: `LDT order for ${order.ldtName}`,
+        clinicalNotes: "",
+        ldtName: order.ldtName,
+        orderDate: order.orderDate,
+        status: order.status,
+      });
+      return;
+    }
+
+    setDraft({
+      ldtType: "PICC Single Lumen",
+      priority: "Routine",
+      reason: "",
+      clinicalNotes: "",
+      ldtName: "",
+      orderDate: today,
+      status: "Pending",
+    });
+  }, []);
 
   const openCreateDrawer = () => {
     setDrawerMode("create");
     setEditingOrder(null);
-    setDraft({ orderType: "Insert", priority: "Routine", ldtName: "", orderDate: "", status: "Pending" });
+    resetDraft(null);
     setDrawerOpen(true);
   };
 
   const openEditDrawer = (order: LdtOrder) => {
     setDrawerMode("edit");
     setEditingOrder(order);
-    setDraft({ orderType: order.orderType, priority: order.priority, ldtName: order.ldtName, orderDate: order.orderDate, status: order.status });
+    resetDraft(order);
     setDrawerOpen(true);
+  };
+
+  const openViewDrawer = (order: LdtOrder) => {
+    setDrawerMode("view");
+    setEditingOrder(order);
+    resetDraft(order);
+    setDrawerOpen(true);
+  };
+
+  const handleSave = () => {
+    const name = draft.ldtName.trim() || draft.ldtType;
+    if (!name) return;
+
+    if (drawerMode === "edit" && editingOrder) {
+      setOrders((current) =>
+        current.map((order) =>
+          order.id === editingOrder.id
+            ? {
+                ...order,
+                orderType: "Insert",
+                ldtName: name,
+                priority: draft.priority,
+                orderDate: draft.orderDate || today,
+                status: draft.status,
+              }
+            : order,
+        ),
+      );
+    } else if (drawerMode === "create") {
+      const nextId = `ldt-${String(orders.length + 1).padStart(3, "0")}`;
+      const nextOrderNo = `LDT-${9000 + orders.length + 1}`;
+      setOrders((current) => [
+        {
+          id: nextId,
+          orderNo: nextOrderNo,
+          orderType: "Insert",
+          ldtName: name,
+          priority: draft.priority,
+          orderDate: draft.orderDate || today,
+          status: draft.status,
+        },
+        ...current,
+      ]);
+    }
+
+    setDrawerOpen(false);
+    setEditingOrder(null);
   };
 
   const columns = React.useMemo<ColumnDef<LdtOrder>[]>(
     () => [
       { header: "Order No", accessorKey: "orderNo" },
-      { header: "Order Type", accessorKey: "orderType" },
       { header: "LDT Name", accessorKey: "ldtName" },
       { header: "Priority", cell: ({ row }) => <Badge tone={row.original.priority === "STAT" ? "danger" : row.original.priority === "Urgent" ? "warning" : "success"}>{row.original.priority}</Badge> },
       { header: "Order Date", accessorKey: "orderDate" },
@@ -83,9 +174,18 @@ export function LdtListPage() {
         header: "Actions",
         cell: ({ row }) => (
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" variant="outline" type="button"><Eye className="h-3.5 w-3.5" />View</Button>
-            <Button size="sm" variant="outline" type="button" onClick={() => openEditDrawer(row.original)}><Pencil className="h-3.5 w-3.5" />Edit</Button>
-            <Button size="sm" variant="outline" type="button" className="text-danger" onClick={() => setDeleteTarget(row.original)}><XCircle className="h-3.5 w-3.5" />Delete</Button>
+            <Button size="sm" variant="outline" type="button" onClick={() => openViewDrawer(row.original)}>
+              <Eye className="h-4 w-4" />
+              
+            </Button>
+            <Button size="sm" variant="outline" type="button" onClick={() => openEditDrawer(row.original)}>
+              <Pencil className="h-4 w-4" />
+              
+            </Button>
+            <Button size="sm" variant="outline" type="button" className="text-danger" onClick={() => setDeleteTarget(row.original)}>
+              <Trash2 className="h-4 w-4" />
+            
+            </Button>
           </div>
         ),
       },
@@ -93,67 +193,44 @@ export function LdtListPage() {
     [],
   );
 
-  const isEditing = drawerMode === "edit" && Boolean(editingOrder);
+  const drawerTitle = drawerMode === "create" ? "Create LDT Order" : drawerMode === "edit" ? "Edit LDT Order" : "View LDT Order";
+  const isReadOnly = drawerMode === "view";
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardContent className="space-y-4 p-3 sm:p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="flex-1" />
-            <Button className="sm:ml-auto" onClick={openCreateDrawer}>
+      <div className="space-y-4 p-3 sm:p-4">
+        <div className="grid gap-3 lg:grid-cols-5">
+          <label className="space-y-1 mt-1 text-xs font-medium text-muted-foreground">
+            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search LDT orders..." aria-label="Search LDT orders" />
+          </label>
+          <SelectFilter label="" value={priority} onChange={setPriority} options={["All Priority", ...priorityOptions]} />
+          <SelectFilter label="" value={status} onChange={setStatus} options={["All Status", ...statusOptions]} />
+          <label className="space-y-1 mt-1 text-xs font-medium text-muted-foreground">
+            <Input type="date" value={dateRange} onChange={(event) => setDateRange(event.target.value)} />
+          </label>
+          <Button className="sm:ml-auto mt-1" onClick={openCreateDrawer}>
+            <Plus className="h-4 w-4" />
+            Create LDT Order
+          </Button>
+        </div>
+
+        <div className="flex justify-end">
+        </div>
+
+        {filteredOrders.length ? (
+          <DataTable data={filteredOrders} columns={columns} />
+        ) : (
+          <div className="flex min-h-52 flex-col items-center justify-center rounded-lg border border-dashed border-border bg-surface-muted p-6 text-center">
+            <SearchX className="mb-3 h-5 w-5 text-muted-foreground" />
+            <h3 className="text-sm font-semibold text-foreground">No LDT Orders Found</h3>
+            <p className="mt-1 max-w-sm text-sm text-muted-foreground">Create your first LDT order.</p>
+            <Button className="mt-4" variant="outline" size="sm" onClick={openCreateDrawer}>
               <Plus className="h-4 w-4" />
               Create LDT Order
             </Button>
           </div>
-
-          <LdtSummaryCards orders={initialOrders} />
-
-          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_repeat(4,minmax(160px,1fr))]">
-            <label className="space-y-1 text-xs font-medium text-muted-foreground">
-              <span>Search</span>
-              <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search LDT orders..." aria-label="Search LDT orders" />
-            </label>
-            <SelectFilter label="Order Type" value={orderType} onChange={setOrderType} options={["All Types", ...orderTypeOptions]} />
-            <SelectFilter label="Priority" value={priority} onChange={setPriority} options={["All Priority", ...priorityOptions]} />
-            <SelectFilter label="Status" value={status} onChange={setStatus} options={["All Status", ...statusOptions]} />
-            <label className="space-y-1 text-xs font-medium text-muted-foreground">
-              <span>Date Range</span>
-              <Input type="date" value={dateRange} onChange={(event) => setDateRange(event.target.value)} />
-            </label>
-          </div>
-
-          <div className="flex justify-end">
-            <Button
-              variant="outline"
-              type="button"
-              onClick={() => {
-                setSearch("");
-                setOrderType("All Types");
-                setPriority("All Priority");
-                setStatus("All Status");
-                setDateRange("");
-              }}
-            >
-              Reset Filters
-            </Button>
-          </div>
-
-          {filteredOrders.length ? (
-            <DataTable data={filteredOrders} columns={columns} />
-          ) : (
-            <div className="flex min-h-52 flex-col items-center justify-center rounded-lg border border-dashed border-border bg-surface-muted p-6 text-center">
-              <SearchX className="mb-3 h-5 w-5 text-muted-foreground" />
-              <h3 className="text-sm font-semibold text-foreground">No LDT Orders Found</h3>
-              <p className="mt-1 max-w-sm text-sm text-muted-foreground">Create your first LDT order.</p>
-              <Button className="mt-4" variant="outline" size="sm" onClick={openCreateDrawer}>
-                <Plus className="h-4 w-4" />
-                Create LDT Order
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        )}
+      </div>
 
       <Drawer
         open={drawerOpen}
@@ -161,28 +238,31 @@ export function LdtListPage() {
           setDrawerOpen(open);
           if (!open) setEditingOrder(null);
         }}
-        title={isEditing ? "Edit LDT Order" : "Create LDT Order"}
+        title={drawerTitle}
         footer={
           <div className="flex justify-end gap-2">
             <Button variant="outline" type="button" onClick={() => setDrawerOpen(false)}>
-              Cancel
+              Close
             </Button>
-            <Button type="button" onClick={() => setDrawerOpen(false)}>
-              Save
-            </Button>
+            {!isReadOnly ? (
+              <Button type="button" onClick={handleSave}>
+                Save
+              </Button>
+            ) : null}
           </div>
         }
       >
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="space-y-1 text-xs font-medium text-muted-foreground">
-              <span>Order Type</span>
+              <span>LDT Type</span>
               <select
                 className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-                value={draft.orderType}
-                onChange={(event) => setDraft((current) => ({ ...current, orderType: event.target.value as LdtOrderType }))}
+                value={draft.ldtType}
+                disabled={isReadOnly}
+                onChange={(event) => setDraft((current) => ({ ...current, ldtType: event.target.value }))}
               >
-                {orderTypeOptions.map((option) => (
+                {LDT_TYPE_OPTIONS.map((option) => (
                   <option key={option} value={option}>
                     {option}
                   </option>
@@ -190,10 +270,11 @@ export function LdtListPage() {
               </select>
             </label>
             <label className="space-y-1 text-xs font-medium text-muted-foreground">
-              <span>Priority</span>
+              <span>Priority </span>
               <select
                 className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                 value={draft.priority}
+                disabled={isReadOnly}
                 onChange={(event) => setDraft((current) => ({ ...current, priority: event.target.value as LdtOrderPriority }))}
               >
                 {priorityOptions.map((option) => (
@@ -203,15 +284,39 @@ export function LdtListPage() {
                 ))}
               </select>
             </label>
+            <label className="space-y-1 text-xs font-medium text-muted-foreground sm:col-span-2">
+              <span>Reason / Indication </span>
+              <Input
+                value={draft.reason}
+                disabled={isReadOnly}
+                onChange={(event) => setDraft((current) => ({ ...current, reason: event.target.value }))}
+                placeholder="Enter reason or indication"
+              />
+            </label>
+            <label className="space-y-1 text-xs font-medium text-muted-foreground sm:col-span-2">
+              <span>Clinical Notes</span>
+              <textarea
+                className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                value={draft.clinicalNotes}
+                disabled={isReadOnly}
+                onChange={(event) => setDraft((current) => ({ ...current, clinicalNotes: event.target.value }))}
+                placeholder="Add clinical notes"
+              />
+            </label>
             <label className="space-y-1 text-xs font-medium text-muted-foreground">
               <span>LDT Name</span>
-              <Input value={draft.ldtName} onChange={(event) => setDraft((current) => ({ ...current, ldtName: event.target.value }))} placeholder="Enter LDT name" />
+              <Input
+                value={draft.ldtName}
+                disabled={isReadOnly}
+                onChange={(event) => setDraft((current) => ({ ...current, ldtName: event.target.value }))}
+                placeholder="Enter LDT name"
+              />
             </label>
             <label className="space-y-1 text-xs font-medium text-muted-foreground">
               <span>Order Date</span>
-              <Input type="date" value={draft.orderDate} onChange={(event) => setDraft((current) => ({ ...current, orderDate: event.target.value }))} />
+              <Input type="date" value={draft.orderDate} disabled={isReadOnly} onChange={(event) => setDraft((current) => ({ ...current, orderDate: event.target.value }))} />
             </label>
-          </div>         
+          </div>
         </div>
       </Drawer>
 
@@ -223,7 +328,12 @@ export function LdtListPage() {
         onOpenChange={(open) => {
           if (!open) setDeleteTarget(null);
         }}
-        onConfirm={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) {
+            setOrders((current) => current.filter((order) => order.id !== deleteTarget.id));
+          }
+          setDeleteTarget(null);
+        }}
       />
     </div>
   );

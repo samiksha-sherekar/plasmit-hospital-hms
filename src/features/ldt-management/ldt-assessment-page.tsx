@@ -449,7 +449,6 @@ function EditAssessmentDrawer({
       open={Boolean(entry)}
       onOpenChange={onOpenChange}
       title="Edit Assessment"
-      description="Update the value or change time to remap this assessment into another slot."
       footer={
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>

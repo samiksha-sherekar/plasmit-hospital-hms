@@ -26,7 +26,7 @@ function FieldSelect({ value, onChange, disabled, children }: { value: string; o
       value={value}
       onChange={(event) => onChange(event.target.value)}
       disabled={disabled}
-      className="h-9 w-full appearance-none rounded-md border border-input bg-background px-3 text-sm text-foreground shadow-sm outline-none transition focus:border-border focus:ring-0 disabled:bg-surface-muted disabled:text-muted-foreground"
+      className="h-9 w-full appearance-none rounded-md border border-input px-3 text-sm text-foreground shadow-sm outline-none transition focus:border-border focus:ring-0 disabled:bg-surface-muted disabled:text-muted-foreground"
     >
       {children}
     </select>
@@ -785,7 +785,7 @@ export function BloodRequestTab() {
               </label>
               <div className="space-y-2">
                 <FieldLabel>Blood Group of Patient - Rh</FieldLabel>
-                <input type="text" readOnly value={form.patientRh} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm" />
+                <input type="text" readOnly value={form.patientRh} className="w-full rounded-md border border-input px-3 py-2 text-sm text-foreground shadow-sm" />
                 <div className="flex items-center gap-2">
                   {/* <Toggle
                     disabled={isRhLabVerified}
@@ -1176,13 +1176,13 @@ export function BloodRequestTab() {
               ) : null}
             </div>
             
-            <div className="rounded-md border border-border bg-surface-muted p-3 text-sm text-foreground">
+            {/* <div className="rounded-md border border-border bg-surface-muted p-3 text-sm text-foreground">
               <div className="text-xs font-medium text-muted-foreground">Date & Time of Signing</div>
               <div className="mt-1 flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-success" />
                 System timestamp on submit
               </div>
-            </div>
+            </div> */}
           </section>
         </CardContent>
       </Card>

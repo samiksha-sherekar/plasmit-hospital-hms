@@ -115,9 +115,9 @@ export function OrderSetsTab() {
             <div className="grid gap-4 ">
               <div className="grid gap-4 md:grid-cols-4">
                 <label className="space-y-2"><div className="text-xs font-medium text-muted-foreground">Order Set Name</div><Input value={draft.orderSetName} onChange={(e) => setDraft((d) => ({ ...d, orderSetName: e.target.value }))} /></label>
-                <label className="space-y-2"><div className="text-xs font-medium text-muted-foreground">Department / Specialty</div><select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={draft.department} onChange={(e) => setDraft((d) => ({ ...d, department: e.target.value }))}>{departments.map((d) => <option key={d}>{d}</option>)}</select></label>
+                <label className="space-y-2"><div className="text-xs font-medium text-muted-foreground">Department / Specialty</div><select className="h-10 w-full rounded-md border border-input px-3 text-sm" value={draft.department} onChange={(e) => setDraft((d) => ({ ...d, department: e.target.value }))}>{departments.map((d) => <option key={d}>{d}</option>)}</select></label>
                 <label className="space-y-2 md:col-span-2"><div className="text-xs font-medium text-muted-foreground">Diagnosis / Condition</div><Input value={draft.diagnosis} onChange={(e) => setDraft((d) => ({ ...d, diagnosis: e.target.value }))} /></label>
-                <label className="space-y-2 md:col-span-2"><div className="text-xs font-medium text-muted-foreground">Special Notes/ Comments</div><textarea className="min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none" value={draft.instructions} onChange={(e) => setDraft((d) => ({ ...d, instructions: e.target.value }))} /></label>
+                <label className="space-y-2 md:col-span-2"><div className="text-xs font-medium text-muted-foreground">Special Notes/ Comments</div><textarea className="min-h-20 w-full rounded-md border border-input px-3 py-2 text-sm outline-none" value={draft.instructions} onChange={(e) => setDraft((d) => ({ ...d, instructions: e.target.value }))} /></label>
               
               </div>
               <div className="space-y-3 rounded-xl border border-border bg-surface-muted p-4">

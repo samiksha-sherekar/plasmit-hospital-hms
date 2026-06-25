@@ -368,7 +368,7 @@ export function LaboratoryResultReviewTab({
                                             sampleType: "Blood",
                                             reportDate: "14/05/2021",
                                             interpretation: block.name.includes("CBC") ? "CBC pattern suggests anemia and low hematocrit." : "KFT indicates renal function abnormality.",
-                                            rows: block.rows.map((row) => ({
+                                            rows: getSelectedReportRows(block).map((row) => ({
                                               testName: block.name,
                                               parameter: row.parameter,
                                               value: row.result,
