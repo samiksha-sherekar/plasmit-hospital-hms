@@ -298,11 +298,11 @@ function DetailItem({ label, value }: { label: string; value: string }) {
   );
 }
 
-function SelectFilter({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: readonly string[] }) {
+function SelectFilter<T extends string>({ label, value, onChange, options }: { label: string; value: T; onChange: (value: T) => void; options: readonly T[] }) {
   return (
     <label className="space-y-1 text-xs font-medium text-muted-foreground">
       <span>{label}</span>
-      <select className="h-10 w-full rounded-md border border-input px-3 text-sm" value={value} onChange={(event) => onChange(event.target.value)}>
+      <select className="h-10 w-full rounded-md border border-input px-3 text-sm" value={value} onChange={(event) => onChange(event.target.value as T)}>
         {options.map((option) => (
           <option key={option} value={option}>
             {option}

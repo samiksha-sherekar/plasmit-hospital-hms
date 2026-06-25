@@ -8,7 +8,7 @@ import { Drawer } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 
 import { diagnosisTypes } from "./data";
-import type { LaboratoryResultBlock } from "./types";
+import type { LaboratoryResultBlock, LaboratorySummaryRow } from "./types";
 import { downloadLaboratoryPdf } from "../report-pdf-utils";
 
 type SortKey = "loinc" | "test" | "orderDate" | "completionDate";

@@ -14,10 +14,10 @@ export function LdtDetailsDrawer({ order, open, onOpenChange }: { order: LdtOrde
           <Row label="LDT Name" value={order.ldtName} />
           <Row label="Priority" value={<Badge tone={order.priority === "STAT" ? "danger" : order.priority === "Urgent" ? "warning" : "success"}>{order.priority}</Badge>} />
           <Row label="Order Date" value={order.orderDate} />
-          <Row label="Patient" value={`${order.patientName} (${order.patientId})`} />
-          <Row label="Doctor" value={order.doctorName} />
+          <Row label="Patient" value={order.ldtName} />
+          <Row label="Doctor" value={order.orderNo} />
           <Row label="Status" value={<Badge tone={order.status === "Completed" ? "success" : order.status === "Cancelled" ? "danger" : order.status === "Active" ? "info" : "warning"}>{order.status}</Badge>} />
-          <Row label="Notes" value={order.notes || "-"} />
+          <Row label="Notes" value="-" />
         </div>
       ) : null}
     </Drawer>
@@ -32,4 +32,3 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
     </div>
   );
 }
-

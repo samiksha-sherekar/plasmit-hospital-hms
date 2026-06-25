@@ -44,3 +44,15 @@ export type LdtReviewRow = {
   referenceRange: string;
   flag: "N" | "H" | "L";
 };
+
+export type LdtOrderFormValues = {
+  orderType: LdtOrderType;
+  ldtName: string;
+  priority: LdtOrderPriority;
+  orderDate: string;
+  status: LdtOrderStatus;
+  patientName: string;
+  patientId: string;
+  doctorName: string;
+  notes: string;
+};
