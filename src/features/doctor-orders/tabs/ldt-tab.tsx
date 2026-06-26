@@ -259,12 +259,12 @@ export function LdtTab() {
             </div>
           ) : null}
 
-          <div className="grid gap-3 lg:grid-cols-5">
-            <label className="mt-1 space-y-1 text-xs font-medium text-muted-foreground">
+          <div className="grid gap-3 lg:grid-cols-4">
+            <label className="mt-1 space-y-1 text-xs font-medium text-muted-foreground md:col-span-2">
               <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search LDT orders..." aria-label="Search LDT orders" />
             </label>
-            <SelectFilter label="" value={priorityFilter} onChange={setPriorityFilter} options={["All Priority", "Routine", "Urgent", "STAT"]} />
-            <SelectFilter label="" value={statusFilter} onChange={setStatusFilter} options={["All Status", "Pending", "Active", "Completed", "Cancelled"]} />
+            {/* <SelectFilter label="" value={priorityFilter} onChange={setPriorityFilter} options={["All Priority", "Routine", "Urgent", "STAT"]} />
+            <SelectFilter label="" value={statusFilter} onChange={setStatusFilter} options={["All Status", "Pending", "Active", "Completed", "Cancelled"]} /> */}
             <label className="mt-1 space-y-1 text-xs font-medium text-muted-foreground">
               <Input type="date" value={dateRange} onChange={(event) => setDateRange(event.target.value)} aria-label="Filter order date" className="pr-10" />
             </label>
