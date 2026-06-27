@@ -15,6 +15,7 @@ export type LdtDraft = {
   reason: string;
   clinicalNotes: string;
   ldtName: string;
+  orderDate: string;
   status: LdtOrderStatus;
   dynamicValues: Record<string, string | string[]>;
 };

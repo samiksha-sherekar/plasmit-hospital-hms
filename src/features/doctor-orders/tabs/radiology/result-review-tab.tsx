@@ -14,6 +14,16 @@ type SortDirection = "asc" | "desc";
 
 const PAGE_SIZE_OPTIONS = [5, 10, 20];
 
+function getCompletedDate(status: string, completionDate?: string) {
+  if (status === "Cancelled" || status === "Ordered" || status === "Sample Collected" || status === "Sample Received" || status === "Processing") {
+    return "";
+  }
+  if (status === "Report Ready" || status === "Completed" || status === "Reviewed") {
+    return completionDate ?? new Date().toLocaleDateString("en-GB");
+  }
+  return completionDate ?? "";
+}
+
 export function RadiologyResultReviewTab({
   resultBlocks,
   onReorderResult,
@@ -83,6 +93,8 @@ export function RadiologyResultReviewTab({
                   </button>
                 </th>
               ))}
+              <th className="px-3 py-3">Status</th>
+              <th className="px-3 py-3">Completed Date</th>
               <th className="px-3 py-3">Action</th>
               <th className="px-3 py-3"><Button size="sm" variant="outline" onClick={handleDownloadAll}>
             <Download className="h-3.5 w-3.5" />

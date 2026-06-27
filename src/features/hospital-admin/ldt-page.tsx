@@ -60,6 +60,20 @@ function ldtFieldTypeToFormType(type: LdtFieldType): PropertyType {
   return "Free text";
 }
 
+function encodeFieldRow(row: PropertyRowValues | AssessmentRowValues) {
+  return JSON.stringify({ value: row.value, type: row.type, dateFormat: row.dateFormat, timeFormat: row.timeFormat, options: row.options, selectionMode: row.selectionMode, checkboxLabel: row.checkboxLabel, checkboxDefault: row.checkboxDefault, trackInIntake: (row as AssessmentRowValues).trackInIntake, trackInOutput: (row as AssessmentRowValues).trackInOutput });
+}
+
+function decodeFieldRow(raw: string | undefined, fallbackType: PropertyType) {
+  if (!raw) return { value: "", type: fallbackType };
+  try {
+    const parsed = JSON.parse(raw) as Partial<PropertyRowValues & AssessmentRowValues>;
+    return { value: typeof parsed.value === "string" ? parsed.value : raw, type: (parsed.type as PropertyType | undefined) ?? fallbackType, dateFormat: parsed.dateFormat, timeFormat: parsed.timeFormat, options: parsed.options, selectionMode: parsed.selectionMode, checkboxLabel: parsed.checkboxLabel, checkboxDefault: parsed.checkboxDefault, trackInIntake: parsed.trackInIntake, trackInOutput: parsed.trackInOutput };
+  } catch {
+    return { value: raw, type: fallbackType };
+  }
+}
+
 function buildTableRows(rows: Record<string, string> | undefined, fields: ConfigField[]): TableRow[] {
   return Object.entries(rows ?? {}).map(([field, value], index) => {
     const configField = fields.find((item) => item.label === field || item.id === field);
@@ -344,34 +358,47 @@ function LdtFormDrawer({
         setLdtFormType(editingRecord.type || ldtTypeOptions[0]);
 
         const config = getLdtTypeConfig(ldtTypeToConfigId(editingRecord.type));
+        const propertyFields = config?.fields.filter((field) => field.group === "property") ?? [];
+        const assessmentFields = config?.fields.filter((field) => field.group === "assessment") ?? [];
 
-        setPropertyRows(
-          toFieldRows(
-            "properties",
-            { name: editingRecord.name, type: editingRecord.type, properties: editingRecord.properties ?? {}, assessment: editingRecord.assessment ?? {}, nurseLocked: editingRecord.nurseLocked },
-            config?.fields.filter((field) => field.group === "property") ?? [],
-          ).map((row, index) => ({
+        const nextPropertyRows = Object.entries(editingRecord.properties ?? {}).map(([name, rawValue], index) => {
+          const decoded = decodeFieldRow(rawValue, "Free text");
+          return {
             ...emptyPropertyForm,
             key: `property-${editingRecord.id}-${index}`,
-            name: row.label,
-            type: ldtFieldTypeToFormType(row.type),
-            value: row.value,
-          })),
-        );
+            name,
+            type: decoded.type,
+            dateFormat: decoded.dateFormat ?? emptyPropertyForm.dateFormat,
+            timeFormat: decoded.timeFormat ?? emptyPropertyForm.timeFormat,
+            options: decoded.options ?? emptyPropertyForm.options,
+            selectionMode: decoded.selectionMode ?? emptyPropertyForm.selectionMode,
+            checkboxLabel: decoded.checkboxLabel ?? emptyPropertyForm.checkboxLabel,
+            checkboxDefault: decoded.checkboxDefault ?? emptyPropertyForm.checkboxDefault,
+            value: decoded.value,
+          };
+        });
 
-        setAssessmentRows(
-          toFieldRows(
-            "assessment",
-            { name: editingRecord.name, type: editingRecord.type, properties: editingRecord.properties ?? {}, assessment: editingRecord.assessment ?? {}, nurseLocked: editingRecord.nurseLocked },
-            config?.fields.filter((field) => field.group === "assessment") ?? [],
-          ).map((row, index) => ({
+        const nextAssessmentRows = Object.entries(editingRecord.assessment ?? {}).map(([name, rawValue], index) => {
+          const decoded = decodeFieldRow(rawValue, "Free text");
+          return {
             ...emptyAssessmentForm,
             key: `assessment-${editingRecord.id}-${index}`,
-            name: row.label,
-            type: ldtFieldTypeToFormType(row.type),
-            value: row.value,
-          })),
-        );
+            name,
+            type: decoded.type,
+            dateFormat: decoded.dateFormat ?? emptyAssessmentForm.dateFormat,
+            timeFormat: decoded.timeFormat ?? emptyAssessmentForm.timeFormat,
+            options: decoded.options ?? emptyAssessmentForm.options,
+            selectionMode: decoded.selectionMode ?? emptyAssessmentForm.selectionMode,
+            checkboxLabel: decoded.checkboxLabel ?? emptyAssessmentForm.checkboxLabel,
+            checkboxDefault: decoded.checkboxDefault ?? emptyAssessmentForm.checkboxDefault,
+            trackInIntake: decoded.trackInIntake ?? emptyAssessmentForm.trackInIntake,
+            trackInOutput: decoded.trackInOutput ?? emptyAssessmentForm.trackInOutput,
+            value: decoded.value,
+          };
+        });
+
+        setPropertyRows(nextPropertyRows.length ? nextPropertyRows : [{ ...emptyPropertyForm, key: `property-${editingRecord.id}-0`, value: "" }]);
+        setAssessmentRows(nextAssessmentRows.length ? nextAssessmentRows : [{ ...emptyAssessmentForm, key: `assessment-${editingRecord.id}-0`, value: "" }]);
       } else {
         setLdtName("");
         setLdtFormType(ldtTypeOptions[0]);
@@ -403,8 +430,8 @@ function LdtFormDrawer({
       {
         name,
         type: ldtFormType,
-        properties: Object.fromEntries(propertyRows.map((row) => [row.name.trim(), row.value]).filter(([key]) => Boolean(key))),
-        assessment: Object.fromEntries(assessmentRows.map((row) => [row.name.trim(), row.value]).filter(([key]) => Boolean(key))),
+        properties: Object.fromEntries(propertyRows.map((row) => [row.name.trim(), encodeFieldRow(row)]).filter(([key]) => Boolean(key))),
+        assessment: Object.fromEntries(assessmentRows.map((row) => [row.name.trim(), encodeFieldRow(row)]).filter(([key]) => Boolean(key))),
         nurseLocked: false,
       },
       editingRecord?.id,
@@ -487,7 +514,7 @@ function LdtFormDrawer({
                     </label>
 
                     <div className="min-w-0">
-                      <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">Dynamic Field</span>
+                      {/* <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">Dynamic Field</span> */}
                       <DynamicPropertyFields values={row} errors={{}} onChange={(next) => setPropertyRows((current) => current.map((item, itemIndex) => (itemIndex === index ? { ...item, ...next } : item)))} />
                     </div>
 
@@ -531,7 +558,7 @@ function LdtFormDrawer({
                     </label>
 
                     <div className="min-w-0">
-                      <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">Dynamic Field</span>
+                      {/* <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">Dynamic Field</span> */}
                       <DynamicAssessmentFields values={row} errors={errors} onChange={(next) => setAssessmentRows((current) => current.map((item, itemIndex) => (itemIndex === index ? { ...item, ...next } : item)))} />
                     </div>
 
@@ -611,6 +638,10 @@ export function LdtPage() {
         header: "LDT Type",
         cell: ({ row }) => <span className="text-sm text-foreground">{row.original.type || "-"}</span>,
       },
+      // {
+      //   header: "Status",
+      //   cell: ({ row }) => <Badge tone={row.original.nurseLocked ? "warning" : "success"}>{row.original.nurseLocked ? "Completed" : "Active"}</Badge>,
+      // },
       {
         header: "Actions",
         cell: ({ row }) => {
@@ -643,21 +674,10 @@ export function LdtPage() {
     <ProtectedAdmin allowed={["Hospital Admin", "Super Admin"]}>
       {({ readOnly }) => (
         <>
-          <PageHeader title="LDT" className="static mx-0 border-b bg-transparent px-0 py-2" actions={null} />
           <AdminSection title="LDT">
             <div className="space-y-4">
               <FilterBar search={search} onSearch={setSearch} placeholder="Search LDT name or type...">
-                <label className="flex min-w-[160px] items-center gap-2 text-xs text-muted-foreground">
-                  <span className="sr-only">LDT Type</span>
-                  <select className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring/20" value={ldtType} onChange={(event) => setLdtType(event.target.value)}>
-                    <option value="All types">All types</option>
-                    {ldtTypeOptions.map((type) => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                
                 <Button disabled={readOnly} onClick={() => setDrawerState({ type: "add", activeSection: "properties" })}>
                   <Plus className="h-4 w-4" />
                   Add LDT
@@ -674,3 +694,6 @@ export function LdtPage() {
     </ProtectedAdmin>
   );
 }
+
+
+

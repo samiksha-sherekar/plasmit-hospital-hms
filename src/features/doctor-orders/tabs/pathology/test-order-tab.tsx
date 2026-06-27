@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Search, Plus } from "lucide-react";
+import { ArrowUpDown, Search, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,6 +47,8 @@ function SelectField({ value, onChange, options }: { value: PathologyPriority; o
   );
 }
 
+type SortState = { key: string; direction: "asc" | "desc" };
+
 type SelectedTestRow = {
   id: string;
   selectedTests: string;
@@ -57,6 +59,16 @@ type SelectedTestRow = {
   priority: PathologyPriority;
 };
 
+function compareText(left: string, right: string) {
+  return left.localeCompare(right, undefined, { numeric: true, sensitivity: "base" });
+}
+
+function getSortedItems<T>(items: T[], sort: SortState, getValue: (item: T) => string) {
+  return [...items].sort((left, right) => {
+    const comparison = compareText(getValue(left), getValue(right));
+    return sort.direction === "asc" ? comparison : -comparison;
+  });
+}
 export function PathologyTestOrderTab({
   search,
   onSearchChange,
@@ -302,12 +314,16 @@ export function PathologyTestOrderTab({
   }, [newProblem, safeProblems]);
   const selectedTests = filteredTests.filter((test) => selectedTestIds.includes(test.id));
   const selectedGroups = groupedTests.filter((group) => selectedGroupIds.includes(group.id));
+  const [groupSort, setGroupSort] = React.useState<SortState>({ key: "name", direction: "asc" });
+  const [testSort, setTestSort] = React.useState<SortState>({ key: "name", direction: "asc" });
   const getSpecimenSource = (id: string) => specimenSourceById?.[id] ?? "Blood";
   const filteredGroupedTests = React.useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) return groupedTests;
     return groupedTests.filter((group) => `${group.name}`.toLowerCase().includes(query));
   }, [search]);
+  const sortedGroupedTests = React.useMemo(() => getSortedItems(filteredGroupedTests, groupSort, (group) => group.name), [filteredGroupedTests, groupSort]);
+  const sortedTests = React.useMemo(() => getSortedItems(filteredTests, testSort, (test) => `${test.name} ${test.description}`), [filteredTests, testSort]);
   const selectedTestRows = React.useMemo<SelectedTestRow[]>(
     () => [
       ...selectedTests.map((test) => ({
@@ -541,18 +557,30 @@ export function PathologyTestOrderTab({
 
                   <div className="grid min-w-0 gap-4 xl:grid-cols-[220px_minmax(0,1fr)]">
                     <div className="min-w-0 overflow-hidden rounded-md border border-border bg-surface-muted">
-                      <div className="border-b border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Select grouped tests</div>
+                      <div className="flex items-center justify-between border-b border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <span>Select grouped tests</span>
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-foreground" onClick={() => setGroupSort((current) => ({ key: "name", direction: current.direction === "asc" ? "desc" : "asc" }))}>
+                    Sort
+                    <ArrowUpDown className="h-3.5 w-3.5" />
+                  </button>
+                </div>
                       <div className="max-h-[360px] overflow-auto px-3">
-                        {filteredGroupedTests.map((group) => (
+                        {sortedGroupedTests.map((group) => (
                           <CheckboxRow key={group.id} label={group.name} checked={selectedGroupIds.includes(group.id)} onToggle={() => onToggleGroup?.(group.id)} />
                         ))}
                       </div>
                     </div>
 
                     <div className="min-w-0 overflow-hidden rounded-md border border-border bg-surface-muted">
-                      <div className="border-b border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Select tests</div>
+                      <div className="flex items-center justify-between border-b border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <span>Select tests</span>
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-foreground" onClick={() => setTestSort((current) => ({ key: "name", direction: current.direction === "asc" ? "desc" : "asc" }))}>
+                    Sort
+                    <ArrowUpDown className="h-3.5 w-3.5" />
+                  </button>
+                </div>
                       <div className="max-h-[360px] overflow-auto px-3">
-                        {filteredTests.map((test) => (
+                        {sortedTests.map((test) => (
                           <CheckboxRow key={test.id} label={`${test.name} - ${test.description}`} checked={selectedTestIds.includes(test.id)} onToggle={() => onToggleTest?.(test.id)} />
                         ))}
                         {filteredTests.some((test) => test.children?.length) ? (

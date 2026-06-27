@@ -15,7 +15,7 @@ function StatusPill({ status }: { status: string }) {
   const tone =
     status === "Pending"
       ? "bg-warning/10 text-warning"
-      : status === "Received"
+      : status === "Completed"
         ? "bg-success/10 text-success"
         : status === "Pending" || status === "Ordered"
           ? "bg-info/10 text-info"
@@ -23,10 +23,22 @@ function StatusPill({ status }: { status: string }) {
   return <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${tone}`}>{status}</span>;
 }
 
-type SortKey = "loinc" | "test" | "orderDate" | "completionDate";
+type SortKey = "loinc" | "test" | "orderDate" | "completionDate" | "status";
 type SortDirection = "asc" | "desc";
 
 const PAGE_SIZE_OPTIONS = [5, 10, 20];
+
+const COMPLETED_DATE_STATUSES = new Set(["Report Ready", "Completed", "Reviewed"]);
+
+function getCompletedDate(status: string, completionDate?: string) {
+  if (status === "Cancelled" || status === "Ordered" || status === "Sample Collected" || status === "Sample Received" || status === "Processing") {
+    return "";
+  }
+  if (COMPLETED_DATE_STATUSES.has(status)) {
+    return completionDate || new Date().toLocaleDateString("en-GB");
+  }
+  return completionDate || "";
+}
 
 function compareDates(left: string, right: string) {
   return parseReviewDate(left) - parseReviewDate(right);
@@ -42,7 +54,9 @@ function getSortValue(block: PathologyResultBlock, sortKey: SortKey) {
   if (sortKey === "loinc") return block.name.toLowerCase().includes("cbc") ? "11273-0" : "28515-7";
   if (sortKey === "test") return block.name.replace(" - complete blood count", "").replace(" - kidney function test", "");
   if (sortKey === "orderDate") return "12/05/2021";
-  return "14/05/2021";
+  if (sortKey === "completionDate") return "14/05/2021";
+  if (sortKey === "status") return "Completed";
+  return "";
 }
 
 type SelectedReportRow = {
@@ -329,6 +343,12 @@ export function PathologyResultReviewTab({
                   {sortKey === "completionDate" ? sortDirection === "asc" ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" /> : <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />}
                 </button>
               </th>
+              <th className="w-[160px] px-3 py-3">
+                <button className="inline-flex items-center gap-1.5" type="button" onClick={() => requestSort("status")}>
+                  Status
+                  {sortKey === "status" ? sortDirection === "asc" ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" /> : <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />}
+                </button>
+              </th>
               <th className="w-[180px] px-3 py-3">Action</th>
               <th className="w-[120px] px-3 py-3">
                 <Button type="button" variant="outline" size="sm" onClick={downloadReport}>
@@ -357,9 +377,9 @@ export function PathologyResultReviewTab({
                     <td className="px-3 py-3 text-muted-foreground">{primaryRow?.referenceRange ?? "-"}</td> */}
                     <td className="w-[160px] px-3 py-3 text-muted-foreground">12/05/2021</td>
                     <td className="w-[160px] px-3 py-3 text-muted-foreground">14/05/2021</td>
-                    {/* <td className="px-3 py-3">
-                      <StatusPill status={hasPending ? "Pending" : hasHigh ? "High" : "Low"} />
-                    </td> */}
+                    <td className="px-3 py-3">
+                      <StatusPill status="Completed" />
+                    </td>
                     <td className="w-[180px] px-3 py-3">
               <div className="flex items-center gap-2 overflow-x-auto">
                         <Button type="button" variant="outline" size="sm" onClick={() => onReorderResult(block.name)}>

@@ -272,7 +272,7 @@ export function LdtTab() {
            
             <Button type="button" onClick={openAddOrder}>
               <ClipboardCheck className="h-4 w-4" />
-              Add Order
+              Add LDT Order
             </Button>
           </div>
           </div>
@@ -288,7 +288,7 @@ export function LdtTab() {
           if (!open) setEditingRow(null);
         }}
         title={editingRow ? `Edit ${editingRow.orderNo}` : "Add Order"}
-        description="Doctor LDT order"
+       
         footer={
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setOrderDrawerOpen(false)}>

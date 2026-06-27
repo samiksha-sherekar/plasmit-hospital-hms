@@ -16,6 +16,18 @@ type SortDirection = "asc" | "desc";
 
 const PAGE_SIZE_OPTIONS = [5, 10, 20];
 
+const COMPLETED_DATE_STATUSES = new Set(["Report Ready", "Completed", "Reviewed"]);
+
+function getCompletedDate(status: string, completionDate?: string) {
+  if (status === "Cancelled" || status === "Ordered" || status === "Sample Collected" || status === "Sample Received" || status === "Processing") {
+    return "";
+  }
+  if (COMPLETED_DATE_STATUSES.has(status)) {
+    return completionDate || new Date().toLocaleDateString("en-GB");
+  }
+  return completionDate || "";
+}
+
 function compareDates(left: string, right: string) {
   return parseReviewDate(left) - parseReviewDate(right);
 }
