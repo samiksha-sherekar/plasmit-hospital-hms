@@ -2,21 +2,21 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ClipboardList, ScanLine, SlidersHorizontal, Trash2, UserRound } from "lucide-react";
+import { ClipboardList, Search, ScanLine, SlidersHorizontal, Trash2, UserRound } from "lucide-react";
 import { toast } from "sonner";
+import type { ColumnDef } from "@tanstack/react-table";
 
 import { useRole } from "@/components/providers/role-provider";
-import { PageHeader } from "@/components/shell/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Drawer } from "@/components/ui/drawer";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
-import { mockPatients } from "@/data/patients";
-import { PatientSearchSelect } from "@/features/patients/patient-search-select";
+import { DataTable } from "@/components/ui/data-table";
 import type { Role } from "@/types";
-import { PatientSummaryBanner } from "@/components/ui/patient-summary-banner";
+
+// keep local demo data aligned with the existing nurse flow
 
 type LdtType = "Line" | "Tube" | "Drain";
 type FieldType = "Free text" | "Date" | "Time" | "Number" | "Dropdown" | "Checkbox";
@@ -56,6 +56,12 @@ type ScannableLdtItem = {
   ldtId: string;
   itemName: string;
   propertyValues: Record<string, FieldValue>;
+};
+
+type LdtRow = AddedLdt & {
+  priority: string;
+  orderedBy: string;
+  status: "Active" | "Pending" | "On Hold";
 };
 
 const nurseRoles: Role[] = ["Nurse", "Super Admin", "Hospital Admin"];
@@ -117,56 +123,9 @@ const propertyFieldsByLdt: Record<string, LdtField[]> = {
   ],
 };
 
-function DetailItem({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-2 rounded-md border border-border bg-surface-muted p-3">
-      <div className="text-xs font-medium text-muted-foreground">{label}:</div>
-      <div className="text-sm font-semibold text-foreground">{value}</div>
-    </div>
-  );
-}
-
-function FieldLabel({ children }: { children: React.ReactNode }) {
-  return <span className="text-xs font-medium text-muted-foreground">{children}</span>;
-}
-
-function LdtTypeDropdown({
-  value,
-  onChange,
-}: {
-  value: LdtType | "";
-  onChange: (value: LdtType | "") => void;
-}) {
-  return (
-    <select
-      className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring/20"
-      value={value}
-      onChange={(event) => onChange(event.target.value as LdtType | "")}
-      aria-label="Select LDT type"
-    >
-      <option value="">Select Line / Tube / Drain</option>
-      <option value="Line">Line</option>
-      <option value="Tube">Tube</option>
-      <option value="Drain">Drain</option>
-    </select>
-  );
-}
-
-function DynamicInput({
-  field,
-  value,
-  onChange,
-}: {
-  field: LdtField;
-  value?: FieldValue;
-  onChange: (value: FieldValue) => void;
-}) {
-  if (field.type === "Date") {
-    return <Input type="date" value={typeof value === "string" ? value : ""} onChange={(event) => onChange(event.target.value)} />;
-  }
-  if (field.type === "Time") {
-    return <Input type="time" value={typeof value === "string" ? value : ""} onChange={(event) => onChange(event.target.value)} />;
-  }
+function DynamicInput({ field, value, onChange }: { field: LdtField; value?: FieldValue; onChange: (value: FieldValue) => void }) {
+  if (field.type === "Date") return <Input type="date" value={typeof value === "string" ? value : ""} onChange={(event) => onChange(event.target.value)} />;
+  if (field.type === "Time") return <Input type="time" value={typeof value === "string" ? value : ""} onChange={(event) => onChange(event.target.value)} />;
   if (field.type === "Number") {
     return (
       <div className="flex gap-2">
@@ -178,11 +137,7 @@ function DynamicInput({
           value={typeof value === "string" ? value : ""}
           onChange={(event) => onChange(event.target.value)}
         />
-        {field.config.unit ? (
-          <div className="flex h-9 min-w-12 items-center justify-center rounded-md border border-border bg-surface-muted px-3 text-sm font-medium text-muted-foreground">
-            {field.config.unit}
-          </div>
-        ) : null}
+        {field.config.unit ? <div className="flex h-9 min-w-12 items-center justify-center rounded-md border border-border bg-surface-muted px-3 text-sm font-medium text-muted-foreground">{field.config.unit}</div> : null}
       </div>
     );
   }
@@ -239,7 +194,6 @@ function PropertiesDrawer({
   onValuesChange: (ldtId: string, fieldId: string, value: FieldValue) => void;
 }) {
   const fields = ldt ? propertyFieldsByLdt[ldt.id] ?? [] : [];
-  const mappedBarcodes = scannableLdtItems.filter((item) => item.ldtId === ldt?.id).map((item) => item.barcode);
 
   return (
     <Drawer
@@ -248,7 +202,7 @@ function PropertiesDrawer({
       title={ldt ? `${ldt.name} Properties` : "LDT Properties"}
       footer={
         <div className="flex justify-end gap-2">
-          <Button className="bg-danger" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button
@@ -274,28 +228,20 @@ function PropertiesDrawer({
           <div className="flex flex-col gap-2 sm:flex-row">
             <div className="relative flex-1">
               <ScanLine className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                className="pl-9"
-                value={barcode}
-                onChange={(event) => onBarcodeChange(event.target.value)}
-                placeholder="Scan or enter barcode"
-                aria-label="Scan or enter barcode"
-              />
+              <Input className="pl-9" value={barcode} onChange={(event) => onBarcodeChange(event.target.value)} placeholder="Scan or enter barcode" aria-label="Scan or enter barcode" />
             </div>
             <Button type="submit" variant="outline" className="sm:w-auto">
               <ScanLine className="h-4 w-4" />
               Scan
             </Button>
           </div>
-          {/* <div className="mt-2 text-xs text-muted-foreground">
-            Demo barcode: {mappedBarcodes.length ? mappedBarcodes.join(", ") : "No barcode mapped"}
-          </div> */}
+
         </form>
         {fields.map((field) => (
           <label key={field.id} className="space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <FieldLabel>{field.name}</FieldLabel>
-              <Badge tone="muted">{field.type}</Badge>
+              <span className="text-xs font-medium text-muted-foreground">{field.name}</span>
+              {/* <Badge tone="muted">{field.type}</Badge> */}
             </div>
             <DynamicInput field={field} value={values[field.id]} onChange={(value) => ldt && onValuesChange(ldt.id, field.id, value)} />
           </label>
@@ -305,93 +251,91 @@ function PropertiesDrawer({
   );
 }
 
-function LdtList({
-  ldts,
-  selectedId,
-  onSelect,
-  onDelete,
-  onOpenProperties,
-}: {
-  ldts: AddedLdt[];
-  selectedId: string | null;
-  onSelect: (id: string) => void;
-  onDelete: (ldt: AddedLdt) => void;
-  onOpenProperties: (ldt: AddedLdt) => void;
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <div>
-          <CardTitle>LDT List</CardTitle>
-        </div>
-        <Badge tone="info">{ldts.length} Items</Badge>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {ldts.length === 0 ? (
-          <div className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">
-            Select Line, Tube, or Drain to view items.
-          </div>
-        ) : null}
-        {ldts.map((ldt) => {
-          const selected = selectedId === ldt.id;
-          return (
-            <div
-              key={ldt.id}
-              role="button"
-              tabIndex={0}
-              className={[
-                "rounded-md border p-3 transition",
-                selected ? "border-primary bg-primary/10" : "border-border bg-surface hover:bg-surface-muted",
-              ].join(" ")}
-              onClick={() => onSelect(ldt.id)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") onSelect(ldt.id);
-              }}
-            >
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge tone={ldt.type === "Line" ? "success" : ldt.type === "Drain" ? "warning" : "info"}>{ldt.type}</Badge>
-                    <div className="font-medium text-foreground">{ldt.name}</div>
-                  </div>
-                  <div className="mt-1 text-xs text-muted-foreground">Actions</div>
-                </div>
-                <div className="flex flex-wrap gap-2" onClick={(event) => event.stopPropagation()}>
-                  <Button size="sm" variant="outline" onClick={() => onOpenProperties(ldt)}>
-                    <SlidersHorizontal className="h-3.5 w-3.5" />
-                    Properties
-                  </Button>
-                  <Button size="sm" variant="outline" asChild>
-                    <Link href={`/nurse/ldt-management/assessment?ldtId=${ldt.id}`}>
-                      <ClipboardList className="h-3.5 w-3.5" />
-                      Assessment
-                    </Link>
-                  </Button>
-                  <Button size="sm" variant="danger" onClick={() => onDelete(ldt)}>
-                    <Trash2 className="h-3.5 w-3.5" />
-                    Delete
-                  </Button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </CardContent>
-    </Card>
-  );
-}
-
 function LdtManagementWorkspace() {
-  const [selectedLdtType, setSelectedLdtType] = React.useState<LdtType | "">("");
   const [deletedLdtIds, setDeletedLdtIds] = React.useState<string[]>([]);
-  const [selectedLdtId, setSelectedLdtId] = React.useState<string | null>(null);
   const [propertiesLdt, setPropertiesLdt] = React.useState<AddedLdt | null>(null);
   const [barcode, setBarcode] = React.useState("");
   const [propertyValuesByLdt, setPropertyValuesByLdt] = React.useState<PropertyValuesByLdt>({});
+  const [search, setSearch] = React.useState("");
 
-  const visibleLdts = selectedLdtType
-    ? ldtOptions.filter((ldt) => ldt.type === selectedLdtType && !deletedLdtIds.includes(ldt.id))
-    : [];
+  const visibleLdts = React.useMemo<LdtRow[]>(() => {
+    const query = search.trim().toLowerCase();
+    return ldtOptions
+      .filter((ldt) => !deletedLdtIds.includes(ldt.id))
+      .map((ldt) => ({
+        ...ldt,
+        priority: ldt.type === "Drain" ? "High" : ldt.type === "Tube" ? "Medium" : "Low",
+        orderedBy: ldt.type === "Line" ? "Dr. Sharma" : ldt.type === "Tube" ? "Dr. Patel" : "Dr. Khan",
+        status: ldt.type === "Line" ? "Active" : ldt.type === "Tube" ? "Pending" : "On Hold",
+      }))
+      .filter((ldt) => {
+        if (!query) return true;
+        return [ldt.name, ldt.type, ldt.priority, ldt.orderedBy, ldt.status].some((value) => value.toLowerCase().includes(query));
+      });
+  }, [deletedLdtIds, search]);
+
+  const handleDelete = React.useCallback((ldt: AddedLdt) => {
+    setDeletedLdtIds((current) => (current.includes(ldt.id) ? current : [...current, ldt.id]));
+    setPropertiesLdt((current) => (current?.id === ldt.id ? null : current));
+    setPropertyValuesByLdt((current) => {
+      const remaining = { ...current };
+      delete remaining[ldt.id];
+      return remaining;
+    });
+    toast.success(`${ldt.name} deleted`);
+  }, []);
+
+  const columns = React.useMemo<ColumnDef<LdtRow>[]>(
+    () => [
+      {
+        accessorKey: "name",
+        header: "LDT Type",
+        cell: ({ row }) => <div className="font-medium text-foreground">{row.original.name}</div>,
+      },
+      {
+        accessorKey: "type",
+        header: "LDT Type",
+        cell: ({ row }) => <Badge tone={row.original.type === "Line" ? "success" : row.original.type === "Drain" ? "warning" : "info"}>{row.original.type}</Badge>,
+      },
+      {
+        accessorKey: "priority",
+        header: "Priority",
+        cell: ({ row }) => <Badge tone={row.original.priority === "High" ? "danger" : row.original.priority === "Medium" ? "warning" : "muted"}>{row.original.priority}</Badge>,
+      },
+      {
+        accessorKey: "orderedBy",
+        header: "Ordered By",
+      },
+      {
+        accessorKey: "status",
+        header: "Status",
+        cell: ({ row }) => <Badge tone={row.original.status === "Active" ? "success" : row.original.status === "Pending" ? "warning" : "muted"}>{row.original.status}</Badge>,
+      },
+      {
+        id: "actions",
+        header: "Action",
+        cell: ({ row }) => (
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={() => setPropertiesLdt(row.original)}>
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              Properties
+            </Button>
+            <Button size="sm" variant="outline" asChild>
+              <Link href={`/nurse/ldt-management/assessment?ldtId=${row.original.id}`}>
+                <ClipboardList className="h-3.5 w-3.5" />
+                Assessment
+              </Link>
+            </Button>
+            {/* <Button size="sm" variant="danger" onClick={() => handleDelete(row.original)}>
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete
+            </Button> */}
+          </div>
+        ),
+      },
+    ],
+    [handleDelete],
+  );
 
   const handleBarcodeScan = () => {
     const normalizedBarcode = barcode.trim().toUpperCase();
@@ -426,18 +370,6 @@ function LdtManagementWorkspace() {
     toast.success(`${scannedItem.itemName} scanned and properties loaded`);
   };
 
-  const handleDelete = (ldt: AddedLdt) => {
-    setDeletedLdtIds((current) => (current.includes(ldt.id) ? current : [...current, ldt.id]));
-    setSelectedLdtId((current) => (current === ldt.id ? null : current));
-    setPropertiesLdt((current) => (current?.id === ldt.id ? null : current));
-    setPropertyValuesByLdt((current) => {
-      const remaining = { ...current };
-      delete remaining[ldt.id];
-      return remaining;
-    });
-    toast.success(`${ldt.name} deleted`);
-  };
-
   const handlePropertyValueChange = (ldtId: string, fieldId: string, value: FieldValue) => {
     setPropertyValuesByLdt((current) => ({
       ...current,
@@ -451,26 +383,17 @@ function LdtManagementWorkspace() {
   return (
     <>
       <Card>
-        <CardHeader>
-          <div>
-            <CardTitle>Select LDT Type</CardTitle>
-          </div>
-        </CardHeader>
+       
         <CardContent>
-          <LdtTypeDropdown value={selectedLdtType} onChange={setSelectedLdtType} />
+          <div className="mb-4 flex items-center gap-2">
+            <div className="relative w-full max-w-sm">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input className="pl-9" placeholder="Search LDT records" value={search} onChange={(event) => setSearch(event.target.value)} />
+            </div>
+          </div>
+          <DataTable columns={columns} data={visibleLdts} />
         </CardContent>
       </Card>
-
-      <LdtList
-        ldts={visibleLdts}
-        selectedId={selectedLdtId}
-        onSelect={setSelectedLdtId}
-        onDelete={handleDelete}
-        onOpenProperties={(ldt) => {
-          setPropertiesLdt(ldt);
-          setBarcode("");
-        }}
-      />
 
       <PropertiesDrawer
         ldt={propertiesLdt}
@@ -489,28 +412,20 @@ function LdtManagementWorkspace() {
 export function LdtManagementPage() {
   const { role } = useRole();
   const allowed = nurseRoles.includes(role);
-  const [patientId, setPatientId] = React.useState(mockPatients[0]?.id ?? "");
-  const patient = mockPatients.find((item) => item.id === patientId) ?? mockPatients[0];
 
   if (!allowed) {
-    return (
-      <EmptyState
-        icon={UserRound}
-        title="Nurse access required"
-        description="Switch to Nurse role to open LDT management."
-      />
-    );
+    return <EmptyState icon={UserRound} title="Nurse access required" description="Switch to Nurse role to open LDT management." />;
   }
 
   return (
     <div className="space-y-6">
-      {/* <PageHeader
-        title="LDT Management"
-        className="static mx-0 border-b bg-transparent px-0 py-2"
-      />
-      <PatientSummaryBanner /> */}
-
       <LdtManagementWorkspace />
     </div>
   );
 }
+
+
+
+
+
+
