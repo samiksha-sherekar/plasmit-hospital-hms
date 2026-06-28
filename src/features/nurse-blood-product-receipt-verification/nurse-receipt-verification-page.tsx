@@ -227,7 +227,7 @@ export function NurseReceiptVerificationPage() {
       {hasExpiredBag ? <AlertBanner icon={Clock3} tone="danger" title="Expired unit">One or more units are expired. Return the unit to Blood Bank before proceeding.</AlertBanner> : null}
       {!form.crossmatchConfirmed ? <AlertBanner icon={Droplets} tone="warning" title="Crossmatch pending">Start Transfusion stays blocked until crossmatch compatibility is confirmed.</AlertBanner> : null}
       {form.vitals.temperature && Number(form.vitals.temperature) >= 38 ? <AlertBanner icon={BellRing} tone="warning" title="Temperature warning">Temperature is 38.0 C or above. Review whether transfusion should be delayed per policy.</AlertBanner> : null}
-      <PatientSummaryBanner/>
+      {/* <PatientSummaryBanner/> */}
 
       <div className="grid gap-6 ">
         <div className="space-y-6">

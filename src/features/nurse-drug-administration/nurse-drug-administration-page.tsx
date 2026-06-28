@@ -148,7 +148,7 @@ export function NurseDrugAdministrationPage() {
         className="static mx-0 border-b bg-transparent px-0 py-2"
       /> */}
 
-      <NurseMedicationPatientSummary patientId={selectedPatientId} onPatientChange={setSelectedPatientId} />
+      {/* <NurseMedicationPatientSummary patientId={selectedPatientId} onPatientChange={setSelectedPatientId} /> */}
 
       {/* <AlertBanner icon={Pill} tone="info" title="Administration safety">
         Select a time slot to review administration details, counter-check requirements, overdue status, and fluid bag information before accepting.

@@ -567,7 +567,7 @@ export function LaboratoryTestOrderTab({
                 <div className="flex items-center justify-between border-b border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   <span>Select grouped tests</span>
                   <button type="button" className="inline-flex items-center gap-1 hover:text-foreground" onClick={() => setGroupSort((current) => ({ key: "name", direction: current.direction === "asc" ? "desc" : "asc" }))}>
-                    Sort
+                    
                     <ArrowUpDown className="h-3.5 w-3.5" />
                   </button>
                 </div>
@@ -582,7 +582,7 @@ export function LaboratoryTestOrderTab({
                 <div className="flex items-center justify-between border-b border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   <span>Select tests</span>
                   <button type="button" className="inline-flex items-center gap-1 hover:text-foreground" onClick={() => setTestSort((current) => ({ key: "name", direction: current.direction === "asc" ? "desc" : "asc" }))}>
-                    Sort
+                    
                     <ArrowUpDown className="h-3.5 w-3.5" />
                   </button>
                 </div>

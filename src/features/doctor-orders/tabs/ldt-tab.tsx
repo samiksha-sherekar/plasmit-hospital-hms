@@ -71,7 +71,7 @@ function buildRemovalInfo(row: TestOrderRow) {
   const propertyFields = config?.fields.filter((field) => field.group === "property") ?? [];
 
   return [
-    { field: "Order No", value: row.orderNo },
+    // { field: "Order No", value: row.orderNo },
     { field: "LDT Type", value: row.ldtType },
     { field: "LDT Name", value: row.ldtName },
     { field: "Order Date", value: row.orderDate },
@@ -221,7 +221,7 @@ export function LdtTab() {
 
   const columns = React.useMemo<ColumnDef<TestOrderRow>[]>(
     () => [
-      { header: "Order No", accessorKey: "orderNo" },
+      // { header: "Order No", accessorKey: "orderNo" },
       { header: "LDT Type", cell: ({ row }) => getLdtTypeConfig(row.original.ldtTypeId)?.label ?? row.original.ldtType },
       { header: "LDT Name", accessorKey: "ldtName" },
       { header: "Priority", accessorKey: "priority" },

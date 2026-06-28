@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 
-import type { LdtOrder, LdtOrderFormValues } from "./types";
+import type { LdtOrder } from "./types";
+import type { LdtOrderFormValues } from "../../types";
 
 const emptyForm: LdtOrderFormValues = {
   orderType: "Insert",

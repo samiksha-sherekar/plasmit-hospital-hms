@@ -1,12 +1,13 @@
 "use client";
 import * as React from "react";
-import { ArrowDown, ArrowUp, ChevronsLeft, ChevronsRight, ChevronsUpDown, Pencil, Save, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronsLeft, ChevronsRight, ChevronsUpDown, Pencil, Save, Search, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 import type { PathologySummaryRow } from "./types";
+import { Input } from "@/components/ui/input";
 
 type SummarySortKey = keyof Pick<PathologySummaryRow, "name" | "loinc" | "cpt" | "department" | "specimen" | "priority">;
 const PAGE_SIZE_OPTIONS = [5, 10, 20];
@@ -73,16 +74,40 @@ export function PathologyOrderSummaryTab({
   ];
   const [pageSize, setPageSize] = React.useState(5);
   const [pageIndex, setPageIndex] = React.useState(0);
-  const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [dateFilter, setDateFilter] = React.useState("");
+
+  const filteredRows = React.useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return rows.filter((row) => {
+      const haystack = `${row.id} ${row.name} ${row.loinc} ${row.cpt} ${row.department} ${row.specimen} ${row.priority} ${row.status} ${row.orderDateTime}`.toLowerCase();
+      return (!query || haystack.includes(query)) && (!dateFilter || row.orderDateTime.startsWith(dateFilter));
+    });
+  }, [dateFilter, rows, searchQuery]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredRows.length / pageSize));
   const currentPage = Math.min(pageIndex, pageCount - 1);
-  const pagedRows = React.useMemo(() => rows.slice(currentPage * pageSize, currentPage * pageSize + pageSize), [currentPage, pageSize, rows]);
+  const pagedRows = React.useMemo(() => filteredRows.slice(currentPage * pageSize, currentPage * pageSize + pageSize), [currentPage, filteredRows, pageSize]);
 
   React.useEffect(() => {
     setPageIndex(0);
-  }, [rows.length]);
+  }, [dateFilter, rows.length, searchQuery]);
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-col gap-3 rounded-lg border border-border bg-white p-3 sm:flex-row sm:items-end">
+        
+       <div className="flex-1 space-y-1">
+          <span className="text-xs font-medium text-muted-foreground">Search</span>
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input className="pl-9" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search by test, code, specimen, status" />
+        </div>
+        <label className="space-y-1 sm:w-[180px]">
+          <span className="text-xs font-medium text-muted-foreground">Date</span>
+          <input type="date" className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none" value={dateFilter} onChange={(event) => setDateFilter(event.target.value)} />
+        </label>
+        <Button type="button" variant="outline" onClick={() => { setSearchQuery(""); setDateFilter(""); setPageIndex(0); }}>Reset</Button>
+      </div>
       {/* <div className="rounded-md border border-border bg-surface-muted/40 px-3 py-2 text-sm text-muted-foreground">
         Saved instructions: {instructionsForLab || "None"}
       </div> */}
@@ -96,7 +121,7 @@ export function PathologyOrderSummaryTab({
               <thead className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 <tr>
                   {headers.map((header) => (
-                    <th key={header.key} className="px-4 py-3">
+                    <th key={header.key ?? header.label} className="px-4 py-3">
                       {header.key ? <SortButton label={header.label} column={header.key} sort={sort} onSort={onSort} /> : header.label}
                     </th>
                   ))}
@@ -150,7 +175,7 @@ export function PathologyOrderSummaryTab({
           <div className="flex flex-col gap-2 border-t border-border/80 bg-white px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)] text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-3">
               <span>
-                {rows.length} records - Page {currentPage + 1} of {pageCount}
+                {filteredRows.length} records - Page {currentPage + 1} of {pageCount}
               </span>
               <label className="flex items-center gap-2">
                 <span>Rows</span>
@@ -194,10 +219,7 @@ export function PathologyOrderSummaryTab({
               View all summary
             </Button> */}
             <div className="ml-auto flex flex-wrap gap-2">
-              {/* <Button type="button" onClick={onSave}>
-                <Save className="h-4 w-4" />
-                Save
-              </Button> */}
+             
               <Button type="button" variant="outline" onClick={onAddToBill}>
                 Add to bill
               </Button>

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowDown, ArrowUp, ArrowUpDown, Download, Eye, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Download, Eye, ChevronsLeft, ChevronsRight, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
@@ -72,40 +72,40 @@ function getSelectedReportRows(block: PathologyResultBlock): SelectedReportRow[]
   const name = block.name.toLowerCase();
   if (name.includes("cbc")) {
     return [
-      { parameter: "Hemoglobin", result: "13.6", unit: "g/dL", referenceRange: "13.0 - 17.0", flag: "N" },
-      { parameter: "RBC Count", result: "4.6", unit: "10^6/µl", referenceRange: "4.5 - 5.5", flag: "N" },
-      { parameter: "PCV", result: "40.1", unit: "%", referenceRange: "40 - 50", flag: "N" },
-      { parameter: "MCV", result: "86.8", unit: "fL", referenceRange: "83 - 101", flag: "N" },
-      { parameter: "MCH", result: "29.5", unit: "pg", referenceRange: "27 - 32", flag: "N" },
-      { parameter: "MCHC", result: "34", unit: "g/dL", referenceRange: "31.5 - 34.5", flag: "N" },
-      { parameter: "RDW (CV)", result: "13.1", unit: "%", referenceRange: "11.6 - 14.0", flag: "N" },
-      { parameter: "RDW-SD", result: "28.5", unit: "fL", referenceRange: "35.1 - 43.9", flag: "L" },
-      { parameter: "TLC", result: "6.8", unit: "10^3/µl", referenceRange: "4 - 10", flag: "N" },
-      { parameter: "Neutrophils", result: "64", unit: "%", referenceRange: "40 - 80", flag: "N" },
-      { parameter: "Lymphocytes", result: "25", unit: "%", referenceRange: "20 - 40", flag: "N" },
-      { parameter: "Monocytes", result: "9", unit: "%", referenceRange: "2 - 10", flag: "N" },
-      { parameter: "Eosinophils", result: "2", unit: "%", referenceRange: "0 - 6", flag: "N" },
-      { parameter: "Basophils", result: "0", unit: "%", referenceRange: "0 - 1", flag: "N" },
-      { parameter: "Neutrophils, absolute", result: "4.35", unit: "10^3/µl", referenceRange: "2 - 7", flag: "N" },
-      { parameter: "Lymphocytes, absolute", result: "1.7", unit: "10^3/µl", referenceRange: "1 - 3", flag: "N" },
-      { parameter: "Monocytes, absolute", result: "0.61", unit: "10^3/µl", referenceRange: "0.2 - 1.0", flag: "N" },
-      { parameter: "Eosinophils, absolute", result: "0.14", unit: "10^3/µl", referenceRange: "0.02 - 0.5", flag: "N" },
-      { parameter: "Basophils, absolute", result: "0", unit: "10^3/µl", referenceRange: "0.02 - 0.5", flag: "L" },
-      { parameter: "Platelet Count", result: "211", unit: "10^3/µl", referenceRange: "150 - 410", flag: "N" },
-      { parameter: "MPV", result: "8.7", unit: "fL", referenceRange: "9.3 - 12.1", flag: "L" },
-      { parameter: "PCT", result: "0.2", unit: "%", referenceRange: "0.17 - 0.32", flag: "N" },
-      { parameter: "PDW", result: "14.6", unit: "fL", referenceRange: "8.3 - 25.0", flag: "N" },
-      { parameter: "P-LCR", result: "25.5", unit: "%", referenceRange: "18 - 50", flag: "N" },
-      { parameter: "P-LCC", result: "54", unit: "10^9/L", referenceRange: "44 - 140", flag: "N" },
-      { parameter: "Mentzer Index", result: "18.87", unit: "", referenceRange: "> 13", flag: "N" },
+      { group: "RBC Parameters", parameter: "Hemoglobin", result: "13.6", unit: "g/dL", referenceRange: "13.0 - 17.0", flag: "N" },
+      { group: "RBC Parameters", parameter: "RBC Count", result: "4.6", unit: "10^6/µl", referenceRange: "4.5 - 5.5", flag: "N" },
+      { group: "RBC Parameters", parameter: "PCV", result: "40.1", unit: "%", referenceRange: "40 - 50", flag: "N" },
+      { group: "RBC Parameters", parameter: "MCV", result: "86.8", unit: "fL", referenceRange: "83 - 101", flag: "N" },
+      { group: "RBC Parameters", parameter: "MCH", result: "29.5", unit: "pg", referenceRange: "27 - 32", flag: "N" },
+      { group: "RBC Parameters", parameter: "MCHC", result: "34", unit: "g/dL", referenceRange: "31.5 - 34.5", flag: "N" },
+      { group: "RBC Parameters", parameter: "RDW (CV)", result: "13.1", unit: "%", referenceRange: "11.6 - 14.0", flag: "N" },
+      { group: "RBC Parameters", parameter: "RDW-SD", result: "28.5", unit: "fL", referenceRange: "35.1 - 43.9", flag: "L" },
+      { group: "WBC Parameters", parameter: "TLC", result: "6.8", unit: "10^3/µl", referenceRange: "4 - 10", flag: "N" },
+      { group: "WBC Parameters", parameter: "Neutrophils", result: "64", unit: "%", referenceRange: "40 - 80", flag: "N" },
+      { group: "WBC Parameters", parameter: "Lymphocytes", result: "25", unit: "%", referenceRange: "20 - 40", flag: "N" },
+      { group: "WBC Parameters", parameter: "Monocytes", result: "9", unit: "%", referenceRange: "2 - 10", flag: "N" },
+      { group: "WBC Parameters", parameter: "Eosinophils", result: "2", unit: "%", referenceRange: "0 - 6", flag: "N" },
+      { group: "WBC Parameters", parameter: "Basophils", result: "0", unit: "%", referenceRange: "0 - 1", flag: "N" },
+      { group: "WBC Parameters", parameter: "Neutrophils, absolute", result: "4.35", unit: "10^3/µl", referenceRange: "2 - 7", flag: "N" },
+      { group: "WBC Parameters", parameter: "Lymphocytes, absolute", result: "1.7", unit: "10^3/µl", referenceRange: "1 - 3", flag: "N" },
+      { group: "WBC Parameters", parameter: "Monocytes, absolute", result: "0.61", unit: "10^3/µl", referenceRange: "0.2 - 1.0", flag: "N" },
+      { group: "WBC Parameters", parameter: "Eosinophils, absolute", result: "0.14", unit: "10^3/µl", referenceRange: "0.02 - 0.5", flag: "N" },
+      { group: "WBC Parameters", parameter: "Basophils, absolute", result: "0", unit: "10^3/µl", referenceRange: "0.02 - 0.5", flag: "L" },
+      { group: "Platelet Parameters", parameter: "Platelet Count", result: "211", unit: "10^3/µl", referenceRange: "150 - 410", flag: "N" },
+      { group: "Platelet Parameters", parameter: "MPV", result: "8.7", unit: "fL", referenceRange: "9.3 - 12.1", flag: "L" },
+      { group: "Platelet Parameters", parameter: "PCT", result: "0.2", unit: "%", referenceRange: "0.17 - 0.32", flag: "N" },
+      { group: "Platelet Parameters", parameter: "PDW", result: "14.6", unit: "fL", referenceRange: "8.3 - 25.0", flag: "N" },
+      { group: "Platelet Parameters", parameter: "P-LCR", result: "25.5", unit: "%", referenceRange: "18 - 50", flag: "N" },
+      { group: "Platelet Parameters", parameter: "P-LCC", result: "54", unit: "10^9/L", referenceRange: "44 - 140", flag: "N" },
+      { group: "Platelet Parameters", parameter: "Mentzer Index", result: "18.87", unit: "", referenceRange: "> 13", flag: "N" },
     ];
   }
   if (name.includes("kft") || name.includes("kidney function")) {
     return [
-      { parameter: "Serum Creatinine", result: "1.9", unit: "mg/dL", referenceRange: "0.6 - 1.2", flag: "H" },
-      { parameter: "Blood Urea Nitrogen", result: "22", unit: "mg/dL", referenceRange: "7 - 20", flag: "H" },
-      { parameter: "Uric Acid", result: "6.3", unit: "mg/dL", referenceRange: "2.6 - 6.0", flag: "H" },
-      { parameter: "eGFR", result: "58", unit: "mL/min/1.73m2", referenceRange: ">= 90", flag: "L" },
+      { group: block.name, parameter: "Serum Creatinine", result: "1.9", unit: "mg/dL", referenceRange: "0.6 - 1.2", flag: "H" },
+      { group: block.name, parameter: "Blood Urea Nitrogen", result: "22", unit: "mg/dL", referenceRange: "7 - 20", flag: "H" },
+      { group: block.name, parameter: "Uric Acid", result: "6.3", unit: "mg/dL", referenceRange: "2.6 - 6.0", flag: "H" },
+      { group: block.name, parameter: "eGFR", result: "58", unit: "mL/min/1.73m2", referenceRange: ">= 90", flag: "L" },
     ];
   }
   return block.rows.map((row) => ({
@@ -138,7 +138,6 @@ export function PathologyResultReviewTab({
   diagnosisOpen,
   selectedDiagnosisLabel,
   instructionsForLab,
-  savedSummaryRows = [],
   onDiagnosisSearchChange,
   onDiagnosisTypeChange,
   onDiagnosisOpenChange,
@@ -177,12 +176,15 @@ export function PathologyResultReviewTab({
   const [pageSize, setPageSize] = React.useState(5);
   const [pageIndex, setPageIndex] = React.useState(0);
   const [selectedBlock, setSelectedBlock] = React.useState<PathologyResultBlock | null>(null);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [dateFilter, setDateFilter] = React.useState("");
 
   const visibleBlocks = React.useMemo(() => {
-    const query = diagnosisSearch.trim().toLowerCase();
-    if (!query) return allBlocks;
-    return allBlocks.filter((block) => `${block.name} ${block.specialty}`.toLowerCase().includes(query));
-  }, [allBlocks, diagnosisSearch]);
+    const query = `${diagnosisSearch} ${searchQuery}`.trim().toLowerCase();
+    const items = allBlocks.filter((block) => `${block.name} ${block.specialty}`.toLowerCase().includes(query));
+    if (!dateFilter) return items;
+    return items.filter(() => "14/05/2021".includes(dateFilter));
+  }, [allBlocks, dateFilter, diagnosisSearch, searchQuery]);
 
   const sortedBlocks = React.useMemo(() => {
     const items = [...visibleBlocks];
@@ -211,7 +213,7 @@ export function PathologyResultReviewTab({
 
   React.useEffect(() => {
     setPageIndex(0);
-  }, [diagnosisSearch]);
+  }, [dateFilter, diagnosisSearch, searchQuery]);
 
   React.useEffect(() => {
     if (currentPage !== pageIndex) setPageIndex(currentPage);
@@ -288,11 +290,7 @@ export function PathologyResultReviewTab({
   const selectedReportName = selectedBlock ? selectedBlock.name.replace(" - complete blood count", "").replace(" - kidney function test", "") : "";
   const selectedReportStatus = "Final";
   const isCbc = Boolean(selectedBlock?.name.toLowerCase().includes("cbc"));
-  const selectedSpecimen = React.useMemo(() => {
-    const normalized = selectedBlock ? selectedBlock.name.toLowerCase() : "";
-    const matched = savedSummaryRows.find((row) => row.name.toLowerCase().includes(normalized) || normalized.includes(row.name.toLowerCase()));
-    return matched?.specimen ?? "Blood";
-  }, [savedSummaryRows, selectedBlock]);
+  const selectedSpecimen = "Blood";
 
   const groupedRows = React.useMemo(() => {
     if (!selectedBlock || !isCbc) return {};
@@ -305,6 +303,34 @@ export function PathologyResultReviewTab({
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-col gap-3 rounded-lg border border-border bg-white p-3 sm:flex-row sm:items-end">
+       
+        <div className="flex-1 space-y-1">
+          <span className="text-xs font-medium text-muted-foreground">Search</span>
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input className="pl-9" value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          placeholder="Search test, code, or department" />
+        </div>
+        <div className="min-w-0">
+          <div className="mb-1 text-xs font-medium text-muted-foreground">Date</div>
+          <Input
+            type="date"
+            value={dateFilter}
+            onChange={(event) => setDateFilter(event.target.value)}
+          />
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setSearchQuery("");
+            setDateFilter("");
+          }}
+        >
+          Reset
+        </Button>
+      </div>
       {/* <div className="rounded-md border border-border bg-surface-muted/40 px-3 py-2 text-sm text-muted-foreground">
         Saved instructions: {instructionsForLab || "None"}
       </div> */}
@@ -514,6 +540,31 @@ export function PathologyResultReviewTab({
       >
         {selectedBlock ? (
           <div className="space-y-4">
+      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_180px_110px_auto] md:items-end">
+        <Input
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          placeholder="Search test, code, or department"
+        />
+        <div className="min-w-0">
+          <div className="mb-1 text-xs font-medium text-muted-foreground">Date</div>
+          <Input
+            type="date"
+            value={dateFilter}
+            onChange={(event) => setDateFilter(event.target.value)}
+          />
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setSearchQuery("");
+            setDateFilter("");
+          }}
+        >
+          Reset
+        </Button>
+      </div>
             {/* <PatientSummaryBanner /> */}
             {/* <div className="grid gap-2 rounded-md border border-border bg-surface-muted/30 p-3 text-sm">
               <div><span className="font-medium text-foreground">Patient Name:</span> <span className="text-muted-foreground">Meera Joshi</span></div>
@@ -523,6 +574,31 @@ export function PathologyResultReviewTab({
             </div> */}
             {isCbc ? (
               <div className="space-y-4">
+      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_180px_110px_auto] md:items-end">
+        <Input
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          placeholder="Search test, code, or department"
+        />
+        <div className="min-w-0">
+          <div className="mb-1 text-xs font-medium text-muted-foreground">Date</div>
+          <Input
+            type="date"
+            value={dateFilter}
+            onChange={(event) => setDateFilter(event.target.value)}
+          />
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setSearchQuery("");
+            setDateFilter("");
+          }}
+        >
+          Reset
+        </Button>
+      </div>
                 {Object.entries(groupedRows).map(([groupName, rows]) => (
                   <div key={groupName} className="overflow-hidden rounded-md border border-border">
                     <div className="border-b border-border bg-surface-muted px-3 py-2 text-sm font-semibold text-foreground">{groupName}</div>
@@ -614,6 +690,31 @@ export function PathologyResultReviewTab({
         }
       >
         <div className="space-y-4">
+      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_180px_110px_auto] md:items-end">
+        <Input
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          placeholder="Search test, code, or department"
+        />
+        <div className="min-w-0">
+          <div className="mb-1 text-xs font-medium text-muted-foreground">Date</div>
+          <Input
+            type="date"
+            value={dateFilter}
+            onChange={(event) => setDateFilter(event.target.value)}
+          />
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setSearchQuery("");
+            setDateFilter("");
+          }}
+        >
+          Reset
+        </Button>
+      </div>
           <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_180px] md:items-end">
             <div className="min-w-0">
               <Input value={diagnosisSearch} onChange={(event) => onDiagnosisSearchChange(event.target.value)} placeholder="Search by clinical conclusion or SNOMED code" />

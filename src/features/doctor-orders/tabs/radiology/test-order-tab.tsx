@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 import { radiologyPriorities, radiologyTestGroups } from "./data";
 import type { RadiologyPriority, RadiologyTest } from "./types";
@@ -165,7 +166,8 @@ export function RadiologyTestOrderTab({
             ))}
           </select>
         ),
-      },
+      }
+      
     ],
     [onPriorityChange],
   );
@@ -185,10 +187,10 @@ export function RadiologyTestOrderTab({
           <div className="max-w-full overflow-hidden rounded-md border border-border p-3">
             <div className="flex items-center gap-2">
               <SectionTitle>Modality / Category</SectionTitle>
-              <Button type="button" size="sm" className="ml-auto">
+              {/* <Button type="button" size="sm" className="ml-auto">
                 <Plus className="h-4 w-4" />
                 Add Test
-              </Button>
+              </Button> */}
             </div>
             <div className="mt-3 max-w-full overflow-hidden border border-border">
               <table className="w-full text-xs">
