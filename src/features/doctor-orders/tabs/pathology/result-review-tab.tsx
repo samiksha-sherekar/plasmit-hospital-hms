@@ -8,7 +8,7 @@ import { Drawer } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 
 import { diagnosisTypes } from "./data";
-import type { PathologyResultBlock } from "./types";
+import type { PathologyResultBlock, PathologySummaryRow } from "./types";
 import { downloadLaboratoryPdf } from "../report-pdf-utils";
 
 function StatusPill({ status }: { status: string }) {
@@ -60,7 +60,7 @@ function getSortValue(block: PathologyResultBlock, sortKey: SortKey) {
 }
 
 type SelectedReportRow = {
-  group: string;
+  group?: string;
   parameter: string;
   result: string;
   unit: string;
@@ -138,6 +138,7 @@ export function PathologyResultReviewTab({
   diagnosisOpen,
   selectedDiagnosisLabel,
   instructionsForLab,
+  savedSummaryRows,
   onDiagnosisSearchChange,
   onDiagnosisTypeChange,
   onDiagnosisOpenChange,
@@ -150,6 +151,7 @@ export function PathologyResultReviewTab({
   diagnosisOpen: boolean;
   selectedDiagnosisLabel: string;
   instructionsForLab: string;
+  savedSummaryRows?: PathologySummaryRow[];
   onDiagnosisSearchChange: (value: string) => void;
   onDiagnosisTypeChange: (value: string) => void;
   onDiagnosisOpenChange: (value: boolean) => void;
@@ -290,7 +292,11 @@ export function PathologyResultReviewTab({
   const selectedReportName = selectedBlock ? selectedBlock.name.replace(" - complete blood count", "").replace(" - kidney function test", "") : "";
   const selectedReportStatus = "Final";
   const isCbc = Boolean(selectedBlock?.name.toLowerCase().includes("cbc"));
-  const selectedSpecimen = "Blood";
+  const selectedSpecimen = React.useMemo(() => {
+    const normalized = selectedBlock ? selectedBlock.name.toLowerCase() : "";
+    const matched = savedSummaryRows?.find((row) => row.name.toLowerCase().includes(normalized) || normalized.includes(row.name.toLowerCase()));
+    return matched?.specimen ?? "Blood";
+  }, [savedSummaryRows, selectedBlock]);
 
   const groupedRows = React.useMemo(() => {
     if (!selectedBlock || !isCbc) return {};
@@ -785,6 +791,10 @@ export function PathologyResultReviewTab({
     </div>
   );
 }
+
+
+
+
 
 
 

@@ -36,7 +36,7 @@ export function RadiologyResultReviewTab({
   const [pageIndex, setPageIndex] = React.useState(0);
   const [sortKey, setSortKey] = React.useState<SortKey>("selectedTests");
   const [sortDirection, setSortDirection] = React.useState<SortDirection>("asc");
-  const pageSize = 5;
+  const [pageSize, setPageSize] = React.useState(5);
   const [selectedBlock, setSelectedBlock] = React.useState<RadiologyResultBlock | null>(null);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [dateFilter, setDateFilter] = React.useState("");
@@ -218,10 +218,7 @@ export function RadiologyResultReviewTab({
             <select
               className="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground outline-none"
               value={pageSize}
-              onChange={(event) => {
-                setPageIndex(0);
-                void event;
-              }}
+              onChange={(event) => {setPageSize(Number(event.target.value));             setPageIndex(0);           }}
             >
               {PAGE_SIZE_OPTIONS.map((size) => (
                 <option key={size} value={size}>
@@ -250,6 +247,8 @@ export function RadiologyResultReviewTab({
     </div>
   );
 }
+
+
 
 
 

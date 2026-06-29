@@ -57,7 +57,7 @@ function getSortValue(block: LaboratoryResultBlock, sortKey: SortKey) {
 }
 
 type SelectedReportRow = {
-  group: string;
+  group?: string;
   parameter: string;
   result: string;
   unit: string;
@@ -284,7 +284,8 @@ export function LaboratoryResultReviewTab({
   const groupedRows = React.useMemo(() => {
     if (!selectedBlock || !isCbc) return [];
     return getSelectedReportRows(selectedBlock).reduce<Record<string, SelectedReportRow[]>>((acc, row) => {
-      acc[row.group] = [...(acc[row.group] ?? []), row];
+      const groupName = row.group ?? "Main Parameters";
+      acc[groupName] = [...(acc[groupName] ?? []), row];
       return acc;
     }, {});
   }, [isCbc, selectedBlock]);
@@ -685,6 +686,9 @@ export function LaboratoryResultReviewTab({
     </div>
   );
 }
+
+
+
 
 
 

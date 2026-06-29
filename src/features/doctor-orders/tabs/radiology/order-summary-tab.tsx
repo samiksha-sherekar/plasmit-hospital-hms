@@ -89,7 +89,7 @@ export function RadiologyOrderSummaryTab({
           <span className="text-xs font-medium text-muted-foreground">Date</span>
           <input type="date" className="h-9 w-full rounded-md border border-input px-3 text-sm outline-none" value={dateFilter} onChange={(event) => setDateFilter(event.target.value)} />
         </label>
-        <Button type="button" variant="outline" onClick={() => { setSearchQuery(""); setDateFilter(""); setPageIndex(0); }}>Reset</Button>
+        <Button type="button" variant="outline" onClick={() => { setSearchQuery(""); setDateFilter(""); }}>Reset</Button>
       </div>
       <DataTable data={filteredRows} columns={columns} />
       <div className="flex flex-wrap items-center gap-2">
@@ -104,3 +104,4 @@ export function RadiologyOrderSummaryTab({
     </div>
   );
 }
+

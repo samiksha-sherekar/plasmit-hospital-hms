@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { DataTable } from "@/components/ui/data-table";
 import type { Role } from "@/types";
 
-// keep local demo data aligned with the existing nurse flow
+
 
 type LdtType = "Line" | "Tube" | "Drain";
 type FieldType = "Free text" | "Date" | "Time" | "Number" | "Dropdown" | "Checkbox";
@@ -423,6 +423,8 @@ export function LdtManagementPage() {
     </div>
   );
 }
+
+
 
 
 

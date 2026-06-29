@@ -10,6 +10,10 @@ export type LdtOrder = {
   priority: LdtOrderPriority;
   orderDate: string;
   status: LdtOrderStatus;
+  patientName: string;
+  patientId: string;
+  doctorName: string;
+  notes: string;
 };
 
 export type LdtTest = {
@@ -56,3 +60,4 @@ export type LdtOrderFormValues = {
   doctorName: string;
   notes: string;
 };
+

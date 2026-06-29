@@ -14,7 +14,7 @@ export type LdtSection = "properties" | "assessment";
 export type LdtDrawerState = { type: "add"; activeSection: LdtSection } | { type: "edit"; record: LdtRecord; activeSection: LdtSection };
 export type LdtDetailsDrawerState = { type: LdtSection; record: LdtRecord } | null;
 
-export type ConfigField = { id: string; label: string; type: LdtFieldType; options?: { label: string; value: string }[] };
+export type ConfigField = { id: string; label: string; type: LdtFieldType; group: LdtSection; options?: { label: string; value: string }[] };
 export type FieldRow = { key: string; label: string; type: LdtFieldType; value: string };
 export type TableRow = { key: string; field: string; type: string; value: string };
 
@@ -154,3 +154,4 @@ export function buildTableRows(rows: Record<string, string> | undefined, fields:
     return { key: `${field}-${index}`, field, type: configField?.type ?? "text", value: value || "-" };
   });
 }
+

@@ -1,3 +1,4 @@
+import type { RadiologyResultBlock } from "./radiology/types";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -298,7 +299,7 @@ export async function downloadLaboratoryPdf(blocks: PdfResultBlock[], filename: 
   doc.save(filename);
 }
 
-export async function downloadRadiologyPdf(blocks: RadiologyPdfBlock[], filename: string) {
+export async function downloadRadiologyPdf(blocks: RadiologyResultBlock[], filename: string) {
   const reportBlocks: PdfResultBlock[] = blocks.map((block, index) => ({
     testName: block.selectedTests,
     department: block.category || "Radiology",
@@ -313,3 +314,4 @@ export async function downloadRadiologyPdf(blocks: RadiologyPdfBlock[], filename
   }));
   await downloadLaboratoryPdf(reportBlocks, filename, "RADIOLOGY REPORT");
 }
+
