@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -11,8 +11,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Drawer } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 
+import { NurseOrderDetailsDrawer } from "./details/nurse-order-details-drawer";
 import { nurseDrugCategories } from "./data";
 import type { NurseDrugOrder } from "./types";
+import type { NurseOrderDetailsModel } from "./details/types";
+import { buildSchedule, formatDateDisplay, formatDateTimeDisplay, getEndDate, getNextDueLabel } from "./schedule-utils";
+
 type NurseOrderAction = "Receive" | "Discontinue" | "Return" | "Modify";
 
 function remainingQty(order: NurseDrugOrder) {
@@ -32,6 +36,81 @@ function ReadOnlyInput({ label, value }: { label: string; value: React.ReactNode
       <Input value={String(value)} readOnly className="bg-background font-semibold" />
     </label>
   );
+}
+
+function mapOrderToDetails(order: NurseDrugOrder): NurseOrderDetailsModel {
+  const orderDate = order.orderDate ?? new Date().toISOString();
+  const startDate = order.startDate ?? orderDate;
+  const endDate = order.endDate ?? getEndDate(startDate, order.days);
+  const lastAdministration = order.lastAdministeredAt ? formatDateTimeDisplay(order.lastAdministeredAt) : "Not Administered";
+  const schedule = buildSchedule(startDate, order.days, order.frequency);
+  const scheduleSlots = schedule.flatMap((day) => day.times.map((time) => ({ date: day.date, time })));
+
+  return {
+    patientName: order.name,
+    mrn: order.id,
+    ward: order.category,
+    bed: order.form,
+    prescriber: order.lastAdministeredBy || "-",
+    orderNumber: order.id,
+    orderType: order.category,
+    orderDate: formatDateDisplay(orderDate) || "-",
+    priority: order.priority || "-",
+    orderStatus: orderStatus(order),
+    orderedBy: order.lastAdministeredBy || "-",
+    genericName: order.name,
+    brandName: order.name,
+    drugForm: order.form,
+    category: order.category,
+    strength: order.dosage || "-",
+    dose: order.dosage || "-",
+    doseUnit: "-",
+    route: order.route || "-",
+    diluent: order.diluent,
+    diluentVolume: order.bagVolume ? String(order.bagVolume) : "-",
+    infusionRate: order.administeredVolume ? String(order.administeredVolume) : "-",
+    administrationInstructions: order.instructions || "-",
+    pharmacy: "-",
+    startDate: formatDateDisplay(startDate) || "-",
+    endDate,
+    scheduledTime: order.cells[0]?.time || "-",
+    frequency: order.frequency || "-",
+    days: order.days || "-",
+    lastAdministration,
+    nextDueTime: getNextDueLabel(order.frequency),
+    orderedQty: String(order.orderedQty),
+    dispensedQty: String(order.dispensedQty),
+    receivedQty: String(order.receivedQty),
+    administeredQty: String(order.administeredQty),
+    remainingQty: String(remainingQty(order)),
+    schedule,
+    administrations: scheduleSlots.map((slot, index) => {
+      const administeredCell = order.cells.find((cell) => cell.status === "administered" && cell.time === slot.time);
+      const isAdministered = Boolean(administeredCell);
+      const actualDateTime = isAdministered && order.lastAdministeredAt ? formatDateTimeDisplay(order.lastAdministeredAt) : "-";
+
+      return {
+        id: `${order.id}-${index}`,
+        administrationDate: slot.date,
+        scheduledTime: slot.time,
+        actualTime: actualDateTime,
+        doseGiven: order.dosage || "-",
+        status: isAdministered ? "Administered" : "Pending",
+        nurse: isAdministered ? order.lastAdministeredBy || "-" : "-",
+        remarks: isAdministered ? order.administrationNote || "Completed" : "Awaiting administration",
+      };
+    }),
+    notes: order.administrationNote
+      ? [
+          {
+            id: `${order.id}-note-1`,
+            time: formatDateTimeDisplay(order.lastAdministeredAt || "") || "-",
+            author: order.lastAdministeredBy || "-",
+            note: order.administrationNote,
+          },
+        ]
+      : [],
+  };
 }
 
 function PopupShell({
@@ -238,9 +317,12 @@ function OrderCard({ order, onAction }: { order: NurseDrugOrder; onAction: (orde
           </button>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
+          <Button type="button" size="sm" variant="outline" onClick={() => onAction(order, "Status")}>
+            View Details
+          </Button>
           <Button type="button" size="sm" variant="outline" disabled={!canReceive} title={canReceive ? `Dispensed pending: ${order.dispensedQty - order.receivedQty}` : "Receive disabled after receiving dispensed drugs"} onClick={() => onAction(order, "Receive")}>Receive</Button>
-          <Button type="button" size="sm" variant="outline" onClick={() => onAction(order, "Discontinue")}>Discontinue</Button>
-          <Button type="button" size="sm" variant="outline" title={`Remaining quantity: ${remainingQty(order)}`} onClick={() => onAction(order, "Return")}>Return</Button>
+          {/* <Button type="button" size="sm" variant="outline" onClick={() => onAction(order, "Discontinue")}>Discontinue</Button>
+          <Button type="button" size="sm" variant="outline" title={`Remaining quantity: ${remainingQty(order)}`} onClick={() => onAction(order, "Return")}>Return</Button> */}
           <Button type="button" size="sm" variant="outline" onClick={() => onAction(order, "Modify")}>Modify</Button>
         </div>
       </div>
@@ -277,9 +359,15 @@ export function DrugOrderReviewTab({ orders }: { orders: NurseDrugOrder[] }) {
   const [activeCategory, setActiveCategory] = React.useState<NurseDrugOrder["category"]>("SOS");
   const [popupOrder, setPopupOrder] = React.useState<NurseDrugOrder | null>(null);
   const [popupAction, setPopupAction] = React.useState<NurseOrderAction | "Status" | null>(null);
+  const [detailsOrder, setDetailsOrder] = React.useState<NurseDrugOrder | null>(null);
   const categoryOrders = orders.filter((order) => order.category === activeCategory);
+  const detailsModel = React.useMemo(() => (detailsOrder ? mapOrderToDetails(detailsOrder) : undefined), [detailsOrder]);
 
   const openPopup = (order: NurseDrugOrder, action: NurseOrderAction | "Status") => {
+    if (action === "Status") {
+      setDetailsOrder(order);
+      return;
+    }
     setPopupOrder(order);
     setPopupAction(action);
   };
@@ -291,6 +379,15 @@ export function DrugOrderReviewTab({ orders }: { orders: NurseDrugOrder[] }) {
         <OrdersPanel activeCategory={activeCategory} categoryOrders={categoryOrders} onAction={openPopup} />
       </div>
       <OrderActionPopup open={Boolean(popupOrder && popupAction)} action={popupAction} order={popupOrder} onOpenChange={(open) => !open && setPopupOrder(null)} />
+      <Drawer
+        open={Boolean(detailsOrder)}
+        onOpenChange={(open) => !open && setDetailsOrder(null)}
+        title="Order Details"
+        description={detailsOrder ? `${detailsOrder.name} / ${detailsOrder.category}` : undefined}
+        className="w-[calc(100vw-2rem)] max-w-5xl"
+      >
+        {detailsModel ? <NurseOrderDetailsDrawer order={detailsModel} /> : null}
+      </Drawer>
     </>
   );
 }

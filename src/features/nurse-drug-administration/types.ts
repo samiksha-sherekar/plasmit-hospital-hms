@@ -1,4 +1,4 @@
-export type NurseDrugCategory = "Scheduled" | "SOS" | "STAT" | "Bolus" | "Diluent" | "Intermittent" | "Continuous" | "Discontinued" | "Unscheduled";
+﻿export type NurseDrugCategory = "Scheduled" | "SOS" | "STAT" | "Bolus" | "Diluent" | "Intermittent" | "Continuous" | "Discontinued" | "Unscheduled";
 export type AdministrationCellStatus = "due" | "overdue" | "administered" | "bolus" | "infusion" | "empty";
 export type AdministrationAction = "Administered" | "Not administered" | "Late administered";
 
@@ -18,6 +18,11 @@ export type NurseDrugOrder = {
   days: string;
   route: string;
   instructions: string;
+  orderDate?: string;
+  startDate?: string;
+  endDate?: string;
+  scheduledTime?: string;
+  nextDueTime?: string;
   diluent?: string;
   priority?: string;
   administrationNote?: string;
