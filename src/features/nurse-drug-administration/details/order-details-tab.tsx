@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { toast } from "sonner";
 import type { NurseOrderDetailsModel } from "./types";
 
 function formatDateValue(value: string) {
@@ -98,6 +99,57 @@ function SectionCard({ title, children }: { title: string; children: React.React
   );
 }
 
+
+type InlineActionKey = "notifyPharmacy" | "returnMedication" | "notifyDoctor" | "verifyDose" | "verifyRoute" | "timeOverride";
+
+type InlineActionField = {
+  key: string;
+  label: string;
+  type?: "text" | "number" | "time";
+  defaultValue: string;
+};
+
+function getInlineActionFields(order: NurseOrderDetailsModel, action: InlineActionKey | null): InlineActionField[] {
+  switch (action) {
+    case "notifyPharmacy":
+      return [
+        { key: "priority", label: "Priority", defaultValue: "High" },
+        { key: "message", label: "Message", defaultValue: `Please review ${getDrugDisplayName(order)} reconciliation.` },
+      ];
+    case "returnMedication":
+      return [
+        { key: "returnQty", label: "Return Qty", type: "number", defaultValue: order.dispensedQty || order.orderedQty || "1" },
+        { key: "returnReason", label: "Return Reason", defaultValue: order.reconciliationRemarks || "Medication mismatch identified." },
+        { key: "remarks", label: "Remarks", defaultValue: "" },
+      ];
+    case "notifyDoctor":
+      return [
+        { key: "issueType", label: "Issue Type", defaultValue: "Medication discrepancy" },
+        { key: "message", label: "Message", defaultValue: "Please review the medication issue and advise next steps." },
+        { key: "doctorResponse", label: "Doctor Response", defaultValue: order.doctorResponse || "" },
+      ];
+    case "verifyDose":
+      return [
+        { key: "orderedDose", label: "Ordered Dose", defaultValue: order.orderedDose || order.dose || "" },
+        { key: "administeredDose", label: "Administered Dose", defaultValue: order.dose || "" },
+        { key: "correctionNotes", label: "Correction Notes", defaultValue: order.rightDoseReason || "" },
+      ];
+    case "verifyRoute":
+      return [
+        { key: "orderedRoute", label: "Ordered Route", defaultValue: order.orderedRoute || order.route || "" },
+        { key: "selectedRoute", label: "Selected Route", defaultValue: order.route || "" },
+        { key: "correctionNotes", label: "Correction Notes", defaultValue: order.rightRouteReason || "" },
+      ];
+    case "timeOverride":
+      return [
+        { key: "scheduledTime", label: "Scheduled Time", type: "time", defaultValue: order.scheduledTime || "" },
+        { key: "administrationTime", label: "Administration Time", type: "time", defaultValue: order.verifiedOn ? order.verifiedOn.slice(11, 16) : "" },
+        { key: "overrideReason", label: "Override Reason", defaultValue: order.rightTimeReason || "" },
+      ];
+    default:
+      return [];
+  }
+}
 function FieldRow({ label, value, format = false }: { label: string; value: string; format?: boolean }) {
   const displayValue = format ? formatDateValue(value) : value;
 
@@ -234,6 +286,8 @@ function DrugReconciliationSection({ order }: { order: NurseOrderDetailsModel })
 
 function RightsSection({ order }: { order: NurseOrderDetailsModel }) {
   const computed = React.useMemo(() => getFiveRights(order), [order]);
+  const [activeInlineAction, setActiveInlineAction] = React.useState<InlineActionKey | null>(null);
+  const [inlineActionStatus, setInlineActionStatus] = React.useState<Partial<Record<InlineActionKey, string>>>({});
   const [actualAdministrationTime, setActualAdministrationTime] = React.useState("");
   const [confirmed, setConfirmed] = React.useState(order.medicationRightsConfirmed);
   const [verifiedBy, setVerifiedBy] = React.useState(order.verifiedBy || "");
@@ -279,9 +333,29 @@ function RightsSection({ order }: { order: NurseOrderDetailsModel }) {
     };
   }, [actualAdministrationTime, computed.rightTimeReason, computed.rightTimeStatus, order.scheduledTime]);
 
-  const canConfirm = computed.rightDrugStatus === "Verified" && computed.rightDoseStatus === "Verified" && computed.rightRouteStatus === "Verified" && (rightTimeWithInput.status === "Verified" || rightTimeWithInput.status === "Warning");
-  const hasCriticalFailure = computed.rightDrugStatus === "Failed" || computed.rightDoseStatus === "Failed" || computed.rightRouteStatus === "Failed" || rightTimeWithInput.status === "Failed";
-  const showWarningAck = rightTimeWithInput.status === "Warning";
+  const selectedTimeOverrideReason = (inlineActionStatus.timeOverride || "").trim();  const hasTimeOverrideReason = Boolean(selectedTimeOverrideReason);  const hasCriticalFailure = computed.rightDrugStatus === "Failed" || computed.rightDoseStatus === "Failed" || computed.rightRouteStatus === "Failed" || rightTimeWithInput.status === "Failed" || (rightTimeWithInput.status === "Warning" && !hasTimeOverrideReason);  const canConfirm = confirmed && computed.rightDrugStatus === "Verified" && computed.rightDoseStatus === "Verified" && computed.rightRouteStatus === "Verified" && (rightTimeWithInput.status === "Verified" || (rightTimeWithInput.status === "Warning" && hasTimeOverrideReason));  const showWarningAck = rightTimeWithInput.status === "Warning" && !hasTimeOverrideReason;  const submitAction = activeInlineAction ?? "notifyDoctor";
+
+  const handleInlineActionToggle = (action: InlineActionKey) => {
+    setActiveInlineAction((current) => (current === action ? null : action));
+  };
+
+  const handleInlineActionCancel = () => {
+    setActiveInlineAction(null);
+  };
+
+  const handleInlineActionSubmit = (action: InlineActionKey) => {
+    const messages: Record<InlineActionKey, string> = {
+      notifyPharmacy: "Pharmacy notified successfully.",
+      returnMedication: "Medication returned successfully.",
+      notifyDoctor: "Doctor notified successfully.",
+      verifyDose: "Dose verification saved successfully.",
+      verifyRoute: "Route verification saved successfully.",
+      timeOverride: "Time override saved successfully.",
+    };
+    setInlineActionStatus((current) => ({ ...current, [action]: messages[action] }));
+    toast.success(messages[action]);
+    setActiveInlineAction(null);
+  };
 
   const handleConfirmChange = (nextChecked: boolean) => {
     setConfirmed(nextChecked);
@@ -294,44 +368,95 @@ function RightsSection({ order }: { order: NurseOrderDetailsModel }) {
     }
   };
 
-  const rights: Array<{ name: string; status: "Verified" | "Warning" | "Failed"; reason?: string }> = [
+  const rights: Array<{ name: string; status: "Verified" | "Warning" | "Failed"; reason?: string; actionKeys?: InlineActionKey[] }> = [
     {
       name: "Right Drug",
       status: computed.rightDrugStatus,
       reason: computed.rightDrugReason,
+      actionKeys: computed.rightDrugStatus === "Failed" ? ["notifyPharmacy", "returnMedication"] : undefined,
     },
     {
       name: "Right Dose",
       status: computed.rightDoseStatus,
       reason: computed.rightDoseReason,
+      actionKeys: computed.rightDoseStatus === "Failed" ? ["notifyDoctor", "verifyDose"] : undefined,
     },
     {
       name: "Right Route",
       status: computed.rightRouteStatus,
       reason: computed.rightRouteReason,
+      actionKeys: computed.rightRouteStatus === "Failed" ? ["verifyRoute", "notifyDoctor"] : undefined,
     },
     {
       name: "Right Time",
       status: rightTimeWithInput.status,
       reason: rightTimeWithInput.reason,
+      actionKeys: rightTimeWithInput.status === "Warning" ? ["timeOverride", "notifyDoctor"] : undefined,
     },
-  ] as const;
+  ];
+
+  const activeFormFields = getInlineActionFields(order, activeInlineAction);
 
   return (
     <SectionCard title="4 Rights Check">
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {rights.map((right) => (
-            <div key={right.name} className={`rounded-xl border p-3 ${right.status === "Failed" ? "border-danger/30 bg-danger/10" : right.status === "Warning" ? "border-warning/30 bg-warning/10" : "border-border bg-surface"}`}>
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <div className="text-sm font-semibold text-foreground">{right.name}</div>
+          {rights.map((right) => {
+            const isActive = Boolean(right.actionKeys?.includes(activeInlineAction as InlineActionKey));
+            return (
+              <div key={right.name} className={`rounded-xl border p-3 ${right.status === "Failed" ? "border-danger/30 bg-danger/10" : right.status === "Warning" ? "border-warning/30 bg-warning/10" : "border-border bg-surface"}`}>
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="text-sm font-semibold text-foreground">{right.name}</div>
+                  </div>
+                  <StatusBadge status={right.status} />
                 </div>
-                <StatusBadge status={right.status} />
+                {right.reason ? <div className={right.status === "Failed" ? "mt-2 text-xs text-danger" : "mt-2 text-xs text-warning"}>{right.reason}</div> : null}
+                {right.actionKeys ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {right.actionKeys.map((actionKey) => {
+                      const label = actionKey === "notifyPharmacy" ? "Notify Pharmacy" : actionKey === "returnMedication" ? "Return Medication" : actionKey === "notifyDoctor" ? "Notify Doctor" : actionKey === "verifyDose" ? "Verify Dose" : actionKey === "verifyRoute" ? "Verify Route" : "Proceed with Reason";
+                      return (
+                        <button
+                          key={actionKey}
+                          type="button"
+                          onClick={() => handleInlineActionToggle(actionKey)}
+                          className={`h-6 rounded-md px-3 text-xs transition ${activeInlineAction === actionKey ? "bg-primary text-primary-foreground" : "border border-border bg-white text-foreground hover:bg-surface-muted"}`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : null}
+                {isActive ? (
+                  <div className="mt-3 space-y-3 rounded-lg border border-border bg-white p-3">
+                    <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Inline Corrective Action</div>
+                    <div className="grid gap-3">
+                      {activeFormFields.map((field) => (
+                        <label key={field.key} className="space-y-1 text-sm">
+                          <span className="text-xs font-medium text-muted-foreground">{field.label}</span>
+                          <input
+                            type={field.type === "number" ? "number" : field.type === "time" ? "time" : "text"}
+                            defaultValue={field.defaultValue}
+                            className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring/20"
+                          />
+                        </label>
+                      ))}
+                    </div>
+                    <div className="flex flex-wrap justify-end gap-2 pt-1">
+                      <button type="button" onClick={handleInlineActionCancel} className="rounded-md border border-border bg-white px-3 py-2 text-sm font-medium text-foreground transition hover:bg-surface-muted">
+                        Cancel
+                      </button>
+                      <button type="button" onClick={() => handleInlineActionSubmit(submitAction)} className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90">
+                        Submit
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
               </div>
-              {right.reason ? <div className={right.status === "Failed" ? "mt-2 text-xs text-danger" : "mt-2 text-xs text-warning"}>{right.reason}</div> : null}
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {showWarningAck ? (
@@ -364,9 +489,7 @@ function RightsSection({ order }: { order: NurseOrderDetailsModel }) {
           <button type="button" className="rounded-md border border-border bg-white px-4 py-2 text-sm font-medium text-foreground transition hover:bg-surface-muted">
             Cancel
           </button>
-          <button type="button" className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90">
-            Save
-          </button>
+          <button type="button" disabled={!canConfirm || hasCriticalFailure} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50">Confirm & Administer </button>
         </div>
       </div>
     </SectionCard>
@@ -436,3 +559,15 @@ export function OrderDetailsTab({ order }: { order: NurseOrderDetailsModel }) {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+

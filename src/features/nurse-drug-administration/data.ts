@@ -94,6 +94,9 @@ export const nurseDrugOrders: NurseDrugOrder[] = [
     orderLabel: "Hydrocortisone",
     dispensedLabel: "Hydrocortisone Sodium Succinate",
     receivedLabel: "Hydrocortisone 100 mg IV Injection",
+    lastAdministeredAt: "2026-06-30T12:30:00",
+    lastAdministeredBy: "Maya Iyer",
+    
     cells: [{ time: "10:00", label: "100 mg STAT", status: "due" }],
   },
   {
@@ -277,3 +280,6 @@ export const defaultFluidDetail: FluidAdministrationDetail = {
   stopAdministrationAt: "",
   reason: "",
 };
+
+
+
