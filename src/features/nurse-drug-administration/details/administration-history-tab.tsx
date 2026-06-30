@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
 
@@ -18,10 +18,43 @@ const columns: ColumnDef<AdministrationLogRow>[] = [
   { accessorKey: "remarks", header: "Remarks" },
 ];
 
+const staticAdministrations: AdministrationLogRow[] = [
+  {
+    id: "adm-001",
+    administrationDate: "2026-06-29",
+    scheduledTime: "08:00",
+    actualTime: "2026-06-29 08:10",
+    doseGiven: "500 mg",
+    status: "Administered",
+    nurse: "Nurse A",
+    remarks: "Completed as scheduled.",
+  },
+  {
+    id: "adm-002",
+    administrationDate: "2026-06-29",
+    scheduledTime: "14:00",
+    actualTime: "2026-06-29 14:25",
+    doseGiven: "500 mg",
+    status: "Late administered",
+    nurse: "Nurse B",
+    remarks: "Delay due to patient rounding.",
+  },
+  {
+    id: "adm-003",
+    administrationDate: "2026-06-30",
+    scheduledTime: "20:00",
+    actualTime: "-",
+    doseGiven: "500 mg",
+    status: "Not administered",
+    nurse: "-",
+    remarks: "Pending shift handover.",
+  },
+];
+
 export function AdministrationHistoryTab({ order }: { order: NurseOrderDetailsModel }) {
-  if (!order.administrations.length) {
+  if (!staticAdministrations.length) {
     return <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">No administration history available.</div>;
   }
 
-  return <DataTable columns={columns} data={order.administrations} />;
+  return <DataTable columns={columns} data={staticAdministrations} />;
 }

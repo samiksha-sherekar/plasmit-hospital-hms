@@ -1,5 +1,5 @@
-import { NurseOrderDetailsPage } from "@/features/nurse-drug-administration/details/details-page";
+// import { NurseOrderDetailsPage } from "@/features/nurse-drug-administration/details/details-page";
 
 export default function Page() {
-  return <NurseOrderDetailsPage />;
+  // return <NurseOrderDetailsPage />;
 }

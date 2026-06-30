@@ -18,6 +18,9 @@ export type NurseDrugOrder = {
   days: string;
   route: string;
   instructions: string;
+  orderLabel?: string;
+  dispensedLabel?: string;
+  receivedLabel?: string;
   orderDate?: string;
   startDate?: string;
   endDate?: string;

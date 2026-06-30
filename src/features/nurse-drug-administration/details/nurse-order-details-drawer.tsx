@@ -1,13 +1,13 @@
-﻿"use client";
+"use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { AdministrationHistoryTab } from "./administration-history-tab";
 import { NotesTab } from "./notes-tab";
 import { OrderDetailsTab } from "./order-details-tab";
-import { type NurseOrderDetailsModel, createEmptyOrderDetails } from "./types";
+import { type NurseOrderDetailsModel } from "./types";
 
-export function NurseOrderDetailsDrawer({ order = createEmptyOrderDetails() }: { order?: NurseOrderDetailsModel }) {
+export function NurseOrderDetailsDrawer({ order }: { order: NurseOrderDetailsModel }) {
   return (
     <div className="space-y-4">
       <Tabs defaultValue="order-details" className="w-full">

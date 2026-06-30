@@ -43,6 +43,9 @@ export const nurseDrugOrders: NurseDrugOrder[] = [
     dispensedQty: 2,
     receivedQty: 1,
     administeredQty: 1,
+    orderLabel: "Pantoprazole",
+    dispensedLabel: "Pantoprazole 10 mg Injection",
+    receivedLabel: "Pantoprazole 40 mg IV Slow",
     lastAdministeredAt: "12:05",
     lastAdministeredBy: "Maya Iyer",
     cells: [
@@ -88,6 +91,9 @@ export const nurseDrugOrders: NurseDrugOrder[] = [
     dispensedQty: 1,
     receivedQty: 1,
     administeredQty: 0,
+    orderLabel: "Hydrocortisone",
+    dispensedLabel: "Hydrocortisone Sodium Succinate",
+    receivedLabel: "Hydrocortisone 100 mg IV Injection",
     cells: [{ time: "10:00", label: "100 mg STAT", status: "due" }],
   },
   {

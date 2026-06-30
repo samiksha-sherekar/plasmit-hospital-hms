@@ -50,10 +50,10 @@ function isAbnormal(row: PdfResultRow) {
   return row.flag === "H" || row.flag === "L";
 }
 
-function rowTone(row: PdfResultRow) {
-  if (row.flag === "H") return [180, 40, 40] as const;
-  if (row.flag === "L") return [30, 90, 180] as const;
-  return [28, 44, 74] as const;
+function rowTone(row: PdfResultRow): [number, number, number] {
+  if (row.flag === "H") return [180, 40, 40];
+  if (row.flag === "L") return [30, 90, 180];
+  return [28, 44, 74];
 }
 
 function groupRows(rows: PdfResultRow[]) {
@@ -314,4 +314,5 @@ export async function downloadRadiologyPdf(blocks: RadiologyResultBlock[], filen
   }));
   await downloadLaboratoryPdf(reportBlocks, filename, "RADIOLOGY REPORT");
 }
+
 

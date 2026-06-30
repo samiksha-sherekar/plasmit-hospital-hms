@@ -348,7 +348,6 @@ export function PathologyTab() {
             selectedCount={selectedCount}
             billingNote={billingNote}
             instructionsForLab={savedInstructionsForLab}
-            savedSummaryRows={selectedSummaryRows}
             onSort={updateSummarySort}
             sort={summarySort}
             onSave={saveOrder}
@@ -368,7 +367,6 @@ export function PathologyTab() {
             diagnosisOpen={diagnosisOpen}
             selectedDiagnosisLabel={selectedDiagnosisLabel}
             instructionsForLab={savedInstructionsForLab}
-            savedSummaryRows={selectedSummaryRows}
             onDiagnosisSearchChange={setDiagnosisSearch}
             onDiagnosisTypeChange={setDiagnosisType}
             onDiagnosisOpenChange={setDiagnosisOpen}

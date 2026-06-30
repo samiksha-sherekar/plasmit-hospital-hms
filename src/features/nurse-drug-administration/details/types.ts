@@ -1,9 +1,11 @@
-﻿export type NurseOrderDetailsModel = {
+export type NurseOrderDetailsModel = {
   patientName: string;
+  selectedPatientName: string;
   mrn: string;
   ward: string;
   bed: string;
   prescriber: string;
+
   orderNumber: string;
   orderType: string;
   orderDate: string;
@@ -11,6 +13,7 @@
   orderStatus: string;
   administrationCondition: string;
   orderedBy: string;
+
   genericName: string;
   brandName: string;
   drugForm: string;
@@ -24,6 +27,7 @@
   infusionRate: string;
   administrationInstructions: string;
   pharmacy: string;
+
   startDate: string;
   endDate: string;
   scheduledTime: string;
@@ -31,15 +35,66 @@
   days: string;
   lastAdministration: string;
   nextDueTime: string;
+
   orderedQty: string;
   dispensedQty: string;
   receivedQty: string;
   administeredQty: string;
   remainingQty: string;
+
+  // Drug Reconciliation
+  orderedDrugName: string;
+  orderedGenericName?: string;
+  orderedStrength: string;
+  orderedDose: string;
+  orderedDoseUnit: string;
+  orderedForm: string;
+  orderedRoute: string;
+
+  dispensedDrugName: string;
+  dispensedGenericName?: string;
+  dispensedStrength: string;
+  dispensedDose: string;
+  dispensedDoseUnit: string;
+  dispensedForm: string;
+  dispensedRoute: string;
+
+  receivedDrugName: string;
+  receivedGenericName?: string;
+  receivedStrength: string;
+  receivedDose: string;
+  receivedDoseUnit: string;
+  receivedForm: string;
+  receivedRoute: string;
+
+  batchNo?: string;
+  expiryDate?: string;
+  manufacturer?: string;
+  reconciliationStatus: "Matched" | "Mismatch";
+  reconciliationRemarks?: string;
+
+  // 5 Rights Check - without patient verification
+  rightDrugStatus: "Verified" | "Failed";
+  rightDrugReason?: string;
+
+  rightDoseStatus: "Verified" | "Failed";
+  rightDoseReason?: string;
+
+  rightRouteStatus: "Verified" | "Failed";
+  rightRouteReason?: string;
+
+  rightTimeStatus: "Verified" | "Warning" | "Failed";
+  rightTimeReason?: string;
+
+  medicationRightsConfirmed: boolean;
+  verifiedBy?: string;
+  verifiedOn?: string;
+
   schedule: Array<{
     date: string;
     times: string[];
   }>;
+
   administrations: Array<{
     id: string;
     administrationDate: string;
@@ -50,71 +105,24 @@
     nurse: string;
     remarks: string;
   }>;
+
   notes: Array<{
     id: string;
     time: string;
     author: string;
     note: string;
   }>;
+
   nurseNotes: string;
   patientResponse: string;
   observation: string;
   followUpNotes: string;
+
   doctorNotified: "Yes" | "No";
   notificationDateTime: string;
+  communicationMethod?: "Phone Call" | "In Person" | "EMR Message" | "";
   communicationDetails: string;
+  doctorResponse?: string;
+
   generalRemarks: string;
 };
-
-export function createEmptyOrderDetails(): NurseOrderDetailsModel {
-  return {
-    patientName: "Empty drawer",
-    mrn: "-",
-    ward: "-",
-    bed: "-",
-    prescriber: "-",
-    orderNumber: "-",
-    orderType: "-",
-    orderDate: "-",
-    priority: "-",
-    orderStatus: "-",
-    administrationCondition: "Held",
-    orderedBy: "-",
-    genericName: "-",
-    brandName: "-",
-    drugForm: "-",
-    category: "-",
-    strength: "-",
-    dose: "-",
-    doseUnit: "-",
-    route: "-",
-    diluent: "-",
-    diluentVolume: "-",
-    infusionRate: "-",
-    administrationInstructions: "-",
-    pharmacy: "-",
-    startDate: "-",
-    endDate: "-",
-    scheduledTime: "-",
-    frequency: "-",
-    days: "-",
-    lastAdministration: "Not Administered",
-    nextDueTime: "-",
-    orderedQty: "-",
-    dispensedQty: "-",
-    receivedQty: "-",
-    administeredQty: "-",
-    remainingQty: "-",
-    schedule: [],
-    administrations: [],
-    notes: [],
-    nurseNotes: "",
-    patientResponse: "",
-    observation: "",
-    followUpNotes: "",
-    doctorNotified: "No",
-    notificationDateTime: "",
-    communicationDetails: "",
-    generalRemarks: "",
-  };
-}

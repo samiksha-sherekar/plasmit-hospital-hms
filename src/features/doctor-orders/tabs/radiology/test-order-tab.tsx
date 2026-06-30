@@ -10,7 +10,9 @@ import { DataTable } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
-import { radiologyPriorities, radiologyTestGroups } from "./data";
+import { toast } from 'sonner';
+
+import { radiologyPriorities, radiologyTestGroups } from './data';
 import type { RadiologyPriority, RadiologyTest } from "./types";
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
@@ -87,6 +89,7 @@ export function RadiologyTestOrderTab({
   onNotesChange,
   onOpenSummary,
   onSave,
+  onReorderPrevious,
 }: {
   search: string;
   onSearchChange: (value: string) => void;
@@ -100,6 +103,7 @@ export function RadiologyTestOrderTab({
   notes: string;
   onNotesChange: (value: string) => void;
   onOpenSummary: () => void;
+  onReorderPrevious?: (historyId: string) => void;
   onSave: () => void;
 }) {
   const [activeCategory, setActiveCategory] = React.useState("CT Scan");
@@ -234,7 +238,7 @@ export function RadiologyTestOrderTab({
                     <td className="border-t border-r border-border px-2 py-2 text-muted-foreground">12 Apr 2026</td>
                     <td className="border-t border-r border-border px-2 py-2 font-medium text-foreground">CT Head</td>
                     <td className="border-t border-border px-2 py-2">
-                      <Button type="button" size="sm" variant="outline">
+                      <Button type="button" size="sm" variant="outline" onClick={() => { onReorderPrevious?.("CT Head"); toast.success(`Reorder requested for ${"CT Head"}`); }}>
                         Reorder
                       </Button>
                     </td>

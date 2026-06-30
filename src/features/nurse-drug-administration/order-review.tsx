@@ -17,6 +17,84 @@ import type { NurseDrugOrder } from "./types";
 import type { NurseOrderDetailsModel } from "./details/types";
 import { buildSchedule, formatDateDisplay, formatDateTimeDisplay, getEndDate, getNextDueLabel } from "./schedule-utils";
 
+function normalizeValue(value?: string) {
+  return (value ?? "").trim().toLowerCase();
+}
+
+function isPresent(value?: string) {
+  const normalized = normalizeValue(value);
+  return Boolean(normalized) && normalized !== "-";
+}
+
+function compareOptionalValues(values: Array<string | undefined>) {
+  const present = values.filter(isPresent);
+  if (present.length <= 1) return true;
+  const baseline = normalizeValue(present[0]);
+  return present.every((value) => normalizeValue(value) === baseline);
+}
+
+function compareText(a?: string, b?: string) {
+  const left = normalizeValue(a);
+  const right = normalizeValue(b);
+  if (!left || !right) return true;
+  return left === right;
+}
+
+function parseTimeToMinutes(value?: string) {
+  if (!value) return null;
+  const match = value.trim().match(/^(\\d{1,2}):(\\d{2})(?:\\s*([ap]m))?$/i);
+  if (!match) return null;
+
+  let hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  const meridiem = match[3]?.toLowerCase();
+
+  if (Number.isNaN(hours) || Number.isNaN(minutes) || minutes < 0 || minutes > 59) return null;
+
+  if (meridiem === "am" || meridiem === "pm") {
+    hours = hours % 12;
+    if (meridiem === "pm") hours += 12;
+  }
+
+  if (hours < 0 || hours > 23) return null;
+  return hours * 60 + minutes;
+}
+
+function compareReconciliation(order: NurseDrugOrder) {
+  const comparisons = [
+    [order.orderLabel || order.name, order.dispensedLabel || order.name, order.receivedLabel || order.form],
+    [order.orderLabel || order.name, order.dispensedLabel || order.name, order.receivedLabel || order.name],
+    [order.dosage, order.dosage, order.dosage],
+    [order.dosage, order.dosage, order.dosage],
+    [order.dosage ? "-" : "-", order.dosage ? "-" : "-", order.dosage ? "-" : "-"],
+    [order.form, order.form, order.form],
+    [order.route, order.route, order.route],
+  ];
+
+  const fields = ["Drug Name", "Generic Name", "Strength", "Dose", "Dose Unit", "Form", "Route"];
+  const mismatches = fields.filter((field, index) => !compareOptionalValues(comparisons[index]));
+  return {
+    reconciliationStatus: mismatches.length ? ("Mismatch" as const) : ("Matched" as const),
+    reconciliationRemarks: mismatches.length ? `Mismatch in ${mismatches.join(", ")}.` : undefined,
+  };
+}
+
+function getRightTimeStatus(order: NurseDrugOrder) {
+  const normalizedCategory = normalizeValue(order.category);
+  const normalizedFrequency = normalizeValue(order.frequency);
+  if ([normalizedCategory, normalizedFrequency].includes("sos")) return { status: "Verified" as const, reason: "As needed medication." };
+  if ([normalizedCategory, normalizedFrequency].includes("stat")) return { status: "Verified" as const, reason: "Immediate administration." };
+
+  const scheduled = parseTimeToMinutes(order.cells[0]?.time || order.scheduledTime);
+  const administered = parseTimeToMinutes(order.lastAdministeredAt ? new Date(order.lastAdministeredAt).toTimeString().slice(0, 5) : undefined);
+  if (scheduled === null || administered === null) return { status: "Failed" as const, reason: "Invalid or missing administration time." };
+
+  const diff = Math.abs(administered - scheduled);
+  return diff <= 30
+    ? { status: "Verified" as const, reason: "" }
+    : { status: "Warning" as const, reason: "Medication is outside the scheduled time window. Please confirm before administration." };
+}
+
 type NurseOrderAction = "Receive" | "Discontinue" | "Return" | "Modify";
 
 function remainingQty(order: NurseDrugOrder) {
@@ -45,9 +123,12 @@ function mapOrderToDetails(order: NurseDrugOrder): NurseOrderDetailsModel {
   const lastAdministration = order.lastAdministeredAt ? formatDateTimeDisplay(order.lastAdministeredAt) : "Not Administered";
   const schedule = buildSchedule(startDate, order.days, order.frequency);
   const scheduleSlots = schedule.flatMap((day) => day.times.map((time) => ({ date: day.date, time })));
+  const reconciliation = compareReconciliation(order);
+  const rightTime = getRightTimeStatus(order);
 
   return {
     patientName: order.name,
+    selectedPatientName: order.name,
     mrn: order.id,
     ward: order.category,
     bed: order.form,
@@ -57,10 +138,11 @@ function mapOrderToDetails(order: NurseDrugOrder): NurseOrderDetailsModel {
     orderDate: formatDateDisplay(orderDate) || "-",
     priority: order.priority || "-",
     orderStatus: orderStatus(order),
+    administrationCondition: orderStatus(order),
     orderedBy: order.lastAdministeredBy || "-",
-    genericName: order.name,
-    brandName: order.name,
-    drugForm: order.form,
+    genericName: order.orderLabel || order.name,
+    brandName: order.dispensedLabel || order.name,
+    drugForm: order.receivedLabel || order.form,
     category: order.category,
     strength: order.dosage || "-",
     dose: order.dosage || "-",
@@ -83,7 +165,40 @@ function mapOrderToDetails(order: NurseDrugOrder): NurseOrderDetailsModel {
     receivedQty: String(order.receivedQty),
     administeredQty: String(order.administeredQty),
     remainingQty: String(remainingQty(order)),
-    schedule,
+    orderedDrugName: order.orderLabel || order.name,
+    orderedGenericName: order.orderLabel || order.name,
+    orderedStrength: order.dosage || "-",
+    orderedDose: order.dosage || "-",
+    orderedDoseUnit: "-",
+    orderedForm: order.form,
+    orderedRoute: order.route || "-",
+    dispensedDrugName: order.dispensedLabel || order.name,
+    dispensedGenericName: order.dispensedLabel || order.name,
+    dispensedStrength: order.dosage || "-",
+    dispensedDose: order.dosage || "-",
+    dispensedDoseUnit: "-",
+    dispensedForm: order.form,
+    dispensedRoute: order.route || "-",
+    receivedDrugName: order.receivedLabel || order.name,
+    receivedGenericName: order.receivedLabel || order.name,
+    receivedStrength: order.dosage || "-",
+    receivedDose: order.dosage || "-",
+    receivedDoseUnit: "-",
+    receivedForm: order.form,
+    receivedRoute: order.route || "-",
+    reconciliationStatus: reconciliation.reconciliationStatus,
+    reconciliationRemarks: reconciliation.reconciliationRemarks,
+    rightDrugStatus: reconciliation.reconciliationStatus === "Matched" ? "Verified" : "Failed",
+    rightDrugReason: reconciliation.reconciliationStatus === "Matched" ? undefined : reconciliation.reconciliationRemarks,
+    rightDoseStatus: "Verified",
+    rightDoseReason: undefined,
+    rightRouteStatus: "Verified",
+    rightRouteReason: undefined,
+    rightTimeStatus: rightTime.status,
+    rightTimeReason: rightTime.reason,
+    medicationRightsConfirmed: false,
+    verifiedBy: "",
+    verifiedOn: "",   schedule,
     administrations: scheduleSlots.map((slot, index) => {
       const administeredCell = order.cells.find((cell) => cell.status === "administered" && cell.time === slot.time);
       const isAdministered = Boolean(administeredCell);
@@ -110,6 +225,14 @@ function mapOrderToDetails(order: NurseDrugOrder): NurseOrderDetailsModel {
           },
         ]
       : [],
+    nurseNotes: "",
+    patientResponse: "",
+    observation: "",
+    followUpNotes: "",
+    doctorNotified: "No",
+    notificationDateTime: "",
+    communicationDetails: "",
+    generalRemarks: "",
   };
 }
 
@@ -321,8 +444,8 @@ function OrderCard({ order, onAction }: { order: NurseDrugOrder; onAction: (orde
             View Details
           </Button>
           <Button type="button" size="sm" variant="outline" disabled={!canReceive} title={canReceive ? `Dispensed pending: ${order.dispensedQty - order.receivedQty}` : "Receive disabled after receiving dispensed drugs"} onClick={() => onAction(order, "Receive")}>Receive</Button>
-          {/* <Button type="button" size="sm" variant="outline" onClick={() => onAction(order, "Discontinue")}>Discontinue</Button>
-          <Button type="button" size="sm" variant="outline" title={`Remaining quantity: ${remainingQty(order)}`} onClick={() => onAction(order, "Return")}>Return</Button> */}
+          <Button type="button" size="sm" variant="outline" onClick={() => onAction(order, "Discontinue")}>Discontinue</Button>
+          <Button type="button" size="sm" variant="outline" title={`Remaining quantity: ${remainingQty(order)}`} onClick={() => onAction(order, "Return")}>Return</Button>
           <Button type="button" size="sm" variant="outline" onClick={() => onAction(order, "Modify")}>Modify</Button>
         </div>
       </div>

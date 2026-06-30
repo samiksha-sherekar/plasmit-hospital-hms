@@ -1,4 +1,4 @@
-import type { LdtFieldType } from "@/features/doctor-orders/tabs/ldt/config";
+import type { LdtDynamicField, LdtFieldType } from "@/features/doctor-orders/tabs/ldt/config";
 
 export type LdtRecord = {
   id: string;
@@ -148,10 +148,11 @@ export function getFieldRows(values: LdtFormValues, section: LdtSection, getLdtT
   return toFieldRows(section, values, fields);
 }
 
-export function buildTableRows(rows: Record<string, string> | undefined, fields: ConfigField[]): TableRow[] {
+export function buildTableRows(rows: Record<string, string> | undefined, fields: Pick<LdtDynamicField, "id" | "label" | "type">[]): TableRow[] {
   return Object.entries(rows ?? {}).map(([field, value], index) => {
     const configField = fields.find((item) => item.label === field || item.id === field);
     return { key: `${field}-${index}`, field, type: configField?.type ?? "text", value: value || "-" };
   });
 }
+
 

@@ -214,6 +214,7 @@ export function RadiologyTab() {
                 rows={sortedSummaryRows}
                 sort={summarySort}
                 onSort={updateSummarySort}
+                billingNote={billingNote}
                 onSave={saveOrder}
                 onAddToBill={addToBill}
                 onSaveAndBill={saveAndBill}

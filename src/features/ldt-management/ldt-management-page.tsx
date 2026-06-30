@@ -266,7 +266,7 @@ function LdtManagementWorkspace() {
         ...ldt,
         priority: ldt.type === "Drain" ? "High" : ldt.type === "Tube" ? "Medium" : "Low",
         orderedBy: ldt.type === "Line" ? "Dr. Sharma" : ldt.type === "Tube" ? "Dr. Patel" : "Dr. Khan",
-        status: ldt.type === "Line" ? "Active" : ldt.type === "Tube" ? "Pending" : "On Hold",
+        status: (ldt.type === "Line" ? "Active" : ldt.type === "Tube" ? "Pending" : "On Hold") as LdtRow["status"],
       }))
       .filter((ldt) => {
         if (!query) return true;
@@ -423,6 +423,8 @@ export function LdtManagementPage() {
     </div>
   );
 }
+
+
 
 
 
