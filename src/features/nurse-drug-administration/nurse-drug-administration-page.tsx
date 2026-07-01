@@ -10,12 +10,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { mockPatients } from "@/data/patients";
 import type { Role } from "@/types";
 
-import { AdministrationTimeline } from "./administration-timeline";
+import { MedicationListTab } from "./administration-details/drug-list-tab";
+import { TimelineTab } from "./administration-details/timeline-tab";
 import { defaultAdministrationDetail, defaultFluidDetail, nurseDrugOrders } from "./data";
 import { AdministrationDetailsPanel, FluidAdministrationDetailsPanel } from "./detail-panels";
 import { DrugOrderReviewTab } from "./order-review";
 import { NurseMedicationPatientSummary } from "./patient-summary";
-import type { AdministrationCell, AdministrationDetail, FluidAdministrationDetail, NurseDrugOrder } from "./types";
+import type { AdministrationCell, AdministrationDetail, FluidAdministrationDetail, NurseDrugOrder } from "./types";import type { MedicationAdministration } from "./administration-details/types";
 
 const nurseRoles: Role[] = ["Nurse", "Super Admin", "Hospital Admin"];
 
@@ -51,6 +52,40 @@ function buildAdministrationDetail(order: NurseDrugOrder, selectedDate: string, 
   };
 }
 
+function mapToMedicationAdministration(order: NurseDrugOrder): MedicationAdministration {
+  const status = order.category === "Continuous" ? "Running" : order.administeredQty > 0 && order.administeredQty < order.orderedQty ? "Partial" : order.receivedQty > 0 ? "Due" : "Pending";
+  const orderStatus = order.category === "Discontinued" ? "Discontinued" : order.receivedQty > 0 ? "Received" : order.dispensedQty > 0 ? "Dispensed" : "Pending";
+  return {
+    id: order.id,
+    patientId: order.id,
+    patientName: order.name,
+    drugName: order.name,
+    genericName: order.orderLabel || order.name,
+    category: order.category,
+    form: order.form,
+    dose: order.dosage,
+    doseUnit: "",
+    route: order.route,
+    frequency: order.frequency,
+    priority: order.priority || "Routine",
+    orderDate: order.orderDate || formatCurrentDate(),
+    startDate: order.startDate || order.orderDate || formatCurrentDate(),
+    endDate: order.endDate || order.orderDate || formatCurrentDate(),
+    nextDueTime: order.nextDueTime || order.scheduledTime || "-",
+    orderStatus,
+    status,
+    orderedQty: order.orderedQty,
+    dispensedQty: order.dispensedQty,
+    receivedQty: order.receivedQty,
+    administeredQty: order.administeredQty,
+    timeline: order.cells.map((cell) => ({
+      date: order.orderDate || formatCurrentDate(),
+      time: cell.time,
+      label: cell.label || order.name,
+      status: cell.status === "administered" ? "done" : cell.status === "overdue" ? "overdue" : cell.status === "infusion" ? "running" : cell.status === "bolus" ? "held" : "due",
+    })),
+  };
+}
 function buildFluidDetail(order: NurseDrugOrder, selectedDate: string): FluidAdministrationDetail {
   const bagVolume = order.bagVolume ?? 500;
   const volumeAdministered = order.administeredVolume ?? 0;
@@ -154,20 +189,10 @@ export function NurseDrugAdministrationPage() {
         Select a time slot to review administration details, counter-check requirements, overdue status, and fluid bag information before accepting.
       </AlertBanner> */}
 
-      <Tabs defaultValue="drug-order" className="space-y-4">
-        <TabsList className="w-full gap-2 overflow-x-auto bg-primary/10 p-1 sm:w-fit">
-          <TabsTrigger
-            value="drug-order"
-            className="min-w-[120px] border border-primary/20 bg-background text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-          >
-            Drug Order
-          </TabsTrigger>
-          <TabsTrigger
-            value="drug-administration"
-            className="min-w-[168px] border border-primary/20 bg-background text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-          >
-            Drug Administration
-          </TabsTrigger>
+            <Tabs defaultValue="drug-order" className="space-y-4">
+        <TabsList className="w-full justify-start rounded-lg bg-surface-muted p-1">
+          <TabsTrigger value="drug-order">Drug Order</TabsTrigger>
+          <TabsTrigger value="drug-administration">Drug Administration</TabsTrigger>
         </TabsList>
 
         <TabsContent value="drug-order">
@@ -175,13 +200,26 @@ export function NurseDrugAdministrationPage() {
         </TabsContent>
 
         <TabsContent value="drug-administration">
-          <AdministrationTimeline
-            orders={displayedOrders}
-            selectedDate={selectedDate}
-            today={today}
-            onDateChange={setSelectedDate}
-            onCellSelect={handleCellSelect}
-          />
+          <Tabs defaultValue="medication-list" className="w-full">
+            <TabsList className="w-full justify-start rounded-lg bg-surface-muted p-1">
+              <TabsTrigger value="medication-list">Medication List</TabsTrigger>
+              <TabsTrigger value="timeline">Timeline</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="medication-list">
+              <MedicationListTab orders={displayedOrders.map(mapToMedicationAdministration)} onAdminister={(record) => { const original = displayedOrders.find((order) => order.id === record.id); if (original) handleCellSelect(original, original.cells.find((cell) => cell.status === "due" || cell.status === "overdue" || cell.status === "administered" || cell.status === "infusion" || cell.status === "bolus")); }} />
+            </TabsContent>
+
+            <TabsContent value="timeline">
+              <TimelineTab
+                orders={displayedOrders}
+                selectedDate={selectedDate}
+                today={today}
+                onDateChange={setSelectedDate}
+                onCellSelect={handleCellSelect}
+              />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
       </Tabs>
       <AdministrationDetailsPanel
@@ -194,3 +232,15 @@ export function NurseDrugAdministrationPage() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+

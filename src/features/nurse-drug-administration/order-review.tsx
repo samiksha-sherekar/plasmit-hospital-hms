@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -497,9 +497,11 @@ export function DrugOrderReviewTab({ orders }: { orders: NurseDrugOrder[] }) {
 
   return (
     <>
-      <div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)]">
-        <CategoryList orders={orders} activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
-        <OrdersPanel activeCategory={activeCategory} categoryOrders={categoryOrders} onAction={openPopup} />
+      <div className="overflow-x-auto pb-2">
+        <div className="grid min-w-[980px] gap-4 xl:grid-cols-[220px_minmax(0,1fr)]">
+          <CategoryList orders={orders} activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
+          <OrdersPanel activeCategory={activeCategory} categoryOrders={categoryOrders} onAction={openPopup} />
+        </div>
       </div>
       <OrderActionPopup open={Boolean(popupOrder && popupAction)} action={popupAction} order={popupOrder} onOpenChange={(open) => !open && setPopupOrder(null)} />
       <Drawer
@@ -514,3 +516,6 @@ export function DrugOrderReviewTab({ orders }: { orders: NurseDrugOrder[] }) {
     </>
   );
 }
+
+
+
