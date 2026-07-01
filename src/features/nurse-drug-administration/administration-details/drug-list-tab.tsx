@@ -53,9 +53,9 @@ function getDrawerActionType(status: string): AdministrationActionType {
   if (status === "Due" || status === "Overdue") return "administer";
   if (status === "Running") return "manage";
   if (status === "Held" || status === "Missed" || status === "Refused") return "review";
-  return "continue";
+  if (status === "Partially Administered") return "continue";
+  return "administer";
 }
-
 function getNextDue(row: MedicationAdministration) {
   return row.nextDueTime || row.timeline[0]?.time || "-";
 }
@@ -125,13 +125,13 @@ export function MedicationListTab({ orders, onAdminister }: { orders: Medication
         <div className="text-base font-semibold text-foreground">Medication List</div>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
           <Input placeholder="Search" value={search} onChange={(event) => setSearch(event.target.value)} />
-          <select className="h-10 rounded-md border border-input bg-background px-3 text-sm" value={category} onChange={(event) => setCategory(event.target.value as typeof category)}>
+          <select className="h-10 rounded-md border border-input px-3 text-sm" value={category} onChange={(event) => setCategory(event.target.value as typeof category)}>
             {categoryOptions.map((option) => <option key={option} value={option}>{option === "All" ? "Category Filter" : option}</option>)}
           </select>
-          <select className="h-10 rounded-md border border-input bg-background px-3 text-sm" value={status} onChange={(event) => setStatus(event.target.value as typeof status)}>
+          <select className="h-10 rounded-md border border-input px-3 text-sm" value={status} onChange={(event) => setStatus(event.target.value as typeof status)}>
             {statusOptions.map((option) => <option key={option} value={option}>{option === "All" ? "Status Filter" : option}</option>)}
           </select>
-          <select className="h-10 rounded-md border border-input bg-background px-3 text-sm" value={priority} onChange={(event) => setPriority(event.target.value as typeof priority)}>
+          <select className="h-10 rounded-md border border-input px-3 text-sm" value={priority} onChange={(event) => setPriority(event.target.value as typeof priority)}>
             {priorityOptions.map((option) => <option key={option} value={option}>{option === "All" ? "Priority Filter" : option}</option>)}
           </select>
           <Input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
@@ -144,3 +144,7 @@ export function MedicationListTab({ orders, onAdminister }: { orders: Medication
     </div>
   );
 }
+
+
+
+
