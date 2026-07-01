@@ -251,38 +251,7 @@ function getFiveRights(order: NurseOrderDetailsModel) {
   };
 }
 
-function DrugReconciliationSection({ order }: { order: NurseOrderDetailsModel }) {
-  const { comparisons, reconciliationStatus, reconciliationRemarks } = compareReconciliationRows(order);
-  const doctorOrdered = [order.orderedDrugName, order.orderedDose, order.orderedRoute].map((part) => (part || "-").trim()).join(" | ");
-  const pharmacyDispensed = [order.dispensedDrugName, order.dispensedDose, order.dispensedRoute].map((part) => (part || "-").trim()).join(" | ");
-  const nurseReceived = [order.receivedDrugName, order.receivedDose, order.receivedRoute].map((part) => (part || "-").trim()).join(" | ");
 
-  return (
-    <SectionCard title="Drug Reconciliation">
-      <div className="space-y-3">
-        <div className="">
-          <FieldRow label="Doctor Ordered" value={doctorOrdered} />
-          <FieldRow label="Pharmacy Dispensed" value={pharmacyDispensed} />
-          <FieldRow label="Nurse Received" value={nurseReceived} />
-        </div>
-        {/* <div className="space-y-2">
-          {comparisons.map((row) => (
-            <div key={row.label} className="grid gap-3 xl:grid-cols-3">
-              <FieldRow label={row.label} value={row.order || "-"} />
-              <FieldRow label={row.label} value={row.dispensed || "-"} />
-              <FieldRow label={row.label} value={row.received || "-"} />
-            </div>
-          ))}
-        </div> */}
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-xs text-muted-foreground">
-          <span className="font-medium text-foreground">Reconciliation Status:</span>
-          <StatusBadge status={reconciliationStatus} />
-          {reconciliationRemarks ? <span>{reconciliationRemarks}</span> : <span>All comparable values match.</span>}
-        </div>
-      </div>
-    </SectionCard>
-  );
-}
 
 function RightsSection({ order }: { order: NurseOrderDetailsModel }) {
   const computed = React.useMemo(() => getFiveRights(order), [order]);
@@ -397,103 +366,7 @@ function RightsSection({ order }: { order: NurseOrderDetailsModel }) {
 
   const activeFormFields = getInlineActionFields(order, activeInlineAction);
 
-  return (
-    <SectionCard title="4 Rights Check">
-      <div className="space-y-4">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {rights.map((right) => {
-            const isActive = Boolean(right.actionKeys?.includes(activeInlineAction as InlineActionKey));
-            return (
-              <div key={right.name} className={`rounded-xl border p-3 ${right.status === "Failed" ? "border-danger/30 bg-danger/10" : right.status === "Warning" ? "border-warning/30 bg-warning/10" : "border-border bg-surface"}`}>
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="text-sm font-semibold text-foreground">{right.name}</div>
-                  </div>
-                  <StatusBadge status={right.status} />
-                </div>
-                {right.reason ? <div className={right.status === "Failed" ? "mt-2 text-xs text-danger" : "mt-2 text-xs text-warning"}>{right.reason}</div> : null}
-                {right.actionKeys ? (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {right.actionKeys.map((actionKey) => {
-                      const label = actionKey === "notifyPharmacy" ? "Notify Pharmacy" : actionKey === "returnMedication" ? "Return Medication" : actionKey === "notifyDoctor" ? "Notify Doctor" : actionKey === "verifyDose" ? "Verify Dose" : actionKey === "verifyRoute" ? "Verify Route" : "Proceed with Reason";
-                      return (
-                        <button
-                          key={actionKey}
-                          type="button"
-                          onClick={() => handleInlineActionToggle(actionKey)}
-                          className={`h-6 rounded-md px-3 text-xs transition ${activeInlineAction === actionKey ? "bg-primary text-primary-foreground" : "border border-border bg-white text-foreground hover:bg-surface-muted"}`}
-                        >
-                          {label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : null}
-                {isActive ? (
-                  <div className="mt-3 space-y-3 rounded-lg border border-border bg-white p-3">
-                    <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Inline Corrective Action</div>
-                    <div className="grid gap-3">
-                      {activeFormFields.map((field) => (
-                        <label key={field.key} className="space-y-1 text-sm">
-                          <span className="text-xs font-medium text-muted-foreground">{field.label}</span>
-                          <input
-                            type={field.type === "number" ? "number" : field.type === "time" ? "time" : "text"}
-                            defaultValue={field.defaultValue}
-                            className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring/20"
-                          />
-                        </label>
-                      ))}
-                    </div>
-                    <div className="flex flex-wrap justify-end gap-2 pt-1">
-                      <button type="button" onClick={handleInlineActionCancel} className="rounded-md border border-border bg-white px-3 py-2 text-sm font-medium text-foreground transition hover:bg-surface-muted">
-                        Cancel
-                      </button>
-                      <button type="button" onClick={() => handleInlineActionSubmit(submitAction)} className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90">
-                        Submit
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
-
-        {showWarningAck ? (
-          <div className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">
-            Medication is outside the scheduled time window. Please confirm before administration.
-          </div>
-        ) : null}
-
-        <label className="flex items-start gap-3 rounded-lg border border-border bg-surface px-3 py-3 text-sm">
-          <input
-            type="checkbox"
-            checked={confirmed}
-            disabled={!canConfirm || hasCriticalFailure}
-            onChange={(event) => handleConfirmChange(event.target.checked)}
-            className="mt-1 h-4 w-4 accent-primary"
-          />
-          <span>
-            I confirm that all medication rights have been verified.
-          </span>
-        </label>
-
-        {confirmed ? (
-          <div className="grid gap-3 sm:grid-cols-2">
-            <FieldRow label="Verified By" value={verifiedBy || "-"} />
-            <FieldRow label="Verified On" value={verifiedOn ? formatDateValue(verifiedOn) : "-"} format={false} />
-          </div>
-        ) : null}
-
-        <div className="flex flex-wrap justify-end gap-2 pt-1">
-          <button type="button" className="rounded-md border border-border bg-white px-4 py-2 text-sm font-medium text-foreground transition hover:bg-surface-muted">
-            Cancel
-          </button>
-          <button type="button" disabled={!canConfirm || hasCriticalFailure} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50">Confirm & Administer </button>
-        </div>
-      </div>
-    </SectionCard>
-  );
+  
 }
 
 export function OrderDetailsTab({ order }: { order: NurseOrderDetailsModel }) {
@@ -513,7 +386,6 @@ export function OrderDetailsTab({ order }: { order: NurseOrderDetailsModel }) {
               <FieldRow label="Ordered By" value={order.orderedBy} />
             </div>
           </SectionCard>
-          <DrugReconciliationSection order={order} />
         </div>
         <SectionCard title="Drug Information">
           <div className="space-y-3">
@@ -555,7 +427,6 @@ export function OrderDetailsTab({ order }: { order: NurseOrderDetailsModel }) {
           </SectionCard>
         </div>
       </div>
-      <RightsSection order={order} />
     </div>
   );
 }
