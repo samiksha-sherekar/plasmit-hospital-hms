@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { Drawer } from "@/components/ui/drawer";
 
-import type { MedicationAdministration } from "./types";
+import type { MedicationAdministration } from "../types";
 import { getMedicationState } from "./utils";
 import { AdministerSection } from "./components/administer-section";
 import { DrawerFooter } from "./components/drawer-footer";
@@ -86,14 +86,14 @@ export function AdministrationDrawer({ open, onOpenChange, selectedMedication, a
     setReturnQty("");
     setReturnReason("");
     setReturnRemarks("");
-    setOrderedPatient(selectedMedication.patientName);
-    setSelectedPatient(selectedMedication.patientName);
+    setOrderedPatient(selectedMedication.patientName ?? "");
+    setSelectedPatient(selectedMedication.patientName ?? "");
     setVerificationNotes("");
-    setOrderedDose(selectedMedication.dose);
-    setEnteredDose(selectedMedication.dose);
+    setOrderedDose(selectedMedication.dose ?? selectedMedication.dosage ?? "");
+    setEnteredDose(selectedMedication.dose ?? selectedMedication.dosage ?? "");
     setDoseCorrectionNotes("");
-    setOrderedRoute(selectedMedication.route);
-    setSelectedRoute(selectedMedication.route);
+    setOrderedRoute(selectedMedication.route ?? "");
+    setSelectedRoute(selectedMedication.route ?? "");
     setRouteCorrectionNotes("");
     setOverrideReason("");
     setPatientResponse("Stable");
@@ -115,27 +115,27 @@ export function AdministrationDrawer({ open, onOpenChange, selectedMedication, a
 
   if (!selectedMedication || !actionType) return null;
 
-  const status = getMedicationState(selectedMedication);
+  const status = getMedicationState(selectedMedication) ?? "";
   const currentRemainingQty = Math.max(remainingQty, 0);
   const quickSummary = [
-    ["Drug Name", selectedMedication.drugName],
-    ["Generic Name", selectedMedication.genericName],
+    ["Drug Name", selectedMedication.drugName ?? selectedMedication.name ?? ""],
+    ["Generic Name", selectedMedication.genericName ?? ""],
     ["Doctor Name", selectedMedication.frequency || ""],
     ["Category", selectedMedication.category],
     ["Form", selectedMedication.form],
-    ["Strength", selectedMedication.dose],
-    ["Dose", selectedMedication.dose],
-    ["Dose Unit", selectedMedication.doseUnit],
-    ["Route", selectedMedication.route],
+    ["Strength", selectedMedication.dose ?? selectedMedication.dosage ?? ""],
+    ["Dose", selectedMedication.dose ?? selectedMedication.dosage ?? ""],
+    ["Dose Unit", selectedMedication.doseUnit ?? ""],
+    ["Route", selectedMedication.route ?? ""],
     ["Frequency", selectedMedication.frequency],
-    ["Priority", selectedMedication.priority],
-    ["Scheduled Date", selectedMedication.orderDate],
-    ["Scheduled Time", selectedMedication.nextDueTime],
-    ["Next Due Time", selectedMedication.nextDueTime],
+    ["Priority", selectedMedication.priority ?? ""],
+    ["Scheduled Date", selectedMedication.orderDate ?? ""],
+    ["Scheduled Time", selectedMedication.nextDueTime ?? ""],
+    ["Next Due Time", selectedMedication.nextDueTime ?? ""],
     ["Current Status", status],
-    ["Order Date", selectedMedication.orderDate],
-    ["Start Date", selectedMedication.startDate],
-    ["End Date", selectedMedication.endDate],
+    ["Order Date", selectedMedication.orderDate ?? ""],
+    ["Start Date", selectedMedication.startDate ?? ""],
+    ["End Date", selectedMedication.endDate ?? ""],
     ["Ordered Qty", `${selectedMedication.orderedQty}`],
     ["Dispensed Qty", `${selectedMedication.dispensedQty}`],
     ["Received Qty", `${selectedMedication.receivedQty}`],
@@ -146,10 +146,10 @@ export function AdministrationDrawer({ open, onOpenChange, selectedMedication, a
   const reconcileStatus = selectedMedication.dispensedQty >= selectedMedication.receivedQty ? "Matched" : selectedMedication.dispensedQty > selectedMedication.receivedQty ? "Mismatch" : "Not Received";
   const rightPatientStatus = "Verified";
   const rightDrugStatus = reconcileStatus === "Matched" ? "Verified" : "Failed";
-  const rightDoseStatus = selectedMedication.dose ? "Verified" : "Warning";
-  const rightRouteStatus = selectedMedication.route ? "Verified" : "Warning";
-  const rightTimeStatus = selectedMedication.nextDueTime ? (selectedMedication.status === "Overdue" ? "Failed" : "Warning") : "Warning";
-  const rightsVerified = reconcileStatus === "Matched" && !!selectedMedication.patientName && !!selectedMedication.drugName && !!selectedMedication.dose && !!selectedMedication.route && !!selectedMedication.nextDueTime;
+  const rightDoseStatus = (selectedMedication.dose ?? selectedMedication.dosage) ? "Verified" : "Warning";
+  const rightRouteStatus = (selectedMedication.route ?? "") ? "Verified" : "Warning";
+  const rightTimeStatus = (selectedMedication.nextDueTime ?? "") ? ((selectedMedication.status ?? "") === "Overdue" ? "Failed" : "Warning") : "Warning";
+  const rightsVerified = reconcileStatus === "Matched" && !!selectedMedication.patientName && !!selectedMedication.drugName && !!(selectedMedication.dose ?? selectedMedication.dosage) && !!selectedMedication.route && !!selectedMedication.nextDueTime;
   const canShowVerification = rightsVerified;
   const canShowAdminFields = nurseVerified;
   const nowString = new Date().toLocaleString();
@@ -209,6 +209,15 @@ export function AdministrationDrawer({ open, onOpenChange, selectedMedication, a
     </Drawer>
   );
 }
+
+
+
+
+
+
+
+
+
 
 
 

@@ -18,3 +18,4 @@ export function TimelineTab({
 }) {
   return <AdministrationTimeline orders={orders} selectedDate={selectedDate} today={today} onDateChange={onDateChange} onCellSelect={onCellSelect} />;
 }
+

@@ -16,7 +16,7 @@ import { defaultAdministrationDetail, defaultFluidDetail, nurseDrugOrders } from
 import { AdministrationDetailsPanel, FluidAdministrationDetailsPanel } from "./detail-panels";
 import { DrugOrderReviewTab } from "./order-review";
 import { NurseMedicationPatientSummary } from "./patient-summary";
-import type { AdministrationCell, AdministrationDetail, FluidAdministrationDetail, NurseDrugOrder } from "./types";import type { MedicationAdministration } from "./administration-details/types";
+import type { AdministrationCell, AdministrationDetail, FluidAdministrationDetail, NurseDrugOrder } from "./types";
 
 const nurseRoles: Role[] = ["Nurse", "Super Admin", "Hospital Admin"];
 
@@ -52,8 +52,8 @@ function buildAdministrationDetail(order: NurseDrugOrder, selectedDate: string, 
   };
 }
 
-function mapToMedicationAdministration(order: NurseDrugOrder): MedicationAdministration {
-  const status = order.category === "Continuous" ? "Running" : order.administeredQty > 0 && order.administeredQty < order.orderedQty ? "Partial" : order.receivedQty > 0 ? "Due" : "Pending";
+function mapToMedicationAdministration(order: NurseDrugOrder): NurseDrugOrder {
+  const status = order.category === "Continuous" ? "Running" : order.administeredQty > 0 && order.administeredQty < order.orderedQty ? "Partial" : order.receivedQty > 0 ? "Due" : "Due";
   const orderStatus = order.category === "Discontinued" ? "Discontinued" : order.receivedQty > 0 ? "Received" : order.dispensedQty > 0 ? "Dispensed" : "Pending";
   return {
     id: order.id,
@@ -207,7 +207,7 @@ export function NurseDrugAdministrationPage() {
             </TabsList>
 
             <TabsContent value="medication-list">
-              <MedicationListTab orders={displayedOrders.map(mapToMedicationAdministration)} onAdminister={(record) => { const original = displayedOrders.find((order) => order.id === record.id); if (original) handleCellSelect(original, original.cells.find((cell) => cell.status === "due" || cell.status === "overdue" || cell.status === "administered" || cell.status === "infusion" || cell.status === "bolus")); }} />
+              <MedicationListTab orders={displayedOrders} onAdminister={(record) => { const original = displayedOrders.find((order) => order.id === record.id); if (original) handleCellSelect(original, original.cells.find((cell) => cell.status === "due" || cell.status === "overdue" || cell.status === "administered" || cell.status === "infusion" || cell.status === "bolus")); }} />
             </TabsContent>
 
             <TabsContent value="timeline">
@@ -232,6 +232,9 @@ export function NurseDrugAdministrationPage() {
     </div>
   );
 }
+
+
+
 
 
 

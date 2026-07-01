@@ -1,4 +1,4 @@
-import type { MedicationAdministration } from "./types";
+import type { MedicationAdministration } from "../types";
 
 export function statusTone(status: string) {
   if (status === "Verified" || status === "Matched") return "success";
@@ -18,3 +18,7 @@ export function getMedicationState(medication: MedicationAdministration) {
   if (medication.status === "Overdue") return "Overdue";
   return medication.status;
 }
+
+
+
+

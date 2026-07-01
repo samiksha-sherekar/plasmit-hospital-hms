@@ -50,22 +50,22 @@ export function ContinueSection(props: Props) {
       <Section title="Quick Order Summary">
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <ReadOnly label="Drug Name" value={selectedMedication.drugName} />
-          <ReadOnly label="Generic Name" value={selectedMedication.genericName} />
+          <ReadOnly label="Generic Name" value={selectedMedication.genericName ?? ""} />
           <ReadOnly label="Category" value={selectedMedication.category} />
-          <ReadOnly label="Dose" value={selectedMedication.dose} />
-          <ReadOnly label="Dose Unit" value={selectedMedication.doseUnit} />
-          <ReadOnly label="Route" value={selectedMedication.route} />
+          <ReadOnly label="Dose" value={selectedMedication.dose ?? selectedMedication.dosage} />
+          <ReadOnly label="Dose Unit" value={selectedMedication.doseUnit ?? ""} />
+          <ReadOnly label="Route" value={selectedMedication.route ?? ""} />
           <ReadOnly label="Frequency" value={selectedMedication.frequency} />
-          <ReadOnly label="Priority" value={selectedMedication.priority} />
+          <ReadOnly label="Priority" value={selectedMedication.priority ?? ""} />
           <ReadOnly label="Current Status" value={status} />
-          <ReadOnly label="Scheduled Time" value={selectedMedication.nextDueTime} />
-          <ReadOnly label="Next Due Time" value={selectedMedication.nextDueTime} />
+          <ReadOnly label="Scheduled Time" value={selectedMedication.nextDueTime ?? ""} />
+          <ReadOnly label="Next Due Time" value={selectedMedication.nextDueTime ?? ""} />
         </div>
       </Section>
       <Section title="Previous Administration Details">
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          <ReadOnly label="Previous Administration Date" value={lastAdministrationDate || selectedMedication.orderDate} />
-          <ReadOnly label="Previous Administration Time" value={lastAdministrationTime || selectedMedication.nextDueTime} />
+          <ReadOnly label="Previous Administration Date" value={lastAdministrationDate ?? selectedMedication.orderDate ?? ""} />
+          <ReadOnly label="Previous Administration Time" value={lastAdministrationTime ?? selectedMedication.nextDueTime ?? ""} />
           <ReadOnly label="Previous Dose Given" value={selectedMedication.administeredQty ? `${selectedMedication.administeredQty}` : ""} />
           <ReadOnly label="Administered By" value={lastAdministeredBy || "Current User"} />
           <ReadOnly label="Partial Administration Reason" value={overrideReason || ""} />
@@ -77,7 +77,7 @@ export function ContinueSection(props: Props) {
           <Field label="Administration Date"><Input type="date" value={administrationDate} onChange={(e) => setAdministrationDate(e.target.value)} /></Field>
           <Field label="Administration Time"><Input type="time" value={administrationTime} onChange={(e) => setAdministrationTime(e.target.value)} /></Field>
           <Field label="Dose To Give"><Input type="number" min="0" max={currentRemainingQty} value={doseToGive} onChange={(e) => setDoseToGive(e.target.value)} /></Field>
-          <ReadOnly label="Dose Unit" value={selectedMedication.doseUnit} />
+          <ReadOnly label="Dose Unit" value={selectedMedication.doseUnit ?? ""} />
           <SelectField label="Administration Status" value={administrationStatus} onChange={setAdministrationStatus}><option value="Administered">Administered</option><option value="Held">Held</option><option value="Refused">Refused</option></SelectField>
           <Field label="Administration Remarks"><textarea className="min-h-24 w-full rounded-md border border-input px-3 py-2 text-sm" value={observation} onChange={(e) => setObservation(e.target.value)} /></Field>
         </div>
@@ -107,3 +107,11 @@ export function ContinueSection(props: Props) {
     </>
   );
 }
+
+
+
+
+
+
+
+

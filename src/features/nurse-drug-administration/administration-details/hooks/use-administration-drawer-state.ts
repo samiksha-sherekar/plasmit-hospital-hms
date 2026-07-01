@@ -75,14 +75,14 @@ export function useAdministrationDrawerState(open: boolean, selectedMedication: 
     setReturnQty("");
     setReturnReason("");
     setReturnRemarks("");
-    setOrderedPatient(selectedMedication.patientName);
-    setSelectedPatient(selectedMedication.patientName);
+    setOrderedPatient(selectedMedication.patientName ?? "");
+    setSelectedPatient(selectedMedication.patientName ?? "");
     setVerificationNotes("");
-    setOrderedDose(selectedMedication.dose);
-    setEnteredDose(selectedMedication.dose);
+    setOrderedDose(selectedMedication.dose ?? selectedMedication.dosage);
+    setEnteredDose(selectedMedication.dose ?? selectedMedication.dosage);
     setDoseCorrectionNotes("");
-    setOrderedRoute(selectedMedication.route);
-    setSelectedRoute(selectedMedication.route);
+    setOrderedRoute(selectedMedication.route ?? "");
+    setSelectedRoute(selectedMedication.route ?? "");
     setRouteCorrectionNotes("");
     setOverrideReason("");
     setPatientResponse("Stable");
@@ -151,3 +151,9 @@ export function useAdministrationDrawerState(open: boolean, selectedMedication: 
     partialReason, setPartialReason,
   };
 }
+
+
+
+
+
+

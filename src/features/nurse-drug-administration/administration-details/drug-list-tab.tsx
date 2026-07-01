@@ -17,7 +17,7 @@ type MedicationRow = MedicationAdministration & {
   action: MedicationAction;
 };
 
-const statusOptions: Array<MedicationStatusFilter | "All"> = ["All", "Received", "Due", "Overdue", "Running", "Partially Administered", "Held", "Missed", "Refused", "Administered"];
+const statusOptions: Array<MedicationStatusFilter> = ["All", "Received", "Due", "Overdue", "Running", "Partially Administered", "Held", "Missed", "Refused", "Administered"];
 const priorityOptions = ["All", "Routine", "Urgent", "Immediate", "Low", "Normal", "High"];
 const categoryOptions = ["All", "Scheduled", "SOS", "STAT", "Bolus", "Diluent", "Intermittent", "Continuous", "Discontinued", "Unscheduled"];
 
@@ -57,7 +57,7 @@ function getDrawerActionType(status: string): AdministrationActionType {
   return "administer";
 }
 function getNextDue(row: MedicationAdministration) {
-  return row.nextDueTime || row.timeline[0]?.time || "-";
+  return row.nextDueTime || row.timeline?.[0]?.time || "-";
 }
 
 function toRows(orders: MedicationAdministration[]): MedicationRow[] {
@@ -144,6 +144,9 @@ export function MedicationListTab({ orders, onAdminister }: { orders: Medication
     </div>
   );
 }
+
+
+
 
 
 

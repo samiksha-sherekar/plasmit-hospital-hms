@@ -10,7 +10,7 @@ import type { MedicationAdministration } from "../types";
 
 type Props = {
   selectedMedication: MedicationAdministration;
-  status: string;
+  status: string | undefined;
   quickSummary: readonly (readonly [string, string])[];
   reconcileStatus: string;
   rightPatientStatus: string;
@@ -92,3 +92,10 @@ export function AdministerSection(props: Props) {
     <PatientObservation patientResponse={patientResponse} setPatientResponse={setPatientResponse} adverseReaction={adverseReaction} setAdverseReaction={setAdverseReaction} reactionDetails={reactionDetails} setReactionDetails={setReactionDetails} observationNotes={observationNotes} setObservationNotes={setObservationNotes} />
   </>;
 }
+
+
+
+
+
+
+

@@ -38,19 +38,19 @@ export function ReviewSection(props: Props) {
       <Section title="Quick Order Summary">
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <ReadOnly label="Drug Name" value={selectedMedication.drugName} />
-          <ReadOnly label="Dose" value={selectedMedication.dose} />
+          <ReadOnly label="Dose" value={selectedMedication.dose ?? selectedMedication.dosage ?? selectedMedication.dosage} />
           <ReadOnly label="Doctor Name" value={selectedMedication.frequency || ""} />
-          <ReadOnly label="Route" value={selectedMedication.route} />
+          <ReadOnly label="Route" value={selectedMedication.route ?? ""} />
           <ReadOnly label="Frequency" value={selectedMedication.frequency} />
           <ReadOnly label="Current Status" value={status} />
-          <ReadOnly label="Scheduled Time" value={selectedMedication.nextDueTime} />
+          <ReadOnly label="Scheduled Time" value={selectedMedication.nextDueTime ?? ""} />
         </div>
       </Section>
       {status === "Held" ? (
         <Section title="Review Details">
           <div className="grid gap-3 sm:grid-cols-2">
-            <ReadOnly label="Held Date" value={lastAdministrationDate || selectedMedication.orderDate} />
-            <ReadOnly label="Held Time" value={lastAdministrationTime || selectedMedication.nextDueTime} />
+            <ReadOnly label="Held Date" value={lastAdministrationDate ?? selectedMedication.orderDate ?? ""} />
+            <ReadOnly label="Held Time" value={lastAdministrationTime ?? selectedMedication.nextDueTime ?? ""} />
             <ReadOnly label="Held By" value={lastAdministeredBy || "Current User"} />
             <SelectField label="Hold Reason" value={holdReason} onChange={setHoldReason}><option value="">Select</option><option value="Doctor Instruction">Doctor Instruction</option><option value="Patient Condition">Patient Condition</option><option value="Medication Unavailable">Medication Unavailable</option><option value="Other">Other</option></SelectField>
             <RadioGroup label="Doctor Notified" value={holdDoctorNotified} onChange={setHoldDoctorNotified} />
@@ -62,9 +62,9 @@ export function ReviewSection(props: Props) {
       {status === "Missed" ? (
         <Section title="Review Details">
           <div className="grid gap-3 sm:grid-cols-2">
-            <ReadOnly label="Missed Date" value={lastAdministrationDate || selectedMedication.orderDate} />
-            <ReadOnly label="Missed Time" value={lastAdministrationTime || selectedMedication.nextDueTime} />
-            <ReadOnly label="Scheduled Time" value={selectedMedication.nextDueTime} />
+            <ReadOnly label="Missed Date" value={lastAdministrationDate ?? selectedMedication.orderDate ?? ""} />
+            <ReadOnly label="Missed Time" value={lastAdministrationTime ?? selectedMedication.nextDueTime ?? ""} />
+            <ReadOnly label="Scheduled Time" value={selectedMedication.nextDueTime ?? ""} />
             <SelectField label="Missed Reason" value={missedReason} onChange={setMissedReason}><option value="">Select</option><option value="Patient Away">Patient Away</option><option value="Procedure">Procedure</option><option value="Clinical Decision">Clinical Decision</option><option value="Other">Other</option></SelectField>
             <RadioGroup label="Doctor Notified" value={missedDoctorNotified} onChange={setMissedDoctorNotified} />
             <Field label="Follow-up Notes"><textarea className="min-h-24 w-full rounded-md border border-input px-3 py-2 text-sm" value={missedNotes} onChange={(e) => setMissedNotes(e.target.value)} /></Field>
@@ -74,8 +74,8 @@ export function ReviewSection(props: Props) {
       {status === "Refused" ? (
         <Section title="Review Details">
           <div className="grid gap-3 sm:grid-cols-2">
-            <ReadOnly label="Refused Date" value={lastAdministrationDate || selectedMedication.orderDate} />
-            <ReadOnly label="Refused Time" value={lastAdministrationTime || selectedMedication.nextDueTime} />
+            <ReadOnly label="Refused Date" value={lastAdministrationDate ?? selectedMedication.orderDate ?? ""} />
+            <ReadOnly label="Refused Time" value={lastAdministrationTime ?? selectedMedication.nextDueTime ?? ""} />
             <Field label="Refusal Reason"><textarea className="min-h-24 w-full rounded-md border border-input px-3 py-2 text-sm" value={refusalReason} onChange={(e) => setRefusalReason(e.target.value)} /></Field>
             <RadioGroup label="Patient Counselling Done" value={patientCounsellingDone} onChange={setPatientCounsellingDone} />
             <RadioGroup label="Doctor Notified" value={refusalDoctorNotified} onChange={setRefusalDoctorNotified} />
@@ -87,3 +87,11 @@ export function ReviewSection(props: Props) {
     </>
   );
 }
+
+
+
+
+
+
+
+

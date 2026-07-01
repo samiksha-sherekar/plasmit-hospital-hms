@@ -36,29 +36,29 @@ export function ManageSection(props: Props) {
     <>
       <Section title="Quick Order Summary">
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <ReadOnly label="Drug Name" value={selectedMedication.drugName} />
-          <ReadOnly label="Generic Name" value={selectedMedication.genericName} />
+          <ReadOnly label="Drug Name" value={selectedMedication.drugName ?? selectedMedication.name ?? ""} />
+          <ReadOnly label="Generic Name" value={selectedMedication.genericName ?? selectedMedication.name ?? "" } />
           <ReadOnly label="Category" value={selectedMedication.category} />
           <ReadOnly label="Doctor Name" value={selectedMedication.frequency || ""} />
           <ReadOnly label="Form" value={selectedMedication.form} />
-          <ReadOnly label="Dose" value={selectedMedication.dose} />
-          <ReadOnly label="Dose Unit" value={selectedMedication.doseUnit} />
-          <ReadOnly label="Route" value={selectedMedication.route} />
+          <ReadOnly label="Dose" value={selectedMedication.dose ?? selectedMedication.dosage} />
+          <ReadOnly label="Dose Unit" value={selectedMedication.doseUnit ?? ""} />
+          <ReadOnly label="Route" value={selectedMedication.route ?? "" } />
           <ReadOnly label="Frequency" value={selectedMedication.frequency} />
-          <ReadOnly label="Priority" value={selectedMedication.priority} />
-          <ReadOnly label="Order Date" value={selectedMedication.orderDate} />
-          <ReadOnly label="Start Date" value={selectedMedication.startDate} />
-          <ReadOnly label="Running Since" value={lastAdministrationDate || selectedMedication.startDate} />
+          <ReadOnly label="Priority" value={selectedMedication.priority ?? ""} />
+          <ReadOnly label="Order Date" value={selectedMedication.orderDate ?? ""} />
+          <ReadOnly label="Start Date" value={selectedMedication.startDate ?? "" } />
+          <ReadOnly label="Running Since" value={lastAdministrationDate ?? selectedMedication.startDate ?? "" } />
           <ReadOnly label="Current Status" value={status} />
         </div>
       </Section>
       <Section title="Current Infusion Details">
         <div className="grid gap-3 sm:grid-cols-3">
-          <ReadOnly label="Infusion Drug" value={selectedMedication.drugName} />
-          <ReadOnly label="Diluent" value={selectedMedication.genericName || selectedMedication.drugName} />
-          <ReadOnly label="Ordered Rate" value={selectedMedication.dose} />
-          {/* <ReadOnly label="Rate Unit" value={selectedMedication.doseUnit} /> */}
-          <ReadOnly label="Route" value={selectedMedication.route} />
+          <ReadOnly label="Infusion Drug" value={selectedMedication.drugName ?? selectedMedication.name ?? ""} />
+          <ReadOnly label="Diluent" value={selectedMedication.genericName ?? selectedMedication.name ?? selectedMedication.drugName ?? selectedMedication.name ?? ""} />
+          <ReadOnly label="Ordered Rate" value={selectedMedication.dose ?? selectedMedication.dosage} />
+          {/* <ReadOnly label="Rate Unit" value={selectedMedication.doseUnit ?? ""} /> */}
+          <ReadOnly label="Route" value={selectedMedication.route ?? "" } />
           <ReadOnly label="Current Status" value={status} />
           <Field label="Current Infusion Rate"><Input type="text" value={reviewNote} onChange={(e) => setReviewNote(e.target.value)} /></Field>
           <Field label="Volume Infused"><Input type="number" value={remainingQty === 0 ? selectedMedication.administeredQty : administeredQty} onChange={(e) => setAdministeredQty(Number(e.target.value || 0))} /></Field>
@@ -79,3 +79,13 @@ export function ManageSection(props: Props) {
     </>
   );
 }
+
+
+
+
+
+
+
+
+
+
